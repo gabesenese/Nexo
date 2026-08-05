@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Nexo Widget: Embed Demo</title>
+  </head>
+  <body>
+    <h1 style="font-family: sans-serif">Example host site</h1>
+    <p style="font-family: sans-serif">
+      This page embeds the built widget the same way a real customer would: a single script tag.
+      Run <code>npm run build --workspace=@nexo/widget</code> first, then serve this file
+      (e.g. <code>npx serve packages/widget</code>) so <code>dist/widget.js</code> resolves.
+    </p>
+
+    <!-- data-api-url points the widget at the running Nexo server -->
+    <script src="./dist/widget.js" data-api-url="http://localhost:4000"></script>
+  </body>
+</html>

@@ -1,0 +1,93 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [vector, pg_trgm]
+}
+
+enum SourceType {
+  help_center
+  pdf
+}
+
+enum ConversationStatus {
+  active
+  resolved
+  escalated
+}
+
+enum MessageRole {
+  user
+  assistant
+}
+
+enum EscalationStatus {
+  pending
+  handed_off
+}
+
+model Source {
+  id           String     @id @default(cuid())
+  type         SourceType
+  name         String
+  origin       String
+  lastSyncedAt DateTime?
+  createdAt    DateTime   @default(now())
+  chunks       Chunk[]
+}
+
+model Chunk {
+  id         String                 @id @default(cuid())
+  sourceId   String
+  source     Source                 @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  content    String
+  embedding  Unsupported("vector(1536)")?
+  tokenCount Int
+  metadata   Json                   @default("{}")
+  createdAt  DateTime               @default(now())
+
+  @@index([sourceId])
+}
+
+model Conversation {
+  id          String             @id @default(cuid())
+  sessionId   String
+  channel     String             @default("widget")
+  status      ConversationStatus @default(active)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  messages    Message[]
+  escalations Escalation[]
+
+  @@index([sessionId])
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role           MessageRole
+  content        String
+  citations      Json         @default("[]")
+  confidence     Float?
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId])
+}
+
+model Escalation {
+  id             String            @id @default(cuid())
+  conversationId String
+  conversation   Conversation      @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  reason         String
+  summary        String
+  handoffPayload Json              @default("{}")
+  status         EscalationStatus  @default(pending)
+  createdAt      DateTime          @default(now())
+
+  @@index([conversationId])
+}

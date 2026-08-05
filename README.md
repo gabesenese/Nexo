@@ -36,11 +36,15 @@ packages/
 
 ```bash
 npm install
-docker compose up -d          # Postgres + pgvector
-cp .env.example .env          # fill in ANTHROPIC_API_KEY and OPENAI_API_KEY
+docker compose up -d                    # Postgres + pgvector
+cp .env.example packages/server/.env    # fill in ANTHROPIC_API_KEY and OPENAI_API_KEY
 npm run db:migrate --workspace=server
-npm run dev                   # server :4000, admin :5173, widget dev demo :5174
+npm run dev                             # server :4000, admin :5173, widget dev demo :5174
 ```
+
+`.env` must live in `packages/server/`, not the repo root: both the Prisma CLI and the server's
+`dotenv/config` loader resolve `.env` relative to the workspace's working directory, which is
+`packages/server` when npm runs a workspace script.
 
 Open http://localhost:5173 for the admin dashboard (add a help-center URL or upload a PDF under
 **Sources**), then http://localhost:5174 to try the chat widget against that content.

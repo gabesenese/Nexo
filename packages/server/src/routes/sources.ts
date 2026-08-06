@@ -1,9 +1,10 @@
 import type { FastifyInstance } from "fastify";
 import { prisma } from "../db/client.js";
 import { ingestHelpCenterUrl, ingestPdf } from "../ingestion/pipeline.js";
+import { requireAuth } from "./auth.js";
 
 export async function sourcesRoutes(app: FastifyInstance) {
-  app.get("/api/sources", async () => {
+  app.get("/api/sources", { preHandler: requireAuth }, async () => {
     const sources = await prisma.source.findMany({
       orderBy: { createdAt: "desc" },
       include: { _count: { select: { chunks: true } } },
@@ -18,7 +19,7 @@ export async function sourcesRoutes(app: FastifyInstance) {
     }));
   });
 
-  app.post<{ Body: { url: string } }>("/api/sources/help-center", async (req, reply) => {
+  app.post<{ Body: { url: string } }>("/api/sources/help-center", { preHandler: requireAuth }, async (req, reply) => {
     const { url } = req.body ?? {};
     if (!url) {
       return reply.status(400).send({ error: "url is required" });
@@ -32,7 +33,7 @@ export async function sourcesRoutes(app: FastifyInstance) {
     }
   });
 
-  app.post("/api/sources/pdf", async (req, reply) => {
+  app.post("/api/sources/pdf", { preHandler: requireAuth }, async (req, reply) => {
     const file = await req.file();
     if (!file) {
       return reply.status(400).send({ error: "a PDF file is required (multipart field 'file')" });

@@ -1,8 +1,11 @@
+import { useEffect, useState } from "react";
 import { NavLink, Route, Routes } from "react-router-dom";
 import { SourcesPage } from "./pages/Sources";
 import { ConversationsPage } from "./pages/Conversations";
 import { AnalyticsPage } from "./pages/Analytics";
 import { LeadsPage } from "./pages/Leads";
+import { LoginPage } from "./pages/Login";
+import { api } from "./api";
 
 function LogoMark() {
   return (
@@ -20,6 +23,45 @@ function LogoMark() {
 }
 
 export default function App() {
+  const [authState, setAuthState] = useState<"loading" | "anon" | "authed">("loading");
+  const [email, setEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    api.me().then((result) => {
+      if (result) {
+        setEmail(result.email);
+        setAuthState("authed");
+      } else {
+        setAuthState("anon");
+      }
+    });
+  }, []);
+
+  async function handleLogout() {
+    await api.logout().catch(() => {});
+    setEmail(null);
+    setAuthState("anon");
+  }
+
+  if (authState === "loading") {
+    return (
+      <div className="login-screen">
+        <p className="empty-note">Loading…</p>
+      </div>
+    );
+  }
+
+  if (authState === "anon") {
+    return (
+      <LoginPage
+        onLoggedIn={(loggedInEmail) => {
+          setEmail(loggedInEmail);
+          setAuthState("authed");
+        }}
+      />
+    );
+  }
+
   return (
     <div className="app">
       <nav className="sidebar">
@@ -45,6 +87,11 @@ export default function App() {
             Leads
           </NavLink>
         </div>
+        <div className="sidebar-spacer" />
+        <div className="sidebar-email">{email}</div>
+        <button className="sidebar-logout" onClick={handleLogout}>
+          Log out
+        </button>
       </nav>
       <main className="content">
         <Routes>

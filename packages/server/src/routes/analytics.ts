@@ -1,8 +1,9 @@
 import type { FastifyInstance } from "fastify";
 import { prisma } from "../db/client.js";
+import { requireAuth } from "./auth.js";
 
 export async function analyticsRoutes(app: FastifyInstance) {
-  app.get("/api/analytics", async () => {
+  app.get("/api/analytics", { preHandler: requireAuth }, async () => {
     const totalConversations = await prisma.conversation.count();
     const escalatedConversations = await prisma.conversation.count({ where: { status: "escalated" } });
 
@@ -28,7 +29,7 @@ export async function analyticsRoutes(app: FastifyInstance) {
     };
   });
 
-  app.get("/api/conversations", async () => {
+  app.get("/api/conversations", { preHandler: requireAuth }, async () => {
     const conversations = await prisma.conversation.findMany({
       orderBy: { createdAt: "desc" },
       take: 50,

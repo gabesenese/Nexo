@@ -47,12 +47,6 @@ export function Widget({ apiUrl }: { apiUrl: string }) {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, open]);
 
-  useEffect(() => {
-    const openHandler = () => setOpen(true);
-    window.addEventListener("nexo:open", openHandler);
-    return () => window.removeEventListener("nexo:open", openHandler);
-  }, []);
-
   async function send(message: string, forceEscalate = false) {
     if (!message.trim() && !forceEscalate) return;
     setMessages((prev) => [...prev, { role: "user", content: forceEscalate ? "Talk to a human" : message }]);

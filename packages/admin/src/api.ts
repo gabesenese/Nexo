@@ -64,6 +64,15 @@ export interface Conversation {
   escalations: Escalation[];
 }
 
+export interface Lead {
+  id: string;
+  name: string;
+  email: string;
+  company: string;
+  source: string;
+  createdAt: string;
+}
+
 export const api = {
   listSources: () => request<SourceSummary[]>("/api/sources"),
   addHelpCenterUrl: (url: string) =>
@@ -77,4 +86,5 @@ export const api = {
   },
   getAnalytics: () => request<AnalyticsSummary>("/api/analytics"),
   listConversations: () => request<Conversation[]>("/api/conversations"),
+  listLeads: () => request<Lead[]>("/api/leads"),
 };

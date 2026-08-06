@@ -3,6 +3,7 @@ const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     ...init,
   });
   if (!res.ok) {
@@ -80,11 +81,19 @@ export const api = {
   uploadPdf: async (file: File) => {
     const form = new FormData();
     form.append("file", file);
-    const res = await fetch(`${API_URL}/api/sources/pdf`, { method: "POST", body: form });
+    const res = await fetch(`${API_URL}/api/sources/pdf`, { method: "POST", body: form, credentials: "include" });
     if (!res.ok) throw new Error(`Upload failed with ${res.status}`);
     return res.json();
   },
   getAnalytics: () => request<AnalyticsSummary>("/api/analytics"),
   listConversations: () => request<Conversation[]>("/api/conversations"),
   listLeads: () => request<Lead[]>("/api/leads"),
+  login: (email: string, password: string) =>
+    request<{ email: string }>("/api/auth/login", { method: "POST", body: JSON.stringify({ email, password }) }),
+  logout: () => request<{ ok: true }>("/api/auth/logout", { method: "POST" }),
+  me: async (): Promise<{ email: string } | null> => {
+    const res = await fetch(`${API_URL}/api/auth/me`, { credentials: "include" });
+    if (!res.ok) return null;
+    return res.json();
+  },
 };

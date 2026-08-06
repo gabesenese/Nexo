@@ -10,6 +10,7 @@ const envSchema = z.object({
   PORT: z.coerce.number().default(4000),
   CORS_ORIGIN: z.string().default("http://localhost:5173"),
   CONFIDENCE_THRESHOLD: z.coerce.number().min(0).max(1).default(0.55),
+  JWT_SECRET: z.string().min(32, "JWT_SECRET must be at least 32 characters"),
 });
 
 export const env = envSchema.parse(process.env);

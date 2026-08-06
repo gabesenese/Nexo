@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <title>Nexo — AI support that always has an exit</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="AI support that knows when to answer — and when to bring in a human. Built for growing support teams that have outgrown a shared inbox.">
+<meta name="description" content="AI support that knows when to answer — and when your customers deserve a person. Built for growing support teams.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -99,49 +99,85 @@
   .l-hero-ctas{display:flex;gap:14px;justify-content:center;margin-bottom:20px;flex-wrap:wrap;}
   .l-hero-note{font-size:12px;color:var(--slate-soft);font-family:'IBM Plex Mono',monospace;}
 
+  .proof-label{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--slate-soft);text-transform:uppercase;letter-spacing:.06em;text-align:center;margin:56px 0 14px;}
   .proof-card{
-    max-width:420px;margin:56px auto 0;text-align:left;background:var(--white);
-    border:1px solid var(--line);border-radius:16px;padding:18px;
-    box-shadow:0 24px 60px -24px rgba(24,27,29,0.2);
+    max-width:520px;margin:0 auto 0;text-align:left;background:var(--white);
+    border:1px solid var(--line);border-radius:18px;padding:22px;
+    box-shadow:0 28px 70px -24px rgba(24,27,29,0.22);
   }
-  .proof-head{display:flex;align-items:center;gap:9px;padding:0 4px 14px;border-bottom:1px solid var(--paper-dim);margin-bottom:14px;}
-  .proof-mark{width:20px;height:20px;background:var(--teal);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-size:11px;color:var(--white);flex-shrink:0;}
-  .proof-head span{font-size:12.5px;font-weight:500;color:var(--ink);}
+  .proof-head{display:flex;align-items:center;gap:11px;padding:0 4px 16px;border-bottom:1px solid var(--paper-dim);margin-bottom:18px;}
+  .proof-mark{width:26px;height:26px;background:var(--teal);border-radius:7px;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-size:13px;color:var(--white);flex-shrink:0;}
+  .proof-head .proof-title{font-size:14.5px;font-weight:500;color:var(--ink);}
+  .proof-head .proof-sub{font-size:11.5px;color:var(--slate-soft);}
   .proof-msg{
-    max-width:84%;font-size:13px;line-height:1.5;padding:10px 13px;border-radius:12px;margin-bottom:10px;
+    max-width:84%;font-size:14px;line-height:1.55;padding:11px 15px;border-radius:13px;margin-bottom:12px;
     opacity:0;transform:translateY(6px);animation:proofIn 420ms var(--ease-out) forwards;
   }
   .proof-msg.user{background:var(--ink);color:var(--paper);margin-left:auto;border-bottom-right-radius:3px;animation-delay:150ms;}
   .proof-msg.bot{background:#fbf4e8;border:1px solid #ecd8b8;color:var(--slate);border-bottom-left-radius:3px;animation-delay:550ms;}
-  .proof-flag{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--amber);display:flex;align-items:center;gap:5px;margin-top:8px;}
+  .proof-flag{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--amber);display:flex;align-items:center;gap:5px;margin-top:9px;}
   .proof-flag::before{content:"●";font-size:7px;}
   .proof-handoff{
-    background:var(--paper-dim);border-radius:10px;padding:12px 14px;font-size:11.5px;color:var(--slate-soft);line-height:1.6;
+    background:var(--paper-dim);border-radius:11px;padding:14px 16px;font-size:12.5px;color:var(--slate-soft);line-height:1.6;
     opacity:0;transform:translateY(6px);animation:proofIn 420ms var(--ease-out) forwards;animation-delay:1000ms;
   }
-  .proof-handoff .label{font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--teal-dark);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;display:block;}
+  .proof-handoff .label{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--teal-dark);text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px;display:block;}
   @keyframes proofIn{to{opacity:1;transform:translateY(0);}}
 
   .l-strip{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--paper-dim);}
   .l-strip-inner{max-width:1080px;margin:0 auto;padding:36px 48px;display:grid;grid-template-columns:repeat(4,1fr);gap:24px;}
+
+  .why-section{text-align:center;padding-top:70px;padding-bottom:70px;}
+  .why-section h2{font-size:clamp(28px,4vw,38px);line-height:1.3;color:var(--ink);max-width:640px;margin:0 auto 40px;}
+  .why-section h2 .accent{color:var(--teal);font-style:italic;display:block;}
+  .why-lines{display:flex;flex-direction:column;gap:4px;}
+  .why-line{font-family:'Fraunces',serif;font-size:21px;font-weight:500;margin:0;color:var(--slate-soft);}
+  .why-line.resolve{color:var(--teal-dark);}
+
+  .compare-heading{font-size:clamp(22px,3vw,28px);color:var(--ink);max-width:560px;margin:64px auto 36px;}
+
+  .compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:36px;max-width:600px;margin:0 auto 72px;text-align:left;}
+  .compare-label{font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--slate-soft);margin-bottom:14px;}
+  .compare-col.hi .compare-label{color:var(--teal-dark);}
+  .compare-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;}
+  .compare-list li{font-size:14px;color:var(--slate-soft);padding-left:16px;position:relative;}
+  .compare-list li::before{content:"–";position:absolute;left:0;color:var(--slate-soft);}
+  .compare-col.hi .compare-list li{color:var(--ink);}
+  .compare-col.hi .compare-list li::before{content:"—";color:var(--teal);}
+
+  .conf-flow{max-width:420px;margin:0 auto 56px;}
+  .cf-step{font-size:14px;color:var(--slate);}
+  .cf-arrow{color:#9a958a;font-family:'IBM Plex Mono',monospace;font-size:16px;margin:10px 0;}
+  .cf-branches{display:flex;justify-content:center;gap:48px;margin-top:6px;}
+  .cf-branch{display:flex;flex-direction:column;align-items:center;gap:8px;}
+  .cf-conf{font-family:'Fraunces',serif;font-size:19px;font-weight:600;}
+  .cf-conf.high{color:var(--teal);}
+  .cf-conf.low{color:var(--amber);}
+  .cf-outcome{font-size:12px;color:var(--slate-soft);font-family:'IBM Plex Mono',monospace;}
+
+  .why-signature{font-family:'Fraunces',serif;font-style:italic;font-size:clamp(20px,3vw,26px);color:var(--ink);max-width:640px;margin:0 auto;line-height:1.45;}
+
+  .knowledge-section{text-align:center;}
+  .ks-head{max-width:520px;margin:0 auto 44px;}
+  .ks-head h2{font-size:clamp(26px,3.5vw,32px);color:var(--ink);margin-bottom:10px;}
+  .ks-head p{color:var(--slate-soft);font-size:15px;margin:0;}
+  .ks-label{font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--teal-dark);margin-bottom:14px;}
+  .ks-label.muted{color:var(--slate-soft);margin-top:36px;}
+  .ks-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;max-width:560px;margin:0 auto;}
+  .ks-chip{font-size:13.5px;padding:9px 16px;border-radius:20px;background:#e3ede9;color:var(--teal-dark);font-weight:500;}
+  .ks-chip.soon{background:var(--paper-dim);color:var(--slate-soft);border:1px dashed var(--line);font-weight:400;}
+  .ks-trust{margin-top:44px;font-size:13px;color:var(--slate-soft);font-family:'IBM Plex Mono',monospace;}
   .stat{text-align:center;}
   .stat .num{font-family:'Fraunces',serif;font-size:30px;color:var(--ink);font-weight:600;}
   .stat .label{font-size:12px;color:var(--slate-soft);margin-top:4px;font-family:'IBM Plex Mono',monospace;}
+  .stat.hi .num{font-size:36px;color:var(--teal-dark);}
+  .stat.hi .label{color:var(--slate);}
 
   .l-section{max-width:1080px;margin:0 auto;padding:90px 48px;}
   .l-section-head{max-width:560px;margin-bottom:48px;}
   .l-section-head .l-eyebrow{margin-bottom:16px;}
   .l-section-head h2{font-size:32px;color:var(--ink);margin-bottom:14px;}
   .l-section-head p{color:var(--slate-soft);font-size:15px;line-height:1.6;}
-
-  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
-  .feat{
-    background:var(--white);border:1px solid var(--line);border-radius:12px;padding:26px;
-    transition:transform 200ms var(--ease-out), box-shadow 200ms var(--ease-out), border-color 200ms ease;
-  }
-  .feat .fi{width:34px;height:34px;border-radius:8px;background:var(--paper-dim);display:flex;align-items:center;justify-content:center;margin-bottom:16px;}
-  .feat h3{font-size:16px;color:var(--ink);margin-bottom:8px;}
-  .feat p{font-size:13.5px;color:var(--slate-soft);line-height:1.55;margin:0;}
 
   .pricing-wrap{background:var(--ink);border-radius:16px;padding:60px 48px;}
   .pricing-head{text-align:center;color:var(--paper);margin-bottom:42px;}
@@ -165,7 +201,6 @@
   .ptier .btn-ghost:hover{border-color:var(--paper);}
 
   @media (hover:hover) and (pointer:fine){
-    .feat:hover{transform:translateY(-3px);box-shadow:0 16px 32px -18px rgba(24,27,29,0.25);border-color:#c9c4b3;}
     .ptier:hover{transform:translateY(-3px);border-color:var(--teal);}
   }
 
@@ -173,7 +208,7 @@
   .l-footer .maple{display:inline-flex;align-items:center;gap:6px;}
 
   @media (max-width:860px){
-    .grid3,.pgrid{grid-template-columns:1fr 1fr;}
+    .pgrid{grid-template-columns:1fr 1fr;}
     .l-nav-links{display:none;}
     .hamburger{display:flex;}
   }
@@ -183,7 +218,9 @@
     .l-hero{padding:64px 24px 48px;}
     .l-section{padding:56px 24px;}
     .l-strip-inner{padding:28px 24px;grid-template-columns:1fr 1fr;gap:20px 16px;}
-    .grid3,.pgrid{grid-template-columns:1fr;}
+    .pgrid,.compare-grid{grid-template-columns:1fr;}
+    .compare-grid{gap:28px;}
+    .cf-branches{gap:32px;}
     .pricing-wrap{padding:40px 24px;}
     .l-footer{padding:24px 20px;flex-direction:column;text-align:center;}
     .mobile-panel{padding-left:24px;padding-right:24px;}
@@ -274,21 +311,25 @@
 <div class="l-hero">
   <span class="l-eyebrow">● Built for growing support teams</span>
   <h1>Every answer has <span class="accent">an exit.</span></h1>
-  <p>AI support that knows when to answer — and when to bring in a human. Built for teams that have outgrown a shared inbox.</p>
+  <p>AI support that knows when to answer — and when your customers deserve a person.</p>
   <div class="l-hero-ctas">
     <button class="btn btn-primary" data-open-trial>Start free trial</button>
     <a class="btn btn-ghost" href="#pricing">See pricing →</a>
   </div>
   <div class="l-hero-note">No sales call required to get started.</div>
 
+  <div class="proof-label">This is the actual product — not a mockup</div>
   <div class="proof-card">
     <div class="proof-head">
       <div class="proof-mark">N</div>
-      <span>The actual product — not a mockup</span>
+      <div>
+        <div class="proof-title">Nexo Support</div>
+        <div class="proof-sub">Usually replies instantly</div>
+      </div>
     </div>
-    <div class="proof-msg user">My order arrived damaged and it's the wrong color — I need this fixed today.</div>
+    <div class="proof-msg user">I was charged twice this month and I'm not sure why — can someone look into my account?</div>
     <div class="proof-msg bot">
-      I can see the damage report policy, but this involves details I don't have full visibility into.
+      I can see our billing policy, but this involves account-specific details I don't have full visibility into.
       <div class="proof-flag">Low confidence — routing to a person</div>
     </div>
     <div class="proof-handoff">
@@ -300,43 +341,92 @@
 
 <div class="l-strip">
   <div class="l-strip-inner">
+    <div class="stat hi"><div class="num">$0</div><div class="label">minimum contract floor</div></div>
+    <div class="stat hi"><div class="num">🇨🇦</div><div class="label">Canadian-hosted data by default</div></div>
     <div class="stat"><div class="num">1,000–50K</div><div class="label">conversations / mo — our sweet spot</div></div>
-    <div class="stat"><div class="num">$0</div><div class="label">minimum contract floor</div></div>
     <div class="stat"><div class="num">&lt;5 days</div><div class="label">to first live conversation</div></div>
-    <div class="stat"><div class="num">🇨🇦</div><div class="label">Canadian-hosted data by default</div></div>
   </div>
 </div>
 
-<section class="l-section" id="product">
-  <div class="l-section-head">
-    <span class="l-eyebrow">Why teams switch</span>
-    <h2>Built for how mid-market support actually works</h2>
-    <p>Not a scaled-down enterprise tool. A different set of decisions, made for teams who don't have a dedicated AI ops team.</p>
+<section class="l-section why-section" id="product">
+  <h2>Customers don't care if it's AI or a human.<span class="accent">They care about getting an answer.</span></h2>
+  <div class="why-lines">
+    <p class="why-line">Nexo answers when it's confident.</p>
+    <p class="why-line resolve">Nexo escalates when it isn't.</p>
   </div>
-  <div class="grid3">
-    <div class="feat">
-      <div class="fi">📚</div>
-      <h3>Reads what you already have</h3>
-      <p>Help center articles and PDFs, connected on day one — more sources (Notion, Confluence, Slack, past tickets) as they're built out.</p>
+
+  <h3 class="compare-heading">Enterprise software makes enterprise assumptions.</h3>
+
+  <div class="compare-grid">
+    <div class="compare-col">
+      <div class="compare-label">Enterprise platforms assume</div>
+      <ul class="compare-list">
+        <li>Dedicated AI teams</li>
+        <li>Long implementations</li>
+        <li>Expensive contracts</li>
+      </ul>
     </div>
-    <div class="feat">
-      <div class="fi">↳</div>
-      <h3>Escalation is never hidden</h3>
-      <p>A human is one tap away in every conversation. Full transcript and sources hand off with the customer, not just a ticket number.</p>
-    </div>
-    <div class="feat">
-      <div class="fi">🎯</div>
-      <h3>Confidence-gated answers</h3>
-      <p>A confident-sounding answer built on weak context still gets capped and escalated — never a guess dressed up as certainty.</p>
+    <div class="compare-col hi">
+      <div class="compare-label">Growing businesses need</div>
+      <ul class="compare-list">
+        <li>Live in days, not months</li>
+        <li>Simple enough to manage yourself</li>
+        <li>Confidence they won't lose customers</li>
+      </ul>
     </div>
   </div>
+
+  <div class="conf-flow">
+    <div class="cf-step">Customer asks a question</div>
+    <div class="cf-arrow">↓</div>
+    <div class="cf-step">Nexo checks its confidence</div>
+    <div class="cf-arrow">↓</div>
+    <div class="cf-branches">
+      <div class="cf-branch">
+        <div class="cf-conf high">High confidence</div>
+        <div class="cf-outcome">Answered automatically</div>
+      </div>
+      <div class="cf-branch">
+        <div class="cf-conf low">Low confidence</div>
+        <div class="cf-outcome">Escalated automatically</div>
+      </div>
+    </div>
+  </div>
+
+  <p class="why-signature">The smartest AI isn't the one that answers every question.<br>It's the one that knows when not to.</p>
+</section>
+
+<section class="l-section knowledge-section" id="knowledge">
+  <div class="ks-head">
+    <h2>Teach Nexo using the knowledge you already have.</h2>
+    <p>Your AI is only as good as what it knows.</p>
+  </div>
+
+  <div class="ks-label">Available today</div>
+  <div class="ks-row">
+    <span class="ks-chip">✓ Help Center</span>
+    <span class="ks-chip">✓ PDF documentation</span>
+  </div>
+
+  <div class="ks-label muted">Coming next</div>
+  <div class="ks-row">
+    <span class="ks-chip soon">Zendesk</span>
+    <span class="ks-chip soon">Intercom</span>
+    <span class="ks-chip soon">Stripe</span>
+    <span class="ks-chip soon">Notion</span>
+    <span class="ks-chip soon">Slack</span>
+    <span class="ks-chip soon">GitHub</span>
+    <span class="ks-chip soon">Linear</span>
+  </div>
+
+  <div class="ks-trust">🇨🇦 Canadian-hosted by default. Your knowledge stays yours.</div>
 </section>
 
 <section class="l-section" style="padding-top:0;" id="pricing">
   <div class="pricing-wrap">
     <div class="pricing-head">
       <span class="l-eyebrow">Simple pricing</span>
-      <h2>See the number before you talk to anyone</h2>
+      <h2>No demos. No hidden pricing. No enterprise sales calls.</h2>
     </div>
     <div class="pgrid">
       <div class="ptier">

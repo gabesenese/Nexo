@@ -1,0 +1,77 @@
+import { useState } from "react";
+import { WizardShell } from "../WizardShell";
+
+const INDUSTRIES = ["SaaS", "E-commerce", "Property management", "Healthcare", "Financial services", "Other"];
+
+export function CreateWorkspaceStep({
+  onNext,
+  onBack,
+  defaults,
+}: {
+  onNext: (data: { companyName: string; industry: string; website: string; supportEmail: string }) => void;
+  onBack: () => void;
+  defaults: { companyName: string; industry: string; website: string; supportEmail: string };
+}) {
+  const [companyName, setCompanyName] = useState(defaults.companyName);
+  const [industry, setIndustry] = useState(defaults.industry || INDUSTRIES[0]);
+  const [website, setWebsite] = useState(defaults.website);
+  const [supportEmail, setSupportEmail] = useState(defaults.supportEmail);
+  const [error, setError] = useState("");
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!companyName.trim()) return setError("Company name is required.");
+    setError("");
+    onNext({ companyName: companyName.trim(), industry, website: website.trim(), supportEmail: supportEmail.trim() });
+  }
+
+  return (
+    <WizardShell step={2} total={7} title="Create your workspace" subtitle="This is what your team and customers will see.">
+      <form onSubmit={handleSubmit} className="onboard-body">
+        <div className="field">
+          <label htmlFor="ob-company">Company name</label>
+          <input id="ob-company" type="text" value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
+        </div>
+        <div className="field">
+          <label htmlFor="ob-industry">Industry</label>
+          <select id="ob-industry" value={industry} onChange={(e) => setIndustry(e.target.value)}>
+            {INDUSTRIES.map((i) => (
+              <option key={i} value={i}>
+                {i}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="field">
+          <label htmlFor="ob-website">Website</label>
+          <input
+            id="ob-website"
+            type="text"
+            placeholder="https://yourcompany.com"
+            value={website}
+            onChange={(e) => setWebsite(e.target.value)}
+          />
+        </div>
+        <div className="field">
+          <label htmlFor="ob-support-email">Support email</label>
+          <input
+            id="ob-support-email"
+            type="email"
+            placeholder="support@yourcompany.com"
+            value={supportEmail}
+            onChange={(e) => setSupportEmail(e.target.value)}
+          />
+        </div>
+        {error && <p className="error-text">{error}</p>}
+        <div className="onboard-actions">
+          <button type="button" className="onboard-back" onClick={onBack}>
+            ← Back
+          </button>
+          <button type="submit" className="btn btn-primary">
+            Continue
+          </button>
+        </div>
+      </form>
+    </WizardShell>
+  );
+}

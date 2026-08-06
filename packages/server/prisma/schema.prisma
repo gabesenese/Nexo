@@ -91,3 +91,12 @@ model Escalation {
 
   @@index([conversationId])
 }
+
+model Lead {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  company   String
+  source    String   @default("landing")
+  createdAt DateTime @default(now())
+}

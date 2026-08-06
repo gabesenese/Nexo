@@ -16,6 +16,7 @@ packages/
   server/    Fastify + TypeScript API: ingestion, hybrid retrieval, LLM orchestration, handoff
   widget/    Embeddable chat widget (React, built as a single script-tag bundle)
   admin/     Admin dashboard (React): sources, conversations, analytics
+  landing/   Public marketing site (static): product pitch + pricing
 ```
 
 - **DB**: Postgres + pgvector (via Prisma; `Chunk.embedding` is an `Unsupported("vector(1536)")`
@@ -38,16 +39,17 @@ packages/
 npm install
 docker compose up -d                    # Postgres + pgvector
 cp .env.example packages/server/.env    # fill in ANTHROPIC_API_KEY and OPENAI_API_KEY
-npm run db:migrate --workspace=server
-npm run dev                             # server :4000, admin :5173, widget dev demo :5174
+npm run db:migrate --workspace=@nexo/server
+npm run dev                             # server :4000, admin :5173, widget dev demo :5174, landing :5175
 ```
 
 `.env` must live in `packages/server/`, not the repo root: both the Prisma CLI and the server's
 `dotenv/config` loader resolve `.env` relative to the workspace's working directory, which is
 `packages/server` when npm runs a workspace script.
 
-Open http://localhost:5173 for the admin dashboard (add a help-center URL or upload a PDF under
-**Sources**), then http://localhost:5174 to try the chat widget against that content.
+Open http://localhost:5175 for the marketing landing page, http://localhost:5173 for the admin
+dashboard (add a help-center URL or upload a PDF under **Knowledge**), then http://localhost:5174
+to try the chat widget against that content.
 
 To try the widget the way an actual customer would embed it (a single `<script>` tag):
 

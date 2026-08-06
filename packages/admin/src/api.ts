@@ -39,10 +39,17 @@ export interface AnalyticsSummary {
   recentEscalations: Escalation[];
 }
 
+export interface Citation {
+  id: string;
+  sourceName: string;
+  headingPath: string[];
+}
+
 export interface Message {
   id: string;
   role: "user" | "assistant";
   content: string;
+  citations: Citation[];
   confidence: number | null;
   createdAt: string;
 }
@@ -55,6 +62,15 @@ export interface Conversation {
   createdAt: string;
   messages: Message[];
   escalations: Escalation[];
+}
+
+export interface Lead {
+  id: string;
+  name: string;
+  email: string;
+  company: string;
+  source: string;
+  createdAt: string;
 }
 
 export const api = {
@@ -70,4 +86,5 @@ export const api = {
   },
   getAnalytics: () => request<AnalyticsSummary>("/api/analytics"),
   listConversations: () => request<Conversation[]>("/api/conversations"),
+  listLeads: () => request<Lead[]>("/api/leads"),
 };

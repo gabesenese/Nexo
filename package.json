@@ -6,13 +6,13 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "concurrently -n server,admin,widget -c blue,green,magenta \"npm run dev --workspace=server\" \"npm run dev --workspace=admin\" \"npm run dev --workspace=widget\"",
+    "dev": "concurrently -n server,admin,widget,landing -c blue,green,magenta,yellow \"npm run dev --workspace=@nexo/server\" \"npm run dev --workspace=@nexo/admin\" \"npm run dev --workspace=@nexo/widget\" \"npm run dev --workspace=@nexo/landing\"",
     "build": "npm run build --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "db:migrate": "npm run db:migrate --workspace=server",
-    "db:generate": "npm run db:generate --workspace=server",
-    "db:seed": "npm run db:seed --workspace=server"
+    "db:migrate": "npm run db:migrate --workspace=@nexo/server",
+    "db:generate": "npm run db:generate --workspace=@nexo/server",
+    "db:seed": "npm run db:seed --workspace=@nexo/server"
   },
   "devDependencies": {
     "concurrently": "^9.0.1",

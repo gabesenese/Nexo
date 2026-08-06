@@ -99,20 +99,28 @@
   .l-hero-ctas{display:flex;gap:14px;justify-content:center;margin-bottom:20px;flex-wrap:wrap;}
   .l-hero-note{font-size:12px;color:var(--slate-soft);font-family:'IBM Plex Mono',monospace;}
 
-  .exitpath{max-width:760px;margin:64px auto 0;padding:34px 40px;background:var(--white);border:1px solid var(--line);border-radius:14px;text-align:left;}
-  .ep-row{display:flex;align-items:center;gap:14px;padding:12px 0;position:relative;flex-wrap:wrap;}
-  .ep-row:not(:last-child)::after{
-    content:"";position:absolute;left:15px;top:44px;bottom:-12px;width:1px;background:var(--line);
+  .proof-card{
+    max-width:420px;margin:56px auto 0;text-align:left;background:var(--white);
+    border:1px solid var(--line);border-radius:16px;padding:18px;
+    box-shadow:0 24px 60px -24px rgba(24,27,29,0.2);
   }
-  .ep-dot{width:31px;height:31px;border-radius:50%;background:var(--paper-dim);border:1px solid var(--line);
-    display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--slate-soft);}
-  .ep-dot.resolved{background:var(--teal);border-color:var(--teal);color:var(--white);}
-  .ep-text{font-size:14px;color:var(--slate);flex:1;min-width:180px;}
-  .ep-text b{color:var(--ink);}
-  .ep-exit{
-    font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--amber);
-    border:1px dashed var(--amber);padding:4px 10px;border-radius:12px;white-space:nowrap;
+  .proof-head{display:flex;align-items:center;gap:9px;padding:0 4px 14px;border-bottom:1px solid var(--paper-dim);margin-bottom:14px;}
+  .proof-mark{width:20px;height:20px;background:var(--teal);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-size:11px;color:var(--white);flex-shrink:0;}
+  .proof-head span{font-size:12.5px;font-weight:500;color:var(--ink);}
+  .proof-msg{
+    max-width:84%;font-size:13px;line-height:1.5;padding:10px 13px;border-radius:12px;margin-bottom:10px;
+    opacity:0;transform:translateY(6px);animation:proofIn 420ms var(--ease-out) forwards;
   }
+  .proof-msg.user{background:var(--ink);color:var(--paper);margin-left:auto;border-bottom-right-radius:3px;animation-delay:150ms;}
+  .proof-msg.bot{background:#fbf4e8;border:1px solid #ecd8b8;color:var(--slate);border-bottom-left-radius:3px;animation-delay:550ms;}
+  .proof-flag{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--amber);display:flex;align-items:center;gap:5px;margin-top:8px;}
+  .proof-flag::before{content:"●";font-size:7px;}
+  .proof-handoff{
+    background:var(--paper-dim);border-radius:10px;padding:12px 14px;font-size:11.5px;color:var(--slate-soft);line-height:1.6;
+    opacity:0;transform:translateY(6px);animation:proofIn 420ms var(--ease-out) forwards;animation-delay:1000ms;
+  }
+  .proof-handoff .label{font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--teal-dark);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;display:block;}
+  @keyframes proofIn{to{opacity:1;transform:translateY(0);}}
 
   .l-strip{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--paper-dim);}
   .l-strip-inner{max-width:1080px;margin:0 auto;padding:36px 48px;display:grid;grid-template-columns:repeat(4,1fr);gap:24px;}
@@ -273,19 +281,19 @@
   </div>
   <div class="l-hero-note">No sales call required to get started.</div>
 
-  <div class="exitpath">
-    <div class="ep-row">
-      <div class="ep-dot">1</div>
-      <div class="ep-text">Customer asks about a <b>refund on a delayed order</b></div>
+  <div class="proof-card">
+    <div class="proof-head">
+      <div class="proof-mark">N</div>
+      <span>The actual product — not a mockup</span>
     </div>
-    <div class="ep-row">
-      <div class="ep-dot">2</div>
-      <div class="ep-text">Nexo answers from your <b>refund policy + order history</b>, citing the source</div>
-      <div class="ep-exit">exit → human</div>
+    <div class="proof-msg user">My order arrived damaged and it's the wrong color — I need this fixed today.</div>
+    <div class="proof-msg bot">
+      I can see the damage report policy, but this involves details I don't have full visibility into.
+      <div class="proof-flag">Low confidence — routing to a person</div>
     </div>
-    <div class="ep-row">
-      <div class="ep-dot resolved">✓</div>
-      <div class="ep-text">Resolved instantly — or escalated the moment confidence drops</div>
+    <div class="proof-handoff">
+      <span class="label">Handed off to a human</span>
+      A team member has this conversation's full history and will follow up here.
     </div>
   </div>
 </div>

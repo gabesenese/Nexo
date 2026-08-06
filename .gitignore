@@ -5,3 +5,7 @@ build/
 *.log
 .DS_Store
 packages/server/prisma/generated/
+
+
+### MISC
+mockups

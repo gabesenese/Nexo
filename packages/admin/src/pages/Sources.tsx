@@ -48,60 +48,61 @@ export function SourcesPage() {
 
   return (
     <div>
-      <h1>Knowledge sources</h1>
-
-      <div className="card">
-        <h3>Add a help-center article (URL)</h3>
-        <div style={{ display: "flex", gap: 8 }}>
-          <input
-            type="text"
-            style={{ flex: 1 }}
-            placeholder="https://help.example.com/article/refunds"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-          />
-          <button onClick={handleAddUrl} disabled={busy}>
-            {busy ? "Ingesting..." : "Add"}
-          </button>
+      <div className="page-top">
+        <div>
+          <h1>Knowledge</h1>
+          <div className="sub">Sources Nexo answers from</div>
         </div>
       </div>
 
-      <div className="card">
-        <h3>Upload a PDF</h3>
-        <input type="file" accept="application/pdf" onChange={handleUpload} disabled={busy} />
+      <div className="row">
+        <div className="card">
+          <h3>Add a help-center article</h3>
+          <div className="card-sub">Paste a URL — it's fetched, chunked, and embedded.</div>
+          <div style={{ display: "flex", gap: 8 }}>
+            <input
+              type="text"
+              style={{ flex: 1 }}
+              placeholder="https://help.example.com/article/refunds"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+            />
+            <button className="btn btn-primary" onClick={handleAddUrl} disabled={busy}>
+              {busy ? "Ingesting…" : "Add"}
+            </button>
+          </div>
+        </div>
+
+        <div className="card">
+          <h3>Upload a PDF</h3>
+          <div className="card-sub">Return policies, warranty terms, and the like.</div>
+          <input type="file" accept="application/pdf" onChange={handleUpload} disabled={busy} />
+        </div>
       </div>
 
-      {error && <p style={{ color: "#b91c1c" }}>{error}</p>}
+      {error && <p className="error-text">{error}</p>}
 
       <div className="card">
         <h3>Ingested sources</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Type</th>
-              <th>Chunks</th>
-              <th>Last synced</th>
-            </tr>
-          </thead>
-          <tbody>
-            {sources.map((s) => (
-              <tr key={s.id}>
-                <td>{s.name}</td>
-                <td>{s.type}</td>
-                <td>{s.chunkCount}</td>
-                <td>{s.lastSyncedAt ? new Date(s.lastSyncedAt).toLocaleString() : "Not synced"}</td>
-              </tr>
-            ))}
-            {sources.length === 0 && (
-              <tr>
-                <td colSpan={4} style={{ color: "#6b7280" }}>
-                  No sources yet. Add a help-center URL or upload a PDF above.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+        <div className="card-sub">{sources.length} source{sources.length === 1 ? "" : "s"}</div>
+        {sources.map((s) => (
+          <div className="list-item" key={s.id}>
+            <div className="avatar mono">{s.type === "pdf" ? "PDF" : "HC"}</div>
+            <div className="list-info">
+              <div className="li-title">{s.name}</div>
+              <div className="li-sub">
+                {s.chunkCount} chunk{s.chunkCount === 1 ? "" : "s"} ·{" "}
+                {s.lastSyncedAt ? `synced ${new Date(s.lastSyncedAt).toLocaleString()}` : "not synced"}
+              </div>
+            </div>
+            <span className={`badge ${s.lastSyncedAt ? "healthy" : "escalated"}`}>
+              {s.lastSyncedAt ? "healthy" : "pending"}
+            </span>
+          </div>
+        ))}
+        {sources.length === 0 && (
+          <p className="empty-note">No sources yet. Add a help-center URL or upload a PDF above.</p>
+        )}
       </div>
     </div>
   );

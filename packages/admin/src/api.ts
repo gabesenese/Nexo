@@ -39,10 +39,17 @@ export interface AnalyticsSummary {
   recentEscalations: Escalation[];
 }
 
+export interface Citation {
+  id: string;
+  sourceName: string;
+  headingPath: string[];
+}
+
 export interface Message {
   id: string;
   role: "user" | "assistant";
   content: string;
+  citations: Citation[];
   confidence: number | null;
   createdAt: string;
 }

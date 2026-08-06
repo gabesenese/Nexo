@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <title>Nexo — AI support that always has an exit</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Nexo resolves support conversations with your own knowledge and never traps a customer in a loop. Built for teams too small for enterprise AI support, too serious for a basic chatbot.">
+<meta name="description" content="AI support that knows when to answer — and when to bring in a human. Built for growing support teams that have outgrown a shared inbox.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -181,6 +181,52 @@
     .mobile-panel{padding-left:24px;padding-right:24px;}
   }
 
+  .modal-overlay{
+    display:none;position:fixed;inset:0;z-index:100;
+    background:rgba(24,27,29,0.5);
+    align-items:center;justify-content:center;padding:20px;
+    opacity:0;transition:opacity 200ms ease;
+  }
+  .modal-overlay.open{display:flex;opacity:1;}
+  .modal-card{
+    width:100%;max-width:420px;background:var(--white);border-radius:16px;
+    padding:32px;position:relative;
+    transform:scale(0.96) translateY(6px);opacity:0;
+    transition:transform 220ms var(--ease-out), opacity 220ms var(--ease-out);
+  }
+  .modal-overlay.open .modal-card{transform:scale(1) translateY(0);opacity:1;}
+  .modal-close{
+    position:absolute;top:18px;right:18px;width:30px;height:30px;border-radius:50%;
+    border:1px solid var(--line);background:var(--white);cursor:pointer;
+    display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--slate-soft);
+    transition:border-color 150ms ease, color 150ms ease, transform 160ms ease-out;
+  }
+  .modal-close:hover{border-color:var(--ink);color:var(--ink);}
+  .modal-close:active{transform:scale(0.9);}
+  .modal-card h2{font-size:22px;margin-bottom:6px;padding-right:20px;}
+  .modal-card .modal-sub{font-size:13px;color:var(--slate-soft);margin-bottom:24px;line-height:1.5;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:12px;font-family:'IBM Plex Mono',monospace;color:var(--slate-soft);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.04em;}
+  .field input{
+    width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:7px;
+    font-size:14px;font-family:'IBM Plex Sans',sans-serif;outline:none;color:var(--ink);
+    transition:border-color 150ms ease;
+  }
+  .field input:focus{border-color:var(--teal);}
+  .field input[aria-invalid="true"]{border-color:#b3452f;}
+  .modal-error{font-size:12.5px;color:#b3452f;margin:-4px 0 14px;min-height:16px;}
+  .modal-submit{width:100%;text-align:center;margin-top:6px;position:relative;}
+  .modal-submit:disabled{opacity:0.6;cursor:default;}
+  .modal-success{display:none;text-align:center;padding:12px 0 4px;}
+  .modal-success.show{display:block;}
+  .modal-success .ms-icon{
+    width:44px;height:44px;border-radius:50%;background:#e3ede9;color:var(--teal-dark);
+    display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:20px;
+  }
+  .modal-success h2{margin-bottom:8px;}
+  .modal-success p{font-size:13.5px;color:var(--slate-soft);line-height:1.6;margin:0 0 22px;}
+  .modal-form.hide{display:none;}
+
   @media (prefers-reduced-motion: reduce){
     html{scroll-behavior:auto;}
     *{transition-duration:1ms !important;animation-duration:1ms !important;}
@@ -199,7 +245,7 @@
   </div>
   <div class="l-nav-cta">
     <a class="btn btn-ghost" href="http://localhost:5173/">Sign in</a>
-    <button class="btn btn-primary" data-open-widget>Start free</button>
+    <button class="btn btn-primary" data-open-trial>Start free</button>
   </div>
   <button class="hamburger" id="hamburger" aria-expanded="false" aria-controls="mobile-panel" aria-label="Toggle menu">
     <svg class="icon-open" viewBox="0 0 20 20" fill="none" stroke="#181b1d" stroke-width="1.6" stroke-linecap="round"><path d="M3 6h14M3 10h14M3 14h14"/></svg>
@@ -213,19 +259,19 @@
   <a href="http://localhost:5174/" data-close>Widget demo</a>
   <div class="l-nav-cta">
     <a class="btn btn-ghost" href="http://localhost:5173/">Sign in</a>
-    <button class="btn btn-primary" data-open-widget>Start free</button>
+    <button class="btn btn-primary" data-open-trial>Start free</button>
   </div>
 </div>
 
 <div class="l-hero">
-  <span class="l-eyebrow">● Built for the middle of the market</span>
+  <span class="l-eyebrow">● Built for growing support teams</span>
   <h1>Every answer has <span class="accent">an exit.</span></h1>
-  <p>Nexo resolves support conversations with your own knowledge — and never traps a customer in a loop. Transparent pricing, live in days, no 300,000-conversation minimum.</p>
+  <p>AI support that knows when to answer — and when to bring in a human. Built for teams that have outgrown a shared inbox.</p>
   <div class="l-hero-ctas">
-    <button class="btn btn-primary" data-open-widget>Start free trial</button>
+    <button class="btn btn-primary" data-open-trial>Start free trial</button>
     <a class="btn btn-ghost" href="#pricing">See pricing →</a>
   </div>
-  <div class="l-hero-note">No sales call required — try the chat right now.</div>
+  <div class="l-hero-note">No sales call required to get started.</div>
 
   <div class="exitpath">
     <div class="ep-row">
@@ -290,21 +336,21 @@
         <div class="pprice">$149<span>/mo</span></div>
         <div class="pdesc">For teams just starting with AI support</div>
         <ul><li>Up to 1,500 conversations/mo</li><li>2 knowledge sources</li><li>1 helpdesk integration</li></ul>
-        <button class="btn btn-ghost" data-open-widget>Start free</button>
+        <button class="btn btn-ghost" data-open-trial>Start free</button>
       </div>
       <div class="ptier hi">
         <div class="pname">Professional</div>
         <div class="pprice">$499<span>/mo</span></div>
         <div class="pdesc">Most mid-market teams start here</div>
         <ul><li>Up to 8,000 conversations/mo</li><li>Unlimited knowledge sources</li><li>All helpdesk integrations</li></ul>
-        <button class="btn btn-primary" data-open-widget>Start free</button>
+        <button class="btn btn-primary" data-open-trial>Start free</button>
       </div>
       <div class="ptier">
         <div class="pname">Growth</div>
         <div class="pprice">$1,500<span>/mo</span></div>
         <div class="pdesc">For higher-volume support teams</div>
         <ul><li>Up to 50,000 conversations/mo</li><li>Custom flows + analytics API</li><li>Priority onboarding</li></ul>
-        <button class="btn btn-ghost" data-open-widget>Start free</button>
+        <button class="btn btn-ghost" data-open-trial>Start free</button>
       </div>
     </div>
   </div>
@@ -314,6 +360,40 @@
   <span>© 2026 Nexo</span>
   <span class="maple">Designed and hosted in Canada</span>
 </footer>
+
+<div class="modal-overlay" id="trial-modal" role="dialog" aria-modal="true" aria-labelledby="trial-modal-title">
+  <div class="modal-card">
+    <button class="modal-close" id="trial-modal-close" aria-label="Close">×</button>
+
+    <form class="modal-form" id="trial-form" novalidate>
+      <h2 id="trial-modal-title">Start your free trial</h2>
+      <div class="modal-sub">Tell us who you are — no credit card, no sales call.</div>
+
+      <div class="field">
+        <label for="trial-name">Name</label>
+        <input type="text" id="trial-name" name="name" autocomplete="name" required />
+      </div>
+      <div class="field">
+        <label for="trial-email">Work email</label>
+        <input type="email" id="trial-email" name="email" autocomplete="email" required />
+      </div>
+      <div class="field">
+        <label for="trial-company">Company</label>
+        <input type="text" id="trial-company" name="company" autocomplete="organization" required />
+      </div>
+      <div class="modal-error" id="trial-error"></div>
+
+      <button type="submit" class="btn btn-primary modal-submit" id="trial-submit">Start free trial</button>
+    </form>
+
+    <div class="modal-success" id="trial-success">
+      <div class="ms-icon">✓</div>
+      <h2>You're in</h2>
+      <p>Thanks — we've got your request. A team member will follow up at the email you gave us to get you set up.</p>
+      <button type="button" class="btn btn-ghost modal-submit" id="trial-success-close">Close</button>
+    </div>
+  </div>
+</div>
 
 <script>
   var nav = document.getElementById('nav');
@@ -349,11 +429,86 @@
     if (window.innerWidth > 860) setMenu(false);
   });
 
-  document.querySelectorAll('[data-open-widget]').forEach(function (el) {
+  var API_URL = 'http://localhost:4000';
+  var modal = document.getElementById('trial-modal');
+  var modalForm = document.getElementById('trial-form');
+  var modalSuccess = document.getElementById('trial-success');
+  var modalError = document.getElementById('trial-error');
+  var modalSubmit = document.getElementById('trial-submit');
+  var nameInput = document.getElementById('trial-name');
+  var emailInput = document.getElementById('trial-email');
+  var companyInput = document.getElementById('trial-company');
+
+  function openModal() {
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    window.setTimeout(function () { nameInput.focus(); }, 50);
+  }
+
+  function closeModal() {
+    modal.classList.remove('open');
+    document.body.style.overflow = '';
+    window.setTimeout(function () {
+      modalForm.classList.remove('hide');
+      modalSuccess.classList.remove('show');
+      modalForm.reset();
+      modalError.textContent = '';
+      [nameInput, emailInput, companyInput].forEach(function (el) { el.removeAttribute('aria-invalid'); });
+    }, 220);
+  }
+
+  document.querySelectorAll('[data-open-trial]').forEach(function (el) {
     el.addEventListener('click', function () {
       setMenu(false);
-      window.dispatchEvent(new Event('nexo:open'));
+      openModal();
     });
+  });
+
+  document.getElementById('trial-modal-close').addEventListener('click', closeModal);
+  document.getElementById('trial-success-close').addEventListener('click', closeModal);
+  modal.addEventListener('click', function (e) {
+    if (e.target === modal) closeModal();
+  });
+  window.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && modal.classList.contains('open')) closeModal();
+  });
+
+  modalForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    modalError.textContent = '';
+    [nameInput, emailInput, companyInput].forEach(function (el) { el.removeAttribute('aria-invalid'); });
+
+    var name = nameInput.value.trim();
+    var email = emailInput.value.trim();
+    var company = companyInput.value.trim();
+
+    if (!name) { nameInput.setAttribute('aria-invalid', 'true'); modalError.textContent = 'Name is required.'; nameInput.focus(); return; }
+    if (!email || !emailInput.checkValidity()) { emailInput.setAttribute('aria-invalid', 'true'); modalError.textContent = 'A valid work email is required.'; emailInput.focus(); return; }
+    if (!company) { companyInput.setAttribute('aria-invalid', 'true'); modalError.textContent = 'Company is required.'; companyInput.focus(); return; }
+
+    modalSubmit.disabled = true;
+    modalSubmit.textContent = 'Submitting…';
+
+    fetch(API_URL + '/api/leads', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: name, email: email, company: company, source: 'landing' }),
+    })
+      .then(function (res) {
+        return res.json().then(function (data) { return { ok: res.ok, data: data }; });
+      })
+      .then(function (result) {
+        if (!result.ok) throw new Error(result.data.error || 'Something went wrong. Please try again.');
+        modalForm.classList.add('hide');
+        modalSuccess.classList.add('show');
+      })
+      .catch(function (err) {
+        modalError.textContent = err.message || 'Something went wrong. Please try again.';
+      })
+      .finally(function () {
+        modalSubmit.disabled = false;
+        modalSubmit.textContent = 'Start free trial';
+      });
   });
 </script>
 

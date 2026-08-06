@@ -5,6 +5,7 @@ import { env } from "./config/env.js";
 import { sourcesRoutes } from "./routes/sources.js";
 import { chatRoutes } from "./routes/chat.js";
 import { analyticsRoutes } from "./routes/analytics.js";
+import { leadsRoutes } from "./routes/leads.js";
 
 const app = Fastify({
   logger: {
@@ -24,6 +25,7 @@ app.get("/health", async () => ({ status: "ok" }));
 await app.register(sourcesRoutes);
 await app.register(chatRoutes);
 await app.register(analyticsRoutes);
+await app.register(leadsRoutes);
 
 app
   .listen({ port: env.PORT, host: "0.0.0.0" })

@@ -281,6 +281,11 @@ h4 {
   color: #2b3f8a;
 }
 
+.badge.neutral {
+  background: var(--paper-dim);
+  color: var(--slate-soft);
+}
+
 table {
   width: 100%;
   border-collapse: collapse;

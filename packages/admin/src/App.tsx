@@ -2,6 +2,7 @@ import { NavLink, Route, Routes } from "react-router-dom";
 import { SourcesPage } from "./pages/Sources";
 import { ConversationsPage } from "./pages/Conversations";
 import { AnalyticsPage } from "./pages/Analytics";
+import { LeadsPage } from "./pages/Leads";
 
 function LogoMark() {
   return (
@@ -39,6 +40,10 @@ export default function App() {
             <span className="dot" />
             Conversations
           </NavLink>
+          <NavLink to="/leads">
+            <span className="dot" />
+            Leads
+          </NavLink>
         </div>
       </nav>
       <main className="content">
@@ -46,6 +51,7 @@ export default function App() {
           <Route path="/" element={<AnalyticsPage />} />
           <Route path="/sources" element={<SourcesPage />} />
           <Route path="/conversations" element={<ConversationsPage />} />
+          <Route path="/leads" element={<LeadsPage />} />
         </Routes>
       </main>
     </div>

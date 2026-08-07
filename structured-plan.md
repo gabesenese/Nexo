@@ -10,32 +10,44 @@
 
 ---
 
-## 0. Current Status (updated 2026-08-06)
+## 0. The Roadmap at a Glance
 
-**Where we are: Phase 1, Stage A — prove the core end-to-end on real data.**
+We build Nexo in **vertical slices**, one milestone at a time. A milestone is a complete
+customer journey (UI → API → DB → visible result), never an isolated layer. It is done only
+when a brand-new real customer can complete it end-to-end, with nothing mocked.
 
-The MVP core (Build Sequence step 1: ingestion + retrieval + demoable widget) is built.
-The open gap is that it has not yet been proven end-to-end: ingesting a real help
-center and a real PDF into a real database and answering a real question correctly, live.
+Each milestone is named for the customer outcome it unlocks:
 
-**Built and real:**
-- Full pipeline: help-center + PDF connectors, semantic chunking, embeddings, hybrid
-  dense+keyword retrieval, Claude orchestrator, confidence-based escalation state machine,
-  mock handoff adapter
-- Postgres + pgvector schema (Source, Chunk, Conversation, Message, Escalation, Lead, AdminUser)
-- Embeddable widget with citations
-- Admin dashboard (Sources, Conversations, Analytics, Leads, Login)
-- Landing page + real lead capture
-- Single global admin auth
-- Onboarding wizard UI prototype (no backend yet — Phase 3 front-end built early, parked)
+| Milestone | Outcome |
+|---|---|
+| M1 — Marketing | A visitor understands Nexo. |
+| M2 — Customer Identity | A visitor becomes a customer. |
+| M3 — Knowledge Import | A customer teaches Nexo. |
+| M4 — Widget Deployment | Nexo answers real questions. |
+| M5 — Support Operations | The support team uses Nexo daily. |
+| M6 — Billing & Readiness | A customer pays and stays. |
 
-**Not yet proven:** the pipeline running end-to-end against real content in a real DB.
+**We optimize for learning, not for shipping milestones.** Each slice's value is what it lets
+us observe about real users (M2's value is watching a real signup; M3's is learning whether
+users understand how to teach Nexo), not the feature itself. If a piece of work doesn't move
+one of the six outcomes forward, we ask why we're building it.
 
-**Deliberately deferred** (see §3 for which phase each lands in): additional connectors
-(Notion/Confluence/Slack/ticket import), a real helpdesk integration (none chosen —
-design-partner decision), flow builder, confusion-report clustering, re-ranking, auth +
-multi-tenancy (issue #2), onboarding-CTA routing (issue #9), self-serve billing, queue
-infra, SOC 2, Canadian hosting.
+**CTO rule:** Never build an isolated layer. Build complete user journeys.
+
+(Milestone names are how we discuss progress internally; a milestone can still be tagged a
+release like v0.2.0 when it ships.)
+
+### Current status (updated 2026-08-06)
+
+**Active milestone: M2 — Customer Identity.** M1 is done. M3–M5 have real backend pieces
+built ahead of their slice, but none is customer-complete yet, so none counts as done under
+the rule above.
+
+Done as backend, not yet a complete slice:
+- Ingestion → hybrid retrieval → local LLM (Ollama, free/on-machine) → confidence-based
+  escalation, proven end-to-end against real content (belongs to M3/M4).
+- Webhook handoff on escalation, proven with HMAC signature + fail-safe delivery (belongs to M5).
+- Onboarding wizard UI prototype, not wired to a backend (belongs to M2–M4).
 
 ---
 
@@ -64,61 +76,66 @@ The plan: build a focused AI support agent — not a bundle — that wins on tra
 
 ---
 
-## 3. Phased Roadmap
+## 3. Milestone Roadmap
 
-### Phase 0 — Validation (Weeks 1–6)
-**Goal:** Confirm the problem and pricing tolerance before writing production code.
-- Interview 20–30 support/CX leaders at Canadian mid-market companies (target: current Zendesk/Freshdesk/Intercom users, 1K–50K conversations/month)
-- Validate: Is pricing opacity/enterprise-floor actually a blocker for them? Would they switch off an existing tool, or is this net-new spend?
-- Recruit 3–5 design partners willing to pilot a pre-product version
-- Deliverable: a one-page validation summary — go/no-go decision point
+Ordered by customer journey. Each milestone is a vertical slice; sub-slices keep each one
+thin enough to finish and learn from. GitHub Milestones mirror this list; every issue belongs
+to one.
 
-### Phase 1 — MVP Build (Months 2–4) ← CURRENT
-**Goal:** Working product with one design partner live.
+### M1 — Marketing ✅ done
+**Outcome:** A visitor understands Nexo.
+Landing page, positioning, pricing, philosophy, lead capture. Locked unless customer feedback
+says otherwise.
 
-The core is built; the remaining work in this phase is proving it and connecting it to
-one real helpdesk. Broken into stages:
+### M2 — Customer Identity ← ACTIVE
+**Outcome:** A visitor becomes a customer. A real company can create an account and enter its
+own workspace. (We are building a customer, not "multi-tenancy.") Covers issue #2.
+- **M2a — Account Creation.** Signup, login, session, empty workspace.
+  *Done when:* a completely new user can sign up and arrive inside their own workspace.
+- **M2b — Workspace Ownership.** Organization model, workspace, ownership, org settings.
+  *Done when:* everything belongs to an organization.
+- **M2c — Tenant Isolation.** organizationId everywhere, scoped queries, authorization, tests.
+  *Done when:* two organizations cannot see each other's data.
 
-- **Stage A — Prove the core end-to-end (current step).** Run the server against a real
-  DB, ingest an actual help center + a real PDF, drive the widget, and verify retrieval,
-  citations, and confidence-based escalation all behave correctly on real content. Fix
-  what's actually broken. This is the deliverable the whole plan hinges on.
-- **Stage B — One real helpdesk handoff.** Replace the mock adapter with one real
-  integration, chosen based on the design partner's actual stack (partner-driven, may wait).
-- Ingestion already covers help center + PDF; add one of (Notion/Confluence/Slack) only
-  once the first two work well on real data — don't build all connectors before one is proven.
-- No billing system yet — manual invoicing for design partners.
-- Deliverable: 1 design partner live in production, handling real conversations.
+### M3 — Knowledge Import
+**Outcome:** A customer teaches Nexo. *Learning goal:* do users understand how to teach it?
+Upload a PDF, connect a help center, watch it index, see the source list, delete a source.
+Backend (ingestion + embeddings, local via Ollama) is already proven; this milestone builds
+the customer-facing path on top of it.
+*Done when:* a customer can upload documentation and see it become searchable knowledge.
 
-### Phase 2 — Pilot & Iterate (Months 4–7)
-**Goal:** Prove retention and resolution quality across multiple customers.
-- Expand to 3–5 design partners across different verticals (retail, fintech/SaaS, services)
-- Build flow builder for top 5 structured use cases
-- Build analytics dashboard + confusion report
-- Track resolution rate, escalation rate, and — critically — whether design partners would pay full price and renew
-- Deliverable: documented case studies, resolution-rate benchmarks, renewal commitments
+### M4 — Widget Deployment
+**Outcome:** Nexo answers real questions, and the customer goes live.
+Test the AI, widget customization, real install snippet, domain verification, embedded widget
+on their site. Escalation + webhook handoff backend already proven.
+*Done when:* a customer can install the widget and it answers a real question on their site.
+Covers issue #9 (flip the landing CTA to onboarding once this is genuinely self-serve).
 
-### Phase 3 — Public Launch (Months 7–10)
-**Goal:** Self-serve acquisition begins.
-- Auth + multi-tenancy (issue #2): Organization model, tenant-scope every table and route.
-  This is the foundation everything else in this phase sits on.
-- Wire the existing onboarding wizard (built early as a UI prototype) to real signup,
-  workspace creation, ingestion, and widget config.
-- Flip the landing "Start free trial" CTA to `/onboarding` (issue #9) once a new user can
-  self-serve to a first successful answer with no help from us.
-- Self-serve billing, public pricing page.
-- Second and third helpdesk integrations.
-- Canadian hosting/data residency formalized.
-- Basic SOC 2 Type I process started.
-- Deliverable: public launch, first cohort of self-serve customers outside design partners.
+### M5 — Support Operations
+**Outcome:** The support team uses Nexo daily.
+Conversations view, escalations, analytics, source management. The dashboard emerges here
+naturally, because now there is real data to manage, not because "we need a dashboard."
+*Done when:* a support manager can run their day inside Nexo.
 
-### Phase 4 — Scale (Months 10–24)
-**Goal:** Repeatable growth engine, US expansion.
-- Expand helpdesk integrations to cover 90%+ of target market
-- Add voice channel (v2) — build vs. buy decision (Vapi/Bland/Retell vs. in-house)
-- Begin US mid-market go-to-market
-- SOC 2 Type II if enterprise pull justifies it
-- Deliverable: repeatable CAC/LTV model, first US customers, Series A readiness (if VC path) or profitability path (if bootstrapped)
+### M6 — Billing & Readiness
+**Outcome:** A customer pays and stays.
+Self-serve billing, public pricing conversion, plan limits, Canadian data-residency
+formalization, SOC 2 process.
+*Done when:* a customer can subscribe and keep using Nexo without our help.
+
+---
+
+### Business track (runs in parallel, not a second roadmap)
+
+These are ongoing business activities that inform the milestones above; they are not build
+work and do not block a milestone from shipping:
+- **Validation & design partners:** interview mid-market CX leaders, recruit 3–5 design
+  partners, learn whether pricing opacity is a real blocker. Feeds M2–M5 priorities.
+- **A real helpdesk handoff:** the current handoff is a generic webhook (works for anyone).
+  A specific Zendesk/Freshdesk/etc. adapter drops into the same interface once a design
+  partner's stack makes the choice real.
+- **Beyond v1.0:** voice channel (build vs. buy: Vapi/Bland/Retell), US expansion, SOC 2
+  Type II if enterprise pull justifies it.
 
 ---
 
@@ -139,24 +156,29 @@ one real helpdesk. Broken into stages:
 
 ## 5. Team & Hiring Plan
 
+Timed to the business track, not the build milestones. Keep the team lean until retention with
+design partners is proven; the goal is learning, not headcount.
+
 | Stage | Roles needed |
 |---|---|
-| Phase 0–1 | Founder(s) + 1 full-stack engineer (you may already cover this) |
-| Phase 2 | + 1 engineer (retrieval/ML-leaning), + 1 design-partner success/support hire (part-time ok) |
-| Phase 3 | + 1 growth/marketing hire, + 1 more engineer |
-| Phase 4 | + sales hire(s) for US expansion, + customer success team |
-
-Keep the team lean through Phase 2 — the goal is proving retention with design partners, not headcount.
+| Early (through M2–M3) | Founder(s) + 1 full-stack engineer (you may already cover this) |
+| Pilot (design partners) | + 1 engineer (retrieval/ML-leaning), + 1 design-partner success/support hire (part-time ok) |
+| Launch (M6 + self-serve) | + 1 growth/marketing hire, + 1 more engineer |
+| Scale (US expansion) | + sales hire(s), + customer success team |
 
 ---
 
-## 6. Success Metrics (by phase)
+## 6. Success Metrics
 
-- **Phase 0:** 20+ interviews completed, 3+ design partners signed
-- **Phase 1:** 1 design partner live, resolution rate baseline established
-- **Phase 2:** 3–5 design partners, 60%+ resolution rate, verbal renewal commitments
-- **Phase 3:** 10+ paying self-serve customers, published pricing converting at a sane rate
-- **Phase 4:** $1M+ ARR, positive unit economics (CAC payback under 12 months), first US logos
+**Primary: the six milestone outcomes** (§0). A milestone is a success when a real customer can
+complete it end-to-end, and we learn something from watching them do it.
+
+**Business KPIs (the business track):**
+- Validation: 20+ CX-leader interviews, 3+ design partners signed
+- First customer live: resolution-rate baseline established
+- Pilot: 3–5 design partners, 60%+ resolution rate, verbal renewal commitments
+- Launch: 10+ paying self-serve customers, public pricing converting at a sane rate
+- Scale: $1M+ ARR, positive unit economics (CAC payback under 12 months), first US logos
 
 ---
 
@@ -166,7 +188,7 @@ Keep the team lean through Phase 2 — the goal is proving retention with design
 |---|---|
 | Crowded competitive field (Voiceflow, SiteGPT, eesel, My AskAI, Intercom Fin already attacking Ada) | Win on Canadian-specific wedge + genuinely better escalation/ingestion, not just price |
 | Resolution quality doesn't beat incumbents | Treat confidence-based escalation as non-negotiable; don't ship an agent that loops |
-| Canada-only market is too small | Plan US expansion from Phase 4, don't treat Canada as the whole plan |
+| Canada-only market is too small | Plan US expansion for the scale stage, don't treat Canada as the whole plan |
 | Long sales cycles even at mid-market | Self-serve motion + design partner referrals to shorten cycle |
 | Knowledge base quality varies wildly by customer | Build onboarding tooling that audits/flags weak knowledge sources early |
 
@@ -220,10 +242,17 @@ any missing requirements before generating code.
 
 ---
 
-## 9. Immediate Next Actions (this week)
+## 9. Immediate Next Actions
 
-1. ~~Pick a working name~~ — using **Nexo** as working name. Run a proper trademark search (CIPO for Canada, USPTO for US) before committing long-term — "Nexo" is already used by a major crypto platform (Nexo.io), which could cause confusion or trademark friction. Register domain (.com + .ca) once cleared, or hold with a placeholder.
-2. Draft the 20-question interview script for Phase 0 validation calls
-3. List 30 target companies for outreach (mid-market Canadian companies on Zendesk/Freshdesk/Intercom)
-4. Set up the repo using the builder prompt above once you're ready to code
-5. Decide bootstrapped vs. fundraising path — this affects hiring pace and runway planning
+**Build (active milestone M2 — Customer Identity):**
+1. M2a — Account Creation as a complete vertical slice: signup → login → session → land in
+   your own empty workspace. Real DB, nothing mocked. Done when a brand-new user can do this
+   unaided.
+
+**Business track (in parallel, not blocking the build):**
+2. ~~Pick a working name~~ — using **Nexo**. Run a proper trademark search (CIPO for Canada,
+   USPTO for US) before committing long-term — "Nexo" is already used by a major crypto
+   platform (Nexo.io). Register domain (.com + .ca) once cleared, or hold with a placeholder.
+3. Draft the 20-question interview script and list 30 target mid-market Canadian companies
+   (Zendesk/Freshdesk/Intercom users) for validation calls.
+4. Decide bootstrapped vs. fundraising path — affects hiring pace and runway.

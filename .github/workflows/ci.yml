@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  build-test:
+    name: Typecheck & test
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://nexo:nexo@localhost:5432/nexo
+      JWT_SECRET: ci_jwt_secret_ci_jwt_secret_ci_jwt_secret
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npm run db:generate
+
+      - name: Typecheck (all workspaces)
+        run: npm run typecheck
+
+      - name: Test (all workspaces)
+        run: npm run test

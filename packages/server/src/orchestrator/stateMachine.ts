@@ -3,6 +3,7 @@ import { prisma } from "../db/client.js";
 import { env } from "../config/env.js";
 import { hybridSearch } from "../retrieval/search.js";
 import { anthropicChatProvider } from "../llm/anthropic.js";
+import { ollamaChatProvider } from "../llm/ollama.js";
 import type { ChatProvider, ChatTurn } from "../llm/provider.js";
 import { mockHandoffAdapter } from "../handoff/mockAdapter.js";
 import type { HandoffAdapter } from "../handoff/adapter.js";
@@ -16,7 +17,7 @@ export interface ChatTurnResult {
   escalated: boolean;
 }
 
-const chatProvider: ChatProvider = anthropicChatProvider;
+const chatProvider: ChatProvider = env.AI_PROVIDER === "cloud" ? anthropicChatProvider : ollamaChatProvider;
 const handoffAdapter: HandoffAdapter = mockHandoffAdapter;
 
 async function getOrCreateConversation(sessionId: string, channel: string) {

@@ -2,7 +2,14 @@ import Anthropic from "@anthropic-ai/sdk";
 import { env } from "../config/env.js";
 import type { ChatProvider, ChatResponse, GenerateParams } from "./provider.js";
 
-const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
+let client: Anthropic | null = null;
+function getClient(): Anthropic {
+  if (!env.ANTHROPIC_API_KEY) {
+    throw new Error("ANTHROPIC_API_KEY is not set (required for the Anthropic chat provider)");
+  }
+  client ??= new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
+  return client;
+}
 
 const RESPOND_TOOL: Anthropic.Tool = {
   name: "respond",
@@ -49,7 +56,7 @@ export const anthropicChatProvider: ChatProvider = {
       },
     ];
 
-    const res = await client.messages.create({
+    const res = await getClient().messages.create({
       model: env.ANTHROPIC_MODEL,
       max_tokens: 1024,
       system: SYSTEM_PROMPT,

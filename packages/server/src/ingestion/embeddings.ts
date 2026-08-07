@@ -5,31 +5,60 @@ export interface EmbeddingProvider {
   embed(texts: string[]): Promise<number[][]>;
 }
 
-const client = new OpenAI({ apiKey: env.OPENAI_API_KEY });
+function orderAndValidate(data: { index: number; embedding: number[] }[]): number[][] {
+  return data
+    .sort((a, b) => a.index - b.index)
+    .map((item) => {
+      if (item.embedding.length !== EMBEDDING_DIMENSIONS) {
+        throw new Error(
+          `Embedding model returned ${item.embedding.length} dims, expected ${EMBEDDING_DIMENSIONS}`,
+        );
+      }
+      return item.embedding;
+    });
+}
+
+let openAiClient: OpenAI | null = null;
+function getOpenAiClient(): OpenAI {
+  if (!env.OPENAI_API_KEY) {
+    throw new Error("OPENAI_API_KEY is not set (required for the OpenAI embedding provider)");
+  }
+  openAiClient ??= new OpenAI({ apiKey: env.OPENAI_API_KEY });
+  return openAiClient;
+}
 
 /**
- * Default embedding provider. Kept behind the EmbeddingProvider interface
- * so a different vendor (or a Canadian/regional-hosted alternative, for
- * the data-residency wedge) can be swapped in without touching callers.
+ * Cloud embedding provider. Kept behind the EmbeddingProvider interface so a
+ * different vendor can be swapped in without touching callers.
  */
 export const openAiEmbeddingProvider: EmbeddingProvider = {
   async embed(texts: string[]): Promise<number[][]> {
     if (texts.length === 0) return [];
-    const res = await client.embeddings.create({
+    const res = await getOpenAiClient().embeddings.create({
       model: env.OPENAI_EMBEDDING_MODEL,
       input: texts,
     });
-    return res.data
-      .sort((a, b) => a.index - b.index)
-      .map((item) => {
-        if (item.embedding.length !== EMBEDDING_DIMENSIONS) {
-          throw new Error(
-            `Embedding model returned ${item.embedding.length} dims, expected ${EMBEDDING_DIMENSIONS}`,
-          );
-        }
-        return item.embedding;
-      });
+    return orderAndValidate(res.data);
   },
 };
 
-export const embeddingProvider = openAiEmbeddingProvider;
+/**
+ * Local embedding provider via Ollama's OpenAI-compatible API. No API key or
+ * external network call, which doubles as the data-residency wedge from the
+ * brief. Default model is nomic-embed-text (768 dims).
+ */
+const ollamaClient = new OpenAI({ baseURL: env.OLLAMA_BASE_URL, apiKey: "ollama" });
+
+export const ollamaEmbeddingProvider: EmbeddingProvider = {
+  async embed(texts: string[]): Promise<number[][]> {
+    if (texts.length === 0) return [];
+    const res = await ollamaClient.embeddings.create({
+      model: env.OLLAMA_EMBEDDING_MODEL,
+      input: texts,
+    });
+    return orderAndValidate(res.data);
+  },
+};
+
+export const embeddingProvider: EmbeddingProvider =
+  env.AI_PROVIDER === "cloud" ? openAiEmbeddingProvider : ollamaEmbeddingProvider;

@@ -112,6 +112,13 @@ Differentiators to lead with:
 
 ## 5. Build Sequence
 
+The phased roadmap, current status, and what to build next now live in `structured-plan.md`
+(§0 Current Status, §3 Phased Roadmap) as the single source of truth. This brief covers the
+durable why/what; the plan covers the when. Step 1 below (get something demoable) is done —
+see the plan for where we are now.
+
+The original coarse sequence, kept for reference:
+
 1. Ingestion (help center + PDFs first) + retrieval + basic embeddable chat widget — get something demoable
 2. Escalation flow + one helpdesk integration (pick the most common one among early design partners)
 3. Flow builder for top 5 use cases

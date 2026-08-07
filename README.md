@@ -4,10 +4,14 @@ AI customer-support agent for Canadian/North American SMB and low-mid-market com
 alternative for teams too small for Ada's enterprise floor and too serious for a basic chatbot.
 See `project-brief.md` and `structured-plan.md` for the full product/business plan.
 
-This repo is the MVP slice from the plan's Build Sequence step 1: **ingestion (help center + PDF) +
-retrieval + a demoable embeddable chat widget**, plus the confidence-based escalation orchestrator
-and a mock/generic human-handoff adapter. No real helpdesk is chosen yet; that's a design-partner
-decision per Phase 0 of the plan.
+> **CTO rule: never build an isolated layer. Build complete user journeys.**
+> We ship Nexo in vertical slices, one milestone at a time. A milestone is done only when a
+> brand-new real customer can complete the whole journey end-to-end (UI → API → DB → result),
+> nothing mocked. `structured-plan.md` is the single roadmap; GitHub Milestones mirror it.
+
+**Status: M2 — Customer Identity (active).** M1 (Marketing) is done. The ingestion → retrieval →
+local-LLM answer → escalation → webhook-handoff core is proven as backend, but its customer-facing
+slices (M3–M5) are not complete yet. See `structured-plan.md` §0 for the full status map.
 
 ## Architecture
 
@@ -70,8 +74,8 @@ Covers the pure logic worth locking down early: chunking token bounds/overlap
 
 ## Explicitly out of scope in this pass
 
-These are called out in the plan as Phase 2+ or open decisions pending design-partner input, not
-forgotten, deliberately deferred:
+These land in later milestones (see `structured-plan.md` §3) or are open decisions pending
+design-partner input, not forgotten, deliberately deferred:
 
 - Additional connectors: Notion, Confluence, Slack, historical ticket import
 - Real helpdesk integrations (Zendesk/Freshdesk/Intercom/Gorgias/HubSpot); `HandoffAdapter` is

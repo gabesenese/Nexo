@@ -5,6 +5,7 @@ import { ConversationsPage } from "./pages/Conversations";
 import { AnalyticsPage } from "./pages/Analytics";
 import { LeadsPage } from "./pages/Leads";
 import { LoginPage } from "./pages/Login";
+import { OnboardingWizard } from "./onboarding/OnboardingWizard";
 import { api } from "./api";
 
 function LogoMark() {
@@ -22,7 +23,7 @@ function LogoMark() {
   );
 }
 
-export default function App() {
+function Dashboard() {
   const [authState, setAuthState] = useState<"loading" | "anon" | "authed">("loading");
   const [email, setEmail] = useState<string | null>(null);
 
@@ -102,5 +103,14 @@ export default function App() {
         </Routes>
       </main>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/onboarding/*" element={<OnboardingWizard />} />
+      <Route path="/*" element={<Dashboard />} />
+    </Routes>
   );
 }

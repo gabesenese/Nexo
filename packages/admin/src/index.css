@@ -345,7 +345,8 @@ tbody tr[data-clickable]:hover {
 input[type="text"],
 input[type="email"],
 input[type="password"],
-input[type="file"] {
+input[type="file"],
+select {
   padding: 9px 12px;
   border: 1px solid var(--line);
   border-radius: 7px;
@@ -359,7 +360,8 @@ input[type="file"] {
 
 input[type="text"]:focus,
 input[type="email"]:focus,
-input[type="password"]:focus {
+input[type="password"]:focus,
+select:focus {
   border-color: var(--teal);
 }
 
@@ -605,6 +607,341 @@ input[type="password"]:focus {
   border-radius: 8px;
   padding: 8px 12px;
   margin-bottom: 10px;
+}
+
+/* ---- onboarding wizard ---- */
+.onboard-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--paper-dim);
+  padding: 32px 20px;
+}
+
+.onboard-card {
+  width: 100%;
+  max-width: 480px;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 36px 36px 32px;
+}
+
+.onboard-card.wide {
+  max-width: 640px;
+}
+
+.onboard-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: "Fraunces", serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 22px;
+}
+
+.onboard-progress {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 18px;
+}
+
+.onboard-dot {
+  height: 4px;
+  flex: 1;
+  border-radius: 2px;
+  background: var(--paper-dim);
+  transition: background 200ms ease;
+}
+
+.onboard-dot.done,
+.onboard-dot.active {
+  background: var(--teal);
+}
+
+.onboard-step-label {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 11px;
+  color: var(--slate-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+}
+
+.onboard-card h1 {
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+
+.onboard-sub {
+  font-size: 13.5px;
+  color: var(--slate-soft);
+  line-height: 1.55;
+  margin: 0 0 26px;
+}
+
+.onboard-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.onboard-card .field {
+  margin-bottom: 0;
+}
+
+.onboard-card .field label {
+  display: block;
+  font-size: 11.5px;
+  font-family: "IBM Plex Mono", monospace;
+  color: var(--slate-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+
+.onboard-card .field input,
+.onboard-card .field select {
+  width: 100%;
+}
+
+.onboard-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 28px;
+}
+
+.onboard-actions .btn-primary {
+  margin-left: auto;
+}
+
+.onboard-back {
+  background: transparent;
+  border: none;
+  color: var(--slate-soft);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 8px 4px;
+  transition: color 150ms ease;
+}
+
+.onboard-back:hover {
+  color: var(--ink);
+}
+
+.onboard-option-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.onboard-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--white);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 150ms ease, background 150ms ease;
+}
+
+.onboard-option:hover {
+  border-color: var(--ink);
+}
+
+.onboard-option.selected {
+  border-color: var(--teal);
+  background: #f0f5f3;
+}
+
+.onboard-option .oo-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--paper-dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 14px;
+}
+
+.onboard-option .oo-title {
+  font-size: 13.5px;
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.onboard-option .oo-sub {
+  font-size: 11.5px;
+  color: var(--slate-soft);
+  margin-top: 2px;
+}
+
+.onboard-progressbar {
+  height: 8px;
+  background: var(--paper-dim);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.onboard-progressbar-fill {
+  height: 100%;
+  background: var(--teal);
+  border-radius: 4px;
+  transition: width 200ms linear;
+}
+
+.onboard-indexing-status {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12px;
+  color: var(--slate-soft);
+  display: flex;
+  justify-content: space-between;
+}
+
+.onboard-chat {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 200px;
+}
+
+.onboard-swatches {
+  display: flex;
+  gap: 10px;
+}
+
+.onboard-swatch {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 150ms ease, transform 150ms ease;
+}
+
+.onboard-swatch.selected {
+  border-color: var(--ink);
+  transform: scale(1.1);
+}
+
+.onboard-widget-preview {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--white);
+}
+
+.onboard-widget-preview .owp-head {
+  padding: 12px 14px;
+  color: var(--white);
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.onboard-widget-preview .owp-mark {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Fraunces", serif;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.onboard-widget-preview .owp-body {
+  padding: 14px;
+  font-size: 12.5px;
+  color: var(--slate-soft);
+}
+
+.onboard-code {
+  background: var(--ink);
+  border-radius: 10px;
+  padding: 14px 76px 14px 16px;
+  position: relative;
+}
+
+.onboard-code-text {
+  color: #d7d2c4;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.onboard-copy {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #2f353a;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--paper);
+  font-size: 11px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: "IBM Plex Sans", sans-serif;
+  transition: background 150ms ease;
+}
+
+.onboard-copy:hover {
+  background: #3a4147;
+}
+
+.onboard-verify {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--slate-soft);
+}
+
+.onboard-verify .ov-spinner {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--paper-dim);
+  border-top-color: var(--teal);
+  animation: onboardSpin 0.8s linear infinite;
+}
+
+@keyframes onboardSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.onboard-done-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #e3ede9;
+  color: var(--teal-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  margin: 0 auto 18px;
 }
 
 @media (max-width: 860px) {

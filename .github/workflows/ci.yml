@@ -10,9 +10,27 @@ jobs:
   build-test:
     name: Typecheck & test
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: nexo
+          POSTGRES_PASSWORD: nexo
+          POSTGRES_DB: nexo_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U nexo"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
     env:
-      DATABASE_URL: postgresql://nexo:nexo@localhost:5432/nexo
+      DATABASE_URL: postgresql://nexo:nexo@localhost:5432/nexo_test?schema=public
       JWT_SECRET: ci_jwt_secret_ci_jwt_secret_ci_jwt_secret
+      INTEGRATION: "1"
+
     steps:
       - uses: actions/checkout@v4
 
@@ -27,8 +45,12 @@ jobs:
       - name: Generate Prisma client
         run: npm run db:generate
 
+      - name: Migrate test database
+        run: npx prisma migrate deploy
+        working-directory: packages/server
+
       - name: Typecheck (all workspaces)
         run: npm run typecheck
 
-      - name: Test (all workspaces)
+      - name: Test (all workspaces, incl. cross-tenant isolation)
         run: npm run test

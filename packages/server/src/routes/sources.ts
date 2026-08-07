@@ -4,8 +4,9 @@ import { ingestHelpCenterUrl, ingestPdf } from "../ingestion/pipeline.js";
 import { requireAuth } from "./auth.js";
 
 export async function sourcesRoutes(app: FastifyInstance) {
-  app.get("/api/sources", { preHandler: requireAuth }, async () => {
+  app.get("/api/sources", { preHandler: requireAuth }, async (req) => {
     const sources = await prisma.source.findMany({
+      where: { organizationId: req.auth!.organizationId },
       orderBy: { createdAt: "desc" },
       include: { _count: { select: { chunks: true } } },
     });
@@ -25,7 +26,7 @@ export async function sourcesRoutes(app: FastifyInstance) {
       return reply.status(400).send({ error: "url is required" });
     }
     try {
-      const result = await ingestHelpCenterUrl(url);
+      const result = await ingestHelpCenterUrl(url, req.auth!.organizationId);
       return result;
     } catch (err) {
       req.log.error(err);
@@ -40,7 +41,7 @@ export async function sourcesRoutes(app: FastifyInstance) {
     }
     const buffer = await file.toBuffer();
     try {
-      const result = await ingestPdf({ filename: file.filename, buffer });
+      const result = await ingestPdf({ filename: file.filename, buffer }, req.auth!.organizationId);
       return result;
     } catch (err) {
       req.log.error(err);

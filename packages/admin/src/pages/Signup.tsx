@@ -11,7 +11,9 @@ function LogoMark() {
   );
 }
 
-export function LoginPage({ onAuthed }: { onAuthed: (user: AuthUser) => void }) {
+export function SignupPage({ onAuthed }: { onAuthed: (user: AuthUser) => void }) {
+  const [name, setName] = useState("");
+  const [companyName, setCompanyName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -22,7 +24,12 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: AuthUser) => void }) 
     setError(null);
     setBusy(true);
     try {
-      const user = await api.login(email.trim(), password);
+      const user = await api.signup({
+        name: name.trim(),
+        companyName: companyName.trim(),
+        email: email.trim(),
+        password,
+      });
       onAuthed(user);
     } catch (err) {
       setError((err as Error).message);
@@ -38,40 +45,49 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: AuthUser) => void }) 
           <LogoMark />
           Nexo
         </div>
-        <h1>Sign in</h1>
-        <div className="sub">Sign in to your Nexo workspace.</div>
+        <h1>Create your account</h1>
+        <div className="sub">Start your own Nexo workspace. No credit card required.</div>
 
         <form onSubmit={handleSubmit}>
           <div className="field">
-            <label htmlFor="login-email">Email</label>
+            <label htmlFor="signup-name">Your name</label>
+            <input id="signup-name" type="text" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} required />
+          </div>
+          <div className="field">
+            <label htmlFor="signup-company">Company name</label>
             <input
-              id="login-email"
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              id="signup-company"
+              type="text"
+              autoComplete="organization"
+              value={companyName}
+              onChange={(e) => setCompanyName(e.target.value)}
               required
             />
           </div>
           <div className="field">
-            <label htmlFor="login-password">Password</label>
+            <label htmlFor="signup-email">Work email</label>
+            <input id="signup-email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          </div>
+          <div className="field">
+            <label htmlFor="signup-password">Password</label>
             <input
-              id="login-password"
+              id="signup-password"
               type="password"
-              autoComplete="current-password"
+              autoComplete="new-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              minLength={8}
               required
             />
           </div>
           {error && <p className="error-text">{error}</p>}
           <button type="submit" className="btn btn-primary" disabled={busy}>
-            {busy ? "Signing in…" : "Sign in"}
+            {busy ? "Creating your workspace…" : "Create account"}
           </button>
         </form>
 
         <p className="auth-alt">
-          New to Nexo? <Link to="/signup">Create an account</Link>
+          Already have an account? <Link to="/login">Sign in</Link>
         </p>
       </div>
     </div>

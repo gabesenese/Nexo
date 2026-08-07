@@ -25,7 +25,10 @@ export async function leadsRoutes(app: FastifyInstance) {
     return reply.status(201).send({ id: lead.id, createdAt: lead.createdAt });
   });
 
-  app.get("/api/leads", { preHandler: requireAuth }, async () => {
-    return prisma.lead.findMany({ orderBy: { createdAt: "desc" } });
+  app.get("/api/leads", { preHandler: requireAuth }, async (req) => {
+    return prisma.lead.findMany({
+      where: { organizationId: req.auth!.organizationId },
+      orderBy: { createdAt: "desc" },
+    });
   });
 }

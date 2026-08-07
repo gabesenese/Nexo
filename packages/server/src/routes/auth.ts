@@ -12,7 +12,7 @@ declare module "fastify" {
   }
 }
 
-interface SessionClaims {
+export interface SessionClaims {
   sub: string;
   email: string;
   orgId: string;
@@ -48,7 +48,7 @@ async function uniqueSlug(base: string): Promise<string> {
   return `${root}-${Date.now().toString(36)}`;
 }
 
-function setSession(app: FastifyInstance, reply: FastifyReply, claims: SessionClaims) {
+export function setSession(app: FastifyInstance, reply: FastifyReply, claims: SessionClaims) {
   const token = app.jwt.sign(claims, { expiresIn: "7d" });
   reply.setCookie(COOKIE_NAME, token, {
     httpOnly: true,

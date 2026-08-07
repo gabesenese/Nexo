@@ -9,6 +9,7 @@ import { chatRoutes } from "./routes/chat.js";
 import { analyticsRoutes } from "./routes/analytics.js";
 import { leadsRoutes } from "./routes/leads.js";
 import { authRoutes } from "./routes/auth.js";
+import { orgRoutes } from "./routes/org.js";
 
 const app = Fastify({
   logger: {
@@ -29,6 +30,7 @@ await app.register(cookie);
 app.get("/health", async () => ({ status: "ok" }));
 
 await app.register(authRoutes);
+await app.register(orgRoutes);
 await app.register(sourcesRoutes);
 await app.register(chatRoutes);
 await app.register(analyticsRoutes);

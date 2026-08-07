@@ -30,14 +30,57 @@ enum EscalationStatus {
   handed_off
 }
 
-model Source {
-  id           String     @id @default(cuid())
-  type         SourceType
+enum Role {
+  owner
+  admin
+  member
+}
+
+model Organization {
+  id            String         @id @default(cuid())
+  name          String
+  slug          String         @unique
+  createdAt     DateTime       @default(now())
+  memberships   Membership[]
+  sources       Source[]
+  conversations Conversation[]
+  leads         Lead[]
+}
+
+model User {
+  id           String       @id @default(cuid())
+  email        String       @unique
+  passwordHash String
   name         String
-  origin       String
-  lastSyncedAt DateTime?
-  createdAt    DateTime   @default(now())
-  chunks       Chunk[]
+  createdAt    DateTime     @default(now())
+  memberships  Membership[]
+}
+
+model Membership {
+  id             String       @id @default(cuid())
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  role           Role         @default(owner)
+  createdAt      DateTime     @default(now())
+
+  @@unique([userId, organizationId])
+  @@index([organizationId])
+}
+
+model Source {
+  id             String        @id @default(cuid())
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  type           SourceType
+  name           String
+  origin         String
+  lastSyncedAt   DateTime?
+  createdAt      DateTime      @default(now())
+  chunks         Chunk[]
+
+  @@index([organizationId])
 }
 
 model Chunk {
@@ -54,16 +97,19 @@ model Chunk {
 }
 
 model Conversation {
-  id          String             @id @default(cuid())
-  sessionId   String
-  channel     String             @default("widget")
-  status      ConversationStatus @default(active)
-  createdAt   DateTime           @default(now())
-  updatedAt   DateTime           @updatedAt
-  messages    Message[]
-  escalations Escalation[]
+  id             String             @id @default(cuid())
+  organizationId String?
+  organization   Organization?      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  sessionId      String
+  channel        String             @default("widget")
+  status         ConversationStatus @default(active)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  messages       Message[]
+  escalations    Escalation[]
 
   @@index([sessionId])
+  @@index([organizationId])
 }
 
 model Message {
@@ -93,17 +139,14 @@ model Escalation {
 }
 
 model Lead {
-  id        String   @id @default(cuid())
-  name      String
-  email     String
-  company   String
-  source    String   @default("landing")
-  createdAt DateTime @default(now())
-}
+  id             String        @id @default(cuid())
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String
+  email          String
+  company        String
+  source         String        @default("landing")
+  createdAt      DateTime      @default(now())
 
-model AdminUser {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  passwordHash String
-  createdAt    DateTime @default(now())
+  @@index([organizationId])
 }

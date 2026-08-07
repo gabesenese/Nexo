@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
-import { NavLink, Route, Routes } from "react-router-dom";
+import { NavLink, Navigate, Route, Routes, useNavigate } from "react-router-dom";
 import { SourcesPage } from "./pages/Sources";
 import { ConversationsPage } from "./pages/Conversations";
 import { AnalyticsPage } from "./pages/Analytics";
 import { LeadsPage } from "./pages/Leads";
 import { LoginPage } from "./pages/Login";
+import { SignupPage } from "./pages/Signup";
 import { OnboardingWizard } from "./onboarding/OnboardingWizard";
-import { api } from "./api";
+import { api, type AuthUser } from "./api";
 
 function LogoMark() {
   return (
@@ -23,14 +24,21 @@ function LogoMark() {
   );
 }
 
+function AuthScreen({ mode }: { mode: "login" | "signup" }) {
+  const navigate = useNavigate();
+  const onAuthed = () => navigate("/", { replace: true });
+  return mode === "signup" ? <SignupPage onAuthed={onAuthed} /> : <LoginPage onAuthed={onAuthed} />;
+}
+
 function Dashboard() {
   const [authState, setAuthState] = useState<"loading" | "anon" | "authed">("loading");
-  const [email, setEmail] = useState<string | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     api.me().then((result) => {
       if (result) {
-        setEmail(result.email);
+        setUser(result);
         setAuthState("authed");
       } else {
         setAuthState("anon");
@@ -40,8 +48,8 @@ function Dashboard() {
 
   async function handleLogout() {
     await api.logout().catch(() => {});
-    setEmail(null);
-    setAuthState("anon");
+    setUser(null);
+    navigate("/login", { replace: true });
   }
 
   if (authState === "loading") {
@@ -53,14 +61,7 @@ function Dashboard() {
   }
 
   if (authState === "anon") {
-    return (
-      <LoginPage
-        onLoggedIn={(loggedInEmail) => {
-          setEmail(loggedInEmail);
-          setAuthState("authed");
-        }}
-      />
-    );
+    return <Navigate to="/login" replace />;
   }
 
   return (
@@ -70,6 +71,7 @@ function Dashboard() {
           <LogoMark />
           Nexo
         </div>
+        <div className="workspace-name">{user?.organization.name}</div>
         <div className="nav-links">
           <NavLink to="/" end>
             <span className="dot" />
@@ -89,7 +91,7 @@ function Dashboard() {
           </NavLink>
         </div>
         <div className="sidebar-spacer" />
-        <div className="sidebar-email">{email}</div>
+        <div className="sidebar-email">{user?.email}</div>
         <button className="sidebar-logout" onClick={handleLogout}>
           Log out
         </button>
@@ -110,6 +112,8 @@ export default function App() {
   return (
     <Routes>
       <Route path="/onboarding/*" element={<OnboardingWizard />} />
+      <Route path="/signup" element={<AuthScreen mode="signup" />} />
+      <Route path="/login" element={<AuthScreen mode="login" />} />
       <Route path="/*" element={<Dashboard />} />
     </Routes>
   );

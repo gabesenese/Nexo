@@ -3,9 +3,12 @@ import { prisma } from "../db/client.js";
 import { requireAuth } from "./auth.js";
 
 export async function analyticsRoutes(app: FastifyInstance) {
-  app.get("/api/analytics", { preHandler: requireAuth }, async () => {
-    const totalConversations = await prisma.conversation.count();
-    const escalatedConversations = await prisma.conversation.count({ where: { status: "escalated" } });
+  app.get("/api/analytics", { preHandler: requireAuth }, async (req) => {
+    const organizationId = req.auth!.organizationId;
+    const totalConversations = await prisma.conversation.count({ where: { organizationId } });
+    const escalatedConversations = await prisma.conversation.count({
+      where: { organizationId, status: "escalated" },
+    });
 
     /**
      * No explicit "mark resolved" UI yet, so resolution rate is a proxy:
@@ -15,6 +18,7 @@ export async function analyticsRoutes(app: FastifyInstance) {
     const resolvedConversations = totalConversations - escalatedConversations;
 
     const recentEscalations = await prisma.escalation.findMany({
+      where: { conversation: { organizationId } },
       orderBy: { createdAt: "desc" },
       take: 20,
     });
@@ -29,8 +33,9 @@ export async function analyticsRoutes(app: FastifyInstance) {
     };
   });
 
-  app.get("/api/conversations", { preHandler: requireAuth }, async () => {
+  app.get("/api/conversations", { preHandler: requireAuth }, async (req) => {
     const conversations = await prisma.conversation.findMany({
+      where: { organizationId: req.auth!.organizationId },
       orderBy: { createdAt: "desc" },
       take: 50,
       include: { messages: { orderBy: { createdAt: "asc" } }, escalations: true },

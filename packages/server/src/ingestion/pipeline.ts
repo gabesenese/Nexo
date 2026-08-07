@@ -13,14 +13,14 @@ export interface IngestResult {
   chunkCount: number;
 }
 
-export async function ingestHelpCenterUrl(url: string): Promise<IngestResult> {
+export async function ingestHelpCenterUrl(url: string, organizationId: string): Promise<IngestResult> {
   const fetched = await helpCenterConnector.fetch(url);
-  return persistSource("help_center", fetched);
+  return persistSource("help_center", fetched, organizationId);
 }
 
-export async function ingestPdf(input: PdfInput): Promise<IngestResult> {
+export async function ingestPdf(input: PdfInput, organizationId: string): Promise<IngestResult> {
   const fetched = await pdfConnector.fetch(input);
-  return persistSource("pdf", fetched);
+  return persistSource("pdf", fetched, organizationId);
 }
 
 /**
@@ -29,9 +29,13 @@ export async function ingestPdf(input: PdfInput): Promise<IngestResult> {
  * raw SQL, with the embedding passed as a bracketed literal and cast
  * to ::vector.
  */
-async function persistSource(type: SourceType, fetched: FetchedSource): Promise<IngestResult> {
+async function persistSource(
+  type: SourceType,
+  fetched: FetchedSource,
+  organizationId: string,
+): Promise<IngestResult> {
   const source = await prisma.source.create({
-    data: { type, name: fetched.name, origin: fetched.origin, lastSyncedAt: new Date() },
+    data: { type, name: fetched.name, origin: fetched.origin, lastSyncedAt: new Date(), organizationId },
   });
 
   const chunks = chunkDocuments(fetched.documents);

@@ -1,10 +1,19 @@
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
 
+export interface AuthUser {
+  email: string;
+  name: string;
+  organization: { id: string; name: string };
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
-    headers: { "Content-Type": "application/json" },
     credentials: "include",
     ...init,
+    headers: {
+      ...(init?.body != null ? { "Content-Type": "application/json" } : {}),
+      ...(init?.headers as Record<string, string> | undefined),
+    },
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
@@ -88,10 +97,12 @@ export const api = {
   getAnalytics: () => request<AnalyticsSummary>("/api/analytics"),
   listConversations: () => request<Conversation[]>("/api/conversations"),
   listLeads: () => request<Lead[]>("/api/leads"),
+  signup: (input: { name: string; email: string; password: string; companyName: string }) =>
+    request<AuthUser>("/api/auth/signup", { method: "POST", body: JSON.stringify(input) }),
   login: (email: string, password: string) =>
-    request<{ email: string }>("/api/auth/login", { method: "POST", body: JSON.stringify({ email, password }) }),
+    request<AuthUser>("/api/auth/login", { method: "POST", body: JSON.stringify({ email, password }) }),
   logout: () => request<{ ok: true }>("/api/auth/logout", { method: "POST" }),
-  me: async (): Promise<{ email: string } | null> => {
+  me: async (): Promise<AuthUser | null> => {
     const res = await fetch(`${API_URL}/api/auth/me`, { credentials: "include" });
     if (!res.ok) return null;
     return res.json();

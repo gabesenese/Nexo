@@ -12,14 +12,28 @@ async function main() {
   const { ADMIN_EMAIL, ADMIN_PASSWORD } = process.env;
   if (ADMIN_EMAIL && ADMIN_PASSWORD) {
     const passwordHash = await bcrypt.hash(ADMIN_PASSWORD, 12);
-    await prisma.adminUser.upsert({
+
+    const organization = await prisma.organization.upsert({
+      where: { slug: "legacy" },
+      update: {},
+      create: { name: "Legacy Workspace", slug: "legacy" },
+    });
+
+    const user = await prisma.user.upsert({
       where: { email: ADMIN_EMAIL },
       update: { passwordHash },
-      create: { email: ADMIN_EMAIL, passwordHash },
+      create: { email: ADMIN_EMAIL, passwordHash, name: ADMIN_EMAIL.split("@")[0] },
     });
-    console.log(`Admin user ready: ${ADMIN_EMAIL}`);
+
+    await prisma.membership.upsert({
+      where: { userId_organizationId: { userId: user.id, organizationId: organization.id } },
+      update: {},
+      create: { userId: user.id, organizationId: organization.id, role: "owner" },
+    });
+
+    console.log(`Seed user ready: ${ADMIN_EMAIL} (workspace: ${organization.name})`);
   } else {
-    console.log("ADMIN_EMAIL / ADMIN_PASSWORD not set — skipping admin user seed.");
+    console.log("ADMIN_EMAIL / ADMIN_PASSWORD not set — skipping user seed.");
   }
 }
 

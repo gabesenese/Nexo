@@ -3,6 +3,40 @@
 
 **Working name: Nexo** (subject to trademark clearance — see note below)
 
+> This document is the single source of truth for **project status and sequencing**.
+> `project-brief.md` holds the durable why/what (market, positioning, architecture).
+> `README.md` holds the how (as-built architecture, setup). When those disagree with
+> this file on *what comes next*, this file wins.
+
+---
+
+## 0. Current Status (updated 2026-08-06)
+
+**Where we are: Phase 1, Stage A — prove the core end-to-end on real data.**
+
+The MVP core (Build Sequence step 1: ingestion + retrieval + demoable widget) is built.
+The open gap is that it has not yet been proven end-to-end: ingesting a real help
+center and a real PDF into a real database and answering a real question correctly, live.
+
+**Built and real:**
+- Full pipeline: help-center + PDF connectors, semantic chunking, embeddings, hybrid
+  dense+keyword retrieval, Claude orchestrator, confidence-based escalation state machine,
+  mock handoff adapter
+- Postgres + pgvector schema (Source, Chunk, Conversation, Message, Escalation, Lead, AdminUser)
+- Embeddable widget with citations
+- Admin dashboard (Sources, Conversations, Analytics, Leads, Login)
+- Landing page + real lead capture
+- Single global admin auth
+- Onboarding wizard UI prototype (no backend yet — Phase 3 front-end built early, parked)
+
+**Not yet proven:** the pipeline running end-to-end against real content in a real DB.
+
+**Deliberately deferred** (see §3 for which phase each lands in): additional connectors
+(Notion/Confluence/Slack/ticket import), a real helpdesk integration (none chosen —
+design-partner decision), flow builder, confusion-report clustering, re-ranking, auth +
+multi-tenancy (issue #2), onboarding-CTA routing (issue #9), self-serve billing, queue
+infra, SOC 2, Canadian hosting.
+
 ---
 
 ## 1. Executive Summary
@@ -39,14 +73,22 @@ The plan: build a focused AI support agent — not a bundle — that wins on tra
 - Recruit 3–5 design partners willing to pilot a pre-product version
 - Deliverable: a one-page validation summary — go/no-go decision point
 
-### Phase 1 — MVP Build (Months 2–4)
+### Phase 1 — MVP Build (Months 2–4) ← CURRENT
 **Goal:** Working product with one design partner live.
-- Ingestion: help center + PDFs + one of (Notion/Confluence/Slack) — don't build all connectors before one works well
-- Retrieval + chat agent with citation display and confidence-based escalation
-- One helpdesk integration (chosen based on design partner's actual stack)
-- Basic embeddable chat widget
-- No billing system yet — manual invoicing for design partners
-- Deliverable: 1 design partner live in production, handling real conversations
+
+The core is built; the remaining work in this phase is proving it and connecting it to
+one real helpdesk. Broken into stages:
+
+- **Stage A — Prove the core end-to-end (current step).** Run the server against a real
+  DB, ingest an actual help center + a real PDF, drive the widget, and verify retrieval,
+  citations, and confidence-based escalation all behave correctly on real content. Fix
+  what's actually broken. This is the deliverable the whole plan hinges on.
+- **Stage B — One real helpdesk handoff.** Replace the mock adapter with one real
+  integration, chosen based on the design partner's actual stack (partner-driven, may wait).
+- Ingestion already covers help center + PDF; add one of (Notion/Confluence/Slack) only
+  once the first two work well on real data — don't build all connectors before one is proven.
+- No billing system yet — manual invoicing for design partners.
+- Deliverable: 1 design partner live in production, handling real conversations.
 
 ### Phase 2 — Pilot & Iterate (Months 4–7)
 **Goal:** Prove retention and resolution quality across multiple customers.
@@ -58,11 +100,17 @@ The plan: build a focused AI support agent — not a bundle — that wins on tra
 
 ### Phase 3 — Public Launch (Months 7–10)
 **Goal:** Self-serve acquisition begins.
-- Self-serve billing, public pricing page, signup flow
-- Second and third helpdesk integrations
-- Canadian hosting/data residency formalized
-- Basic SOC 2 Type I process started
-- Deliverable: public launch, first cohort of self-serve customers outside design partners
+- Auth + multi-tenancy (issue #2): Organization model, tenant-scope every table and route.
+  This is the foundation everything else in this phase sits on.
+- Wire the existing onboarding wizard (built early as a UI prototype) to real signup,
+  workspace creation, ingestion, and widget config.
+- Flip the landing "Start free trial" CTA to `/onboarding` (issue #9) once a new user can
+  self-serve to a first successful answer with no help from us.
+- Self-serve billing, public pricing page.
+- Second and third helpdesk integrations.
+- Canadian hosting/data residency formalized.
+- Basic SOC 2 Type I process started.
+- Deliverable: public launch, first cohort of self-serve customers outside design partners.
 
 ### Phase 4 — Scale (Months 10–24)
 **Goal:** Repeatable growth engine, US expansion.

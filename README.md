@@ -9,6 +9,10 @@ retrieval + a demoable embeddable chat widget**, plus the confidence-based escal
 and a mock/generic human-handoff adapter. No real helpdesk is chosen yet; that's a design-partner
 decision per Phase 0 of the plan.
 
+**Status: Phase 1, Stage A — prove the core end-to-end on real data.** The pipeline is built but
+not yet proven ingesting real content in a real DB and answering correctly, live. See
+`structured-plan.md` §0 for the full status map and current step.
+
 ## Architecture
 
 ```

@@ -6,6 +6,8 @@ import { AnalyticsPage } from "./pages/Analytics";
 import { LeadsPage } from "./pages/Leads";
 import { LoginPage } from "./pages/Login";
 import { SignupPage } from "./pages/Signup";
+import { SettingsPage } from "./pages/Settings";
+import { InviteAcceptPage } from "./pages/InviteAccept";
 import { OnboardingWizard } from "./onboarding/OnboardingWizard";
 import { api, type AuthUser } from "./api";
 
@@ -89,6 +91,10 @@ function Dashboard() {
             <span className="dot" />
             Leads
           </NavLink>
+          <NavLink to="/settings">
+            <span className="dot" />
+            Settings
+          </NavLink>
         </div>
         <div className="sidebar-spacer" />
         <div className="sidebar-email">{user?.email}</div>
@@ -102,6 +108,16 @@ function Dashboard() {
           <Route path="/sources" element={<SourcesPage />} />
           <Route path="/conversations" element={<ConversationsPage />} />
           <Route path="/leads" element={<LeadsPage />} />
+          <Route
+            path="/settings"
+            element={
+              <SettingsPage
+                onWorkspaceRenamed={(name) =>
+                  setUser((u) => (u ? { ...u, organization: { ...u.organization, name } } : u))
+                }
+              />
+            }
+          />
         </Routes>
       </main>
     </div>
@@ -114,6 +130,7 @@ export default function App() {
       <Route path="/onboarding/*" element={<OnboardingWizard />} />
       <Route path="/signup" element={<AuthScreen mode="signup" />} />
       <Route path="/login" element={<AuthScreen mode="login" />} />
+      <Route path="/invite/:token" element={<InviteAcceptPage />} />
       <Route path="/*" element={<Dashboard />} />
     </Routes>
   );

@@ -6,6 +6,36 @@ export interface AuthUser {
   organization: { id: string; name: string };
 }
 
+export type MemberRole = "owner" | "admin" | "member";
+
+export interface OrgMember {
+  email: string;
+  name: string;
+  role: MemberRole;
+}
+
+export interface OrgInvite {
+  id: string;
+  email: string;
+  role: "admin" | "member";
+  token: string;
+  createdAt: string;
+}
+
+export interface OrgDetails {
+  id: string;
+  name: string;
+  slug: string;
+  members: OrgMember[];
+  invites: OrgInvite[];
+}
+
+export interface InviteInfo {
+  email: string;
+  organizationName: string;
+  needsAccount: boolean;
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
     credentials: "include",
@@ -107,4 +137,13 @@ export const api = {
     if (!res.ok) return null;
     return res.json();
   },
+  getOrg: () => request<OrgDetails>("/api/org"),
+  renameOrg: (name: string) =>
+    request<{ id: string; name: string }>("/api/org", { method: "PATCH", body: JSON.stringify({ name }) }),
+  createInvite: (email: string, role: "admin" | "member") =>
+    request<OrgInvite>("/api/org/invites", { method: "POST", body: JSON.stringify({ email, role }) }),
+  deleteInvite: (id: string) => request<{ ok: true }>(`/api/org/invites/${id}`, { method: "DELETE" }),
+  getInvite: (token: string) => request<InviteInfo>(`/api/invites/${token}`),
+  acceptInvite: (token: string, body: { name?: string; password: string }) =>
+    request<AuthUser>(`/api/invites/${token}/accept`, { method: "POST", body: JSON.stringify(body) }),
 };

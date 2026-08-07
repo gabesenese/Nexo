@@ -42,9 +42,24 @@ model Organization {
   slug          String         @unique
   createdAt     DateTime       @default(now())
   memberships   Membership[]
+  invites       Invite[]
   sources       Source[]
   conversations Conversation[]
   leads         Lead[]
+}
+
+model Invite {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  email          String
+  role           Role         @default(member)
+  token          String       @unique
+  createdAt      DateTime     @default(now())
+  acceptedAt     DateTime?
+
+  @@unique([organizationId, email])
+  @@index([organizationId])
 }
 
 model User {

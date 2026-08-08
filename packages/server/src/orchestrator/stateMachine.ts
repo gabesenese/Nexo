@@ -69,6 +69,7 @@ export async function handleUserMessage(params: {
   if (forceEscalate) {
     return escalate({
       conversationId: conversation.id,
+      organizationId,
       reason: "user_requested",
       confidence: null,
       answer: "Connecting you with a human agent now.",
@@ -100,6 +101,7 @@ export async function handleUserMessage(params: {
   if (shouldEscalate(combinedConfidence, env.CONFIDENCE_THRESHOLD)) {
     return escalate({
       conversationId: conversation.id,
+      organizationId,
       reason: "low_confidence",
       confidence: combinedConfidence,
       answer: result.answer,
@@ -128,12 +130,13 @@ export async function handleUserMessage(params: {
 
 async function escalate(params: {
   conversationId: string;
+  organizationId: string;
   reason: string;
   confidence: number | null;
   answer: string;
   citations: { id: string; sourceName: string; headingPath: string[] }[];
 }): Promise<ChatTurnResult> {
-  const { conversationId, reason, confidence, answer, citations } = params;
+  const { conversationId, organizationId, reason, confidence, answer, citations } = params;
 
   await prisma.message.create({
     data: {
@@ -172,6 +175,9 @@ async function escalate(params: {
         summary,
         handoffPayload: handoffResult.raw as Prisma.InputJsonValue,
       },
+    }),
+    prisma.notification.create({
+      data: { organizationId, conversationId, type: "escalation", message: summary },
     }),
   ]);
 

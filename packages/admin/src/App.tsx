@@ -9,6 +9,7 @@ import { SignupPage } from "./pages/Signup";
 import { SettingsPage } from "./pages/Settings";
 import { InviteAcceptPage } from "./pages/InviteAccept";
 import { OnboardingWizard } from "./onboarding/OnboardingWizard";
+import { NotificationBell } from "./components/NotificationBell";
 import { api, type AuthUser } from "./api";
 
 function LogoMark() {
@@ -73,7 +74,10 @@ function Dashboard() {
           <LogoMark />
           Nexo
         </div>
-        <div className="workspace-name">{user?.organization.name}</div>
+        <div className="sidebar-topbar">
+          <div className="workspace-name">{user?.organization.name}</div>
+          <NotificationBell />
+        </div>
         <div className="nav-links">
           <NavLink to="/" end>
             <span className="dot" />

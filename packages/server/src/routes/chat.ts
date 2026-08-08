@@ -9,7 +9,29 @@ interface ChatBody {
   forceEscalate?: boolean;
 }
 
+const DEFAULT_ACCENT = "#204c40";
+const DEFAULT_WELCOME = "Hi! Ask me anything. I'll cite my sources, and you can talk to a human any time.";
+
 export async function chatRoutes(app: FastifyInstance) {
+  app.get<{ Querystring: { orgKey?: string } }>("/api/widget/config", async (req, reply) => {
+    const { orgKey } = req.query ?? {};
+    if (!orgKey) {
+      return reply.status(400).send({ error: "orgKey is required" });
+    }
+    const org = await prisma.organization.findUnique({
+      where: { slug: orgKey },
+      include: { widgetConfig: true },
+    });
+    if (!org) {
+      return reply.status(404).send({ error: "Unknown widget key" });
+    }
+    return {
+      organizationName: org.name,
+      accentColor: org.widgetConfig?.accentColor ?? DEFAULT_ACCENT,
+      welcomeMessage: org.widgetConfig?.welcomeMessage ?? DEFAULT_WELCOME,
+    };
+  });
+
   app.get<{ Querystring: { orgKey?: string; sessionId?: string; after?: string } }>(
     "/api/chat/messages",
     async (req, reply) => {

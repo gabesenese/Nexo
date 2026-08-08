@@ -91,6 +91,38 @@ export async function orgRoutes(app: FastifyInstance) {
     return { ok: true };
   });
 
+  app.get("/api/widget-config", { preHandler: requireAuth }, async (req) => {
+    const config = await prisma.widgetConfig.findUnique({ where: { organizationId: req.auth!.organizationId } });
+    return {
+      accentColor: config?.accentColor ?? "#204c40",
+      welcomeMessage:
+        config?.welcomeMessage ?? "Hi! Ask me anything. I'll cite my sources, and you can talk to a human any time.",
+    };
+  });
+
+  app.patch("/api/widget-config", { preHandler: requireAuth }, async (req, reply) => {
+    const { userId, organizationId } = req.auth!;
+    const role = await roleOf(userId, organizationId);
+    if (role !== "owner" && role !== "admin") {
+      return reply.status(403).send({ error: "Only owners and admins can change widget settings." });
+    }
+    const parsed = z
+      .object({
+        accentColor: z.string().trim().regex(/^#[0-9a-fA-F]{6}$/, "Accent color must be a hex value like #204c40."),
+        welcomeMessage: z.string().trim().min(1).max(300),
+      })
+      .safeParse(req.body);
+    if (!parsed.success) {
+      return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? "Invalid widget settings." });
+    }
+    const config = await prisma.widgetConfig.upsert({
+      where: { organizationId },
+      update: parsed.data,
+      create: { organizationId, ...parsed.data },
+    });
+    return { accentColor: config.accentColor, welcomeMessage: config.welcomeMessage };
+  });
+
   app.get<{ Params: { token: string } }>("/api/invites/:token", async (req, reply) => {
     const invite = await prisma.invite.findUnique({
       where: { token: req.params.token },

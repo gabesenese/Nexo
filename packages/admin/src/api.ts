@@ -50,6 +50,11 @@ export interface InviteInfo {
   needsAccount: boolean;
 }
 
+export interface WidgetConfig {
+  accentColor: string;
+  welcomeMessage: string;
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
     credentials: "include",
@@ -173,6 +178,9 @@ export const api = {
   createInvite: (email: string, role: "admin" | "member") =>
     request<OrgInvite>("/api/org/invites", { method: "POST", body: JSON.stringify({ email, role }) }),
   deleteInvite: (id: string) => request<{ ok: true }>(`/api/org/invites/${id}`, { method: "DELETE" }),
+  getWidgetConfig: () => request<WidgetConfig>("/api/widget-config"),
+  updateWidgetConfig: (input: WidgetConfig) =>
+    request<WidgetConfig>("/api/widget-config", { method: "PATCH", body: JSON.stringify(input) }),
   getInvite: (token: string) => request<InviteInfo>(`/api/invites/${token}`),
   acceptInvite: (token: string, body: { name?: string; password: string }) =>
     request<AuthUser>(`/api/invites/${token}/accept`, { method: "POST", body: JSON.stringify(body) }),

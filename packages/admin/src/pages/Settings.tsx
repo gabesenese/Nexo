@@ -10,6 +10,8 @@ function inviteLink(token: string) {
   return `${window.location.origin}/invite/${token}`;
 }
 
+const WIDGET_COLORS = ["#204c40", "#2f6f5e", "#c9873a", "#181b1d", "#2b3f8a"];
+
 export function SettingsPage({ onWorkspaceRenamed }: { onWorkspaceRenamed?: (name: string) => void }) {
   const [org, setOrg] = useState<OrgDetails | null>(null);
   const [name, setName] = useState("");
@@ -22,10 +24,33 @@ export function SettingsPage({ onWorkspaceRenamed }: { onWorkspaceRenamed?: (nam
   const [inviting, setInviting] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
 
+  const [widget, setWidget] = useState({ accentColor: "#204c40", welcomeMessage: "" });
+  const [savingWidget, setSavingWidget] = useState(false);
+  const [widgetSaved, setWidgetSaved] = useState(false);
+  const [widgetError, setWidgetError] = useState<string | null>(null);
+
   async function load() {
-    const data = await api.getOrg();
+    const [data, wc] = await Promise.all([api.getOrg(), api.getWidgetConfig()]);
     setOrg(data);
     setName(data.name);
+    setWidget(wc);
+  }
+
+  async function saveWidget(e: React.FormEvent) {
+    e.preventDefault();
+    setSavingWidget(true);
+    setWidgetSaved(false);
+    setWidgetError(null);
+    try {
+      const updated = await api.updateWidgetConfig({ ...widget, welcomeMessage: widget.welcomeMessage.trim() });
+      setWidget(updated);
+      setWidgetSaved(true);
+      setTimeout(() => setWidgetSaved(false), 2000);
+    } catch (err) {
+      setWidgetError((err as Error).message);
+    } finally {
+      setSavingWidget(false);
+    }
   }
 
   useEffect(() => {
@@ -92,6 +117,41 @@ export function SettingsPage({ onWorkspaceRenamed }: { onWorkspaceRenamed?: (nam
           </div>
           <button type="submit" className="btn btn-primary" disabled={savingName || name.trim() === org?.name}>
             {savingName ? "Saving…" : nameSaved ? "Saved" : "Save"}
+          </button>
+        </form>
+      </div>
+
+      <div className="card">
+        <h3>Widget</h3>
+        <div className="card-sub">The branding your customers see in the chat widget.</div>
+        <form onSubmit={saveWidget}>
+          <div className="field">
+            <label>Accent color</label>
+            <div className="onboard-swatches">
+              {WIDGET_COLORS.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  className={`onboard-swatch${widget.accentColor === c ? " selected" : ""}`}
+                  style={{ background: c }}
+                  aria-label={`Choose ${c}`}
+                  onClick={() => setWidget((w) => ({ ...w, accentColor: c }))}
+                />
+              ))}
+            </div>
+          </div>
+          <div className="field">
+            <label htmlFor="widget-welcome">Welcome message</label>
+            <input
+              id="widget-welcome"
+              type="text"
+              value={widget.welcomeMessage}
+              onChange={(e) => setWidget((w) => ({ ...w, welcomeMessage: e.target.value }))}
+            />
+          </div>
+          {widgetError && <p className="error-text">{widgetError}</p>}
+          <button type="submit" className="btn btn-primary" disabled={savingWidget || !widget.welcomeMessage.trim()}>
+            {savingWidget ? "Saving…" : widgetSaved ? "Saved" : "Save"}
           </button>
         </form>
       </div>

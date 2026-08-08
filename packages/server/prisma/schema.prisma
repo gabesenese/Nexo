@@ -41,6 +41,7 @@ model Organization {
   id            String         @id @default(cuid())
   name          String
   slug          String         @unique
+  widgetKey     String         @unique
   createdAt     DateTime       @default(now())
   memberships   Membership[]
   invites       Invite[]

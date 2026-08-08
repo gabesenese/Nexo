@@ -28,12 +28,35 @@ export function SettingsPage({ onWorkspaceRenamed }: { onWorkspaceRenamed?: (nam
   const [savingWidget, setSavingWidget] = useState(false);
   const [widgetSaved, setWidgetSaved] = useState(false);
   const [widgetError, setWidgetError] = useState<string | null>(null);
+  const [rotating, setRotating] = useState(false);
+  const [keyCopied, setKeyCopied] = useState(false);
 
   async function load() {
     const [data, wc] = await Promise.all([api.getOrg(), api.getWidgetConfig()]);
     setOrg(data);
     setName(data.name);
     setWidget(wc);
+  }
+
+  async function copyWidgetKey() {
+    if (!org) return;
+    await navigator.clipboard.writeText(org.widgetKey);
+    setKeyCopied(true);
+    setTimeout(() => setKeyCopied(false), 1800);
+  }
+
+  async function rotateWidgetKey() {
+    const ok = window.confirm(
+      "Rotate the widget key? Any embeds using the current key will stop working until you update them with the new snippet.",
+    );
+    if (!ok) return;
+    setRotating(true);
+    try {
+      await api.rotateWidgetKey();
+      await load();
+    } finally {
+      setRotating(false);
+    }
   }
 
   async function saveWidget(e: React.FormEvent) {
@@ -154,6 +177,22 @@ export function SettingsPage({ onWorkspaceRenamed }: { onWorkspaceRenamed?: (nam
             {savingWidget ? "Saving…" : widgetSaved ? "Saved" : "Save"}
           </button>
         </form>
+
+        <div className="field" style={{ marginTop: 18 }}>
+          <label>Widget key</label>
+          <div className="card-sub" style={{ marginBottom: 8 }}>
+            The public key in your embed snippet. Rotating it disables existing embeds until you update them.
+          </div>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <input className="mono" style={{ flex: 1 }} readOnly value={org?.widgetKey ?? ""} />
+            <button type="button" className="btn-small" onClick={copyWidgetKey}>
+              {keyCopied ? "Copied" : "Copy"}
+            </button>
+            <button type="button" className="btn-small danger" onClick={rotateWidgetKey} disabled={rotating}>
+              {rotating ? "Rotating…" : "Rotate"}
+            </button>
+          </div>
+        </div>
       </div>
 
       <div className="card">

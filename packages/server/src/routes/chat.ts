@@ -19,7 +19,7 @@ export async function chatRoutes(app: FastifyInstance) {
       return reply.status(400).send({ error: "orgKey is required" });
     }
     const org = await prisma.organization.findUnique({
-      where: { slug: orgKey },
+      where: { widgetKey: orgKey },
       include: { widgetConfig: true },
     });
     if (!org) {
@@ -39,7 +39,7 @@ export async function chatRoutes(app: FastifyInstance) {
       if (!orgKey || !sessionId) {
         return reply.status(400).send({ error: "orgKey and sessionId are required" });
       }
-      const org = await prisma.organization.findUnique({ where: { slug: orgKey }, select: { id: true } });
+      const org = await prisma.organization.findUnique({ where: { widgetKey: orgKey }, select: { id: true } });
       if (!org) {
         return reply.status(404).send({ error: "Unknown widget key" });
       }
@@ -64,7 +64,7 @@ export async function chatRoutes(app: FastifyInstance) {
       return reply.status(400).send({ error: "sessionId, orgKey, and message are required" });
     }
 
-    const org = await prisma.organization.findUnique({ where: { slug: orgKey }, select: { id: true } });
+    const org = await prisma.organization.findUnique({ where: { widgetKey: orgKey }, select: { id: true } });
     if (!org) {
       return reply.status(404).send({ error: "Unknown widget key" });
     }

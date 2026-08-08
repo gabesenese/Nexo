@@ -258,8 +258,8 @@ suite("tenant isolation", () => {
     expect((await get("/api/widget-config", b.cookie)).json().welcomeMessage).not.toBe("Welcome to Acme");
 
     // public config by A's slug reflects A's settings
-    const aSlug = (await get("/api/org", a.cookie)).json().slug;
-    const pub = await app.inject({ method: "GET", url: `/api/widget/config?orgKey=${aSlug}` });
+    const aOrg = (await get("/api/org", a.cookie)).json();
+    const pub = await app.inject({ method: "GET", url: `/api/widget/config?orgKey=${aOrg.widgetKey}` });
     expect(pub.json()).toMatchObject({ accentColor: "#2b3f8a", welcomeMessage: "Welcome to Acme" });
 
     // a member cannot change widget settings
@@ -284,6 +284,38 @@ suite("tenant isolation", () => {
       payload: { accentColor: "#204c40", welcomeMessage: "hijack" },
     });
     expect(memberPatch.statusCode).toBe(403);
+  });
+
+  it("rotates the widget key: old key stops resolving, new one works, member gated", async () => {
+    const a = await signup("a@acme.test", "Acme");
+    const before = (await get("/api/org", a.cookie)).json().widgetKey as string;
+    expect((await app.inject({ method: "GET", url: `/api/widget/config?orgKey=${before}` })).statusCode).toBe(200);
+
+    const rot = await app.inject({ method: "POST", url: "/api/widget-key/rotate", headers: { cookie: a.cookie } });
+    expect(rot.statusCode).toBe(200);
+    const after = rot.json().widgetKey as string;
+    expect(after).not.toBe(before);
+
+    expect((await app.inject({ method: "GET", url: `/api/widget/config?orgKey=${before}` })).statusCode).toBe(404);
+    expect((await app.inject({ method: "GET", url: `/api/widget/config?orgKey=${after}` })).statusCode).toBe(200);
+
+    const invite = await app.inject({
+      method: "POST",
+      url: "/api/org/invites",
+      headers: { cookie: a.cookie, "content-type": "application/json" },
+      payload: { email: "m@acme.test", role: "member" },
+    });
+    const token = (await prisma.invite.findUniqueOrThrow({ where: { id: invite.json().id } })).token;
+    const accept = await app.inject({
+      method: "POST",
+      url: `/api/invites/${token}/accept`,
+      headers: { "content-type": "application/json" },
+      payload: { name: "M", password: "password123" },
+    });
+    const memberCookie = `nexo_admin_session=${accept.cookies.find((c) => c.name === "nexo_admin_session")!.value}`;
+    expect(
+      (await app.inject({ method: "POST", url: "/api/widget-key/rotate", headers: { cookie: memberCookie } })).statusCode,
+    ).toBe(403);
   });
 
   it("serves the widget bundle route and reflects any origin for embedding", async () => {

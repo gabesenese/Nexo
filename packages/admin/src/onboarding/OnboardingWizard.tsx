@@ -109,7 +109,7 @@ export function OnboardingWizard() {
     case 4:
       return (
         <TestNexoStep
-          orgKey={auth?.organization.slug ?? ""}
+          orgKey={auth?.organization.widgetKey ?? ""}
           hasKnowledge={!skipped && (indexResult?.chunkCount ?? 0) > 0}
           onNext={() => next(5)}
         />
@@ -128,7 +128,7 @@ export function OnboardingWizard() {
     case 6:
       return (
         <InstallStep
-          orgKey={auth?.organization.slug ?? ""}
+          orgKey={auth?.organization.widgetKey ?? ""}
           onBack={() => next(5)}
           onFinish={() => navigate("/", { replace: true })}
         />

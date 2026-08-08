@@ -23,6 +23,7 @@ enum ConversationStatus {
 enum MessageRole {
   user
   assistant
+  agent
 }
 
 enum EscalationStatus {
@@ -135,6 +136,7 @@ model Message {
   content        String
   citations      Json         @default("[]")
   confidence     Float?
+  authorUserId   String?
   createdAt      DateTime     @default(now())
 
   @@index([conversationId])

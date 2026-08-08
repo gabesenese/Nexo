@@ -9,8 +9,9 @@ declare global {
 }
 
 const scriptEl = document.currentScript as HTMLScriptElement | null;
-const apiUrl = scriptEl?.dataset.apiUrl ?? window.NEXO_API_URL ?? "http://localhost:4000";
-const orgKey = scriptEl?.dataset.orgKey ?? window.NEXO_ORG_KEY ?? "";
+const params = new URLSearchParams(window.location.search);
+const apiUrl = scriptEl?.dataset.apiUrl ?? params.get("apiUrl") ?? window.NEXO_API_URL ?? "http://localhost:4000";
+const orgKey = scriptEl?.dataset.orgKey ?? params.get("org") ?? window.NEXO_ORG_KEY ?? "";
 
 const fontLinkId = "nexo-widget-fonts";
 if (!document.getElementById(fontLinkId)) {

@@ -21,8 +21,13 @@ const chatProvider: ChatProvider = env.AI_PROVIDER === "cloud" ? anthropicChatPr
 const handoffAdapter: HandoffAdapter = mockHandoffAdapter;
 
 async function getOrCreateConversation(sessionId: string, organizationId: string, channel: string) {
+  /**
+   * A session's thread continues across `active` and `escalated` (a human
+   * taking over must not fork a new conversation). Only a `resolved`
+   * conversation starts a fresh thread on the next message.
+   */
   const existing = await prisma.conversation.findFirst({
-    where: { sessionId, organizationId, status: "active" },
+    where: { sessionId, organizationId, status: { in: ["active", "escalated"] } },
     orderBy: { createdAt: "desc" },
   });
   if (existing) return existing;
@@ -52,6 +57,15 @@ export async function handleUserMessage(params: {
     data: { conversationId: conversation.id, role: "user", content: message },
   });
 
+  /**
+   * Once a human has taken over (conversation escalated), the AI stops
+   * auto-answering: the customer's message is recorded and surfaced to the
+   * operator, who replies. This keeps the AI from talking over the human.
+   */
+  if (conversation.status === "escalated") {
+    return { conversationId: conversation.id, answer: "", confidence: null, citations: [], escalated: true };
+  }
+
   if (forceEscalate) {
     return escalate({
       conversationId: conversation.id,
@@ -69,7 +83,7 @@ export async function handleUserMessage(params: {
   /** Drop the last row: it's the message just inserted, passed separately as `message`. */
   const history: ChatTurn[] = priorMessages
     .slice(0, -1)
-    .map((m: Message) => ({ role: m.role, content: m.content }));
+    .map((m: Message) => ({ role: m.role === "user" ? "user" : "assistant", content: m.content }));
 
   const retrieved = await hybridSearch(message, organizationId);
   const context = retrieved.map((r) => ({ id: r.id, sourceName: r.sourceName, content: r.content }));
@@ -145,7 +159,7 @@ async function escalate(params: {
     conversationId,
     reason,
     summary,
-    transcript: allMessages.map((m: Message) => ({ role: m.role, content: m.content })),
+    transcript: allMessages.map((m: Message) => ({ role: m.role === "user" ? "user" : "assistant", content: m.content })),
     sources: citations.map((c) => ({ id: c.id, sourceName: c.sourceName })),
   });
 

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 
 interface Citation {
   id: string;
@@ -7,20 +7,14 @@ interface Citation {
 }
 
 interface ChatMessage {
-  role: "user" | "assistant";
+  id: string;
+  role: "user" | "assistant" | "agent";
   content: string;
   citations?: Citation[];
-  confidence?: number | null;
-  escalated?: boolean;
+  createdAt: string;
 }
 
-interface ChatApiResponse {
-  conversationId: string;
-  answer: string;
-  confidence: number | null;
-  citations: Citation[];
-  escalated: boolean;
-}
+const GREETING = "Hi! Ask me anything. I'll cite my sources, and you can talk to a human any time.";
 
 function getSessionId(): string {
   const key = "nexo_session_id";
@@ -34,48 +28,73 @@ function getSessionId(): string {
 
 export function Widget({ apiUrl, orgKey }: { apiUrl: string; orgKey: string }) {
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    { role: "assistant", content: "Hi! Ask me anything. I'll cite my sources, and you can talk to a human any time." },
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [pending, setPending] = useState<string | null>(null);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [escalated, setEscalated] = useState(false);
+  const [status, setStatus] = useState<string | null>(null);
   const sessionId = useRef(getSessionId());
   const scrollRef = useRef<HTMLDivElement>(null);
+  const seen = useRef<Set<string>>(new Set());
+  const cursor = useRef<string | null>(null);
+
+  const escalated = status === "escalated";
+  const resolved = status === "resolved";
+  const headerSub = escalated
+    ? "A human will follow up shortly"
+    : resolved
+      ? "Conversation resolved"
+      : "Usually replies instantly";
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages, open]);
+  }, [messages, pending, loading, open]);
+
+  async function reconcile() {
+    const qs = new URLSearchParams({ orgKey, sessionId: sessionId.current });
+    if (cursor.current) qs.set("after", cursor.current);
+    try {
+      const res = await fetch(`${apiUrl}/api/chat/messages?${qs.toString()}`);
+      if (!res.ok) return;
+      const data: { status: string | null; messages: ChatMessage[] } = await res.json();
+      if (data.status) setStatus(data.status);
+      const fresh = data.messages.filter((m) => !seen.current.has(m.id));
+      if (fresh.length === 0) return;
+      fresh.forEach((m) => seen.current.add(m.id));
+      cursor.current = fresh[fresh.length - 1].createdAt;
+      setMessages((prev) => [...prev, ...fresh]);
+    } catch {
+      /* transient; next poll retries */
+    }
+  }
+
+  useEffect(() => {
+    if (!open) return;
+    reconcile();
+    const id = setInterval(reconcile, 4000);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   async function send(message: string, forceEscalate = false) {
     if (!message.trim() && !forceEscalate) return;
-    setMessages((prev) => [...prev, { role: "user", content: forceEscalate ? "Talk to a human" : message }]);
+    setPending(forceEscalate ? "Talk to a human" : message);
     setInput("");
     setLoading(true);
     try {
-      const res = await fetch(`${apiUrl}/api/chat`, {
+      await fetch(`${apiUrl}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sessionId: sessionId.current, orgKey, message: message || "Talk to a human", forceEscalate }),
       });
-      const data: ChatApiResponse = await res.json();
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: data.answer,
-          citations: data.citations,
-          confidence: data.confidence,
-          escalated: data.escalated,
-        },
-      ]);
-      if (data.escalated) setEscalated(true);
+      await reconcile();
     } catch {
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: "Sorry, something went wrong reaching the support agent." },
+        { id: `err-${Date.now()}`, role: "assistant", content: "Sorry, something went wrong reaching support.", createdAt: new Date().toISOString() },
       ]);
     } finally {
+      setPending(null);
       setLoading(false);
     }
   }
@@ -98,9 +117,7 @@ export function Widget({ apiUrl, orgKey }: { apiUrl: string; orgKey: string }) {
           <div style={styles.mark}>N</div>
           <div style={{ flex: 1 }}>
             <div style={styles.headTitle}>Nexo Support</div>
-            <div style={styles.headSub}>
-              {escalated ? "A human will follow up shortly" : "Usually replies instantly"}
-            </div>
+            <div style={styles.headSub}>{headerSub}</div>
           </div>
           <button
             className="nexo-icon-btn"
@@ -114,24 +131,38 @@ export function Widget({ apiUrl, orgKey }: { apiUrl: string; orgKey: string }) {
         </div>
 
         <div style={styles.messages} ref={scrollRef}>
-          {messages.map((m, i) => (
-            <div
-              key={i}
-              className="nexo-msg-enter"
-              style={m.role === "user" ? styles.userBubble : styles.assistantBubble}
-            >
-              <div>{m.content}</div>
-              {m.citations && m.citations.length > 0 && (
-                <div style={styles.citations}>
-                  {m.citations.map((c) => (
-                    <span key={c.id} style={styles.citationBadge} title={c.headingPath.join(" > ")}>
-                      {c.sourceName}
-                    </span>
-                  ))}
+          <div className="nexo-msg-enter" style={styles.assistantBubble}>
+            <div>{GREETING}</div>
+          </div>
+          {messages.map((m, i) => {
+            const firstAgent = m.role === "agent" && messages.findIndex((x) => x.role === "agent") === i;
+            return (
+              <Fragment key={m.id}>
+                {firstAgent && <div style={styles.joinNote}>A support specialist has joined this conversation</div>}
+                <div
+                  className="nexo-msg-enter"
+                  style={m.role === "user" ? styles.userBubble : m.role === "agent" ? styles.agentBubble : styles.assistantBubble}
+                >
+                  {m.role === "agent" && <div style={styles.agentLabel}>● Support specialist</div>}
+                  <div>{m.content}</div>
+                  {m.citations && m.citations.length > 0 && (
+                    <div style={styles.citations}>
+                      {m.citations.map((c) => (
+                        <span key={c.id} style={styles.citationBadge} title={c.headingPath.join(" > ")}>
+                          {c.sourceName}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              )}
+              </Fragment>
+            );
+          })}
+          {pending && (
+            <div className="nexo-msg-enter" style={styles.userBubble}>
+              <div>{pending}</div>
             </div>
-          ))}
+          )}
           {loading && (
             <div className="nexo-msg-enter" style={styles.assistantBubble}>
               <span className="nexo-typing">
@@ -141,10 +172,16 @@ export function Widget({ apiUrl, orgKey }: { apiUrl: string; orgKey: string }) {
               </span>
             </div>
           )}
-          {messages.some((m) => m.escalated) && (
+          {escalated && !messages.some((m) => m.role === "agent") && (
             <div className="nexo-msg-enter" style={styles.handoffSummary}>
-              <span style={styles.handoffLabel}>Handed off to a human</span>
-              A team member has this conversation's full history and will follow up here.
+              <span style={styles.handoffLabel}>Connecting you with a human</span>
+              A support specialist has been brought into this conversation and will reply here.
+            </div>
+          )}
+          {resolved && (
+            <div className="nexo-msg-enter" style={styles.handoffSummary}>
+              <span style={styles.handoffLabel}>Conversation resolved</span>
+              Our team marked this as resolved. Send a message anytime to start a new one.
             </div>
           )}
         </div>
@@ -316,6 +353,7 @@ const styles: Record<string, React.CSSProperties> = {
   messages: {
     flex: 1,
     overflowY: "auto",
+    overflowX: "hidden",
     padding: 16,
     display: "flex",
     flexDirection: "column",
@@ -345,6 +383,31 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 13,
     lineHeight: 1.5,
   },
+  agentBubble: {
+    alignSelf: "flex-start",
+    background: "#eef3f1",
+    border: `1px solid ${colors.teal}`,
+    color: colors.slate,
+    padding: "10px 13px",
+    borderRadius: 12,
+    borderBottomLeftRadius: 3,
+    maxWidth: "82%",
+    fontSize: 13,
+    lineHeight: 1.5,
+  },
+  agentLabel: {
+    fontFamily: mono,
+    fontSize: 10,
+    color: colors.tealDark,
+    marginBottom: 5,
+  },
+  joinNote: {
+    alignSelf: "center",
+    textAlign: "center",
+    fontSize: 11,
+    color: colors.slateSoft,
+    margin: "4px 0 8px",
+  },
   citations: { marginTop: 7, display: "flex", flexWrap: "wrap", gap: 4 },
   citationBadge: {
     fontFamily: mono,
@@ -357,6 +420,7 @@ const styles: Record<string, React.CSSProperties> = {
   handoffSummary: {
     alignSelf: "center",
     width: "100%",
+    boxSizing: "border-box",
     background: colors.paperDim,
     borderRadius: 10,
     padding: "12px 14px",

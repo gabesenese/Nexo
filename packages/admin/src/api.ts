@@ -107,7 +107,7 @@ export interface Citation {
 
 export interface Message {
   id: string;
-  role: "user" | "assistant";
+  role: "user" | "assistant" | "agent";
   content: string;
   citations: Citation[];
   confidence: number | null;
@@ -152,6 +152,10 @@ export const api = {
     request<ChatReply>("/api/chat", { method: "POST", body: JSON.stringify(input) }),
   getAnalytics: () => request<AnalyticsSummary>("/api/analytics"),
   listConversations: () => request<Conversation[]>("/api/conversations"),
+  replyToConversation: (id: string, message: string) =>
+    request<Message>(`/api/conversations/${id}/reply`, { method: "POST", body: JSON.stringify({ message }) }),
+  resolveConversation: (id: string) =>
+    request<{ ok: true }>(`/api/conversations/${id}/resolve`, { method: "POST" }),
   listLeads: () => request<Lead[]>("/api/leads"),
   signup: (input: { name: string; email: string; password: string; companyName: string }) =>
     request<AuthUser>("/api/auth/signup", { method: "POST", body: JSON.stringify(input) }),

@@ -32,14 +32,4 @@ export async function analyticsRoutes(app: FastifyInstance) {
       recentEscalations,
     };
   });
-
-  app.get("/api/conversations", { preHandler: requireAuth }, async (req) => {
-    const conversations = await prisma.conversation.findMany({
-      where: { organizationId: req.auth!.organizationId },
-      orderBy: { createdAt: "desc" },
-      take: 50,
-      include: { messages: { orderBy: { createdAt: "asc" } }, escalations: true },
-    });
-    return conversations;
-  });
 }

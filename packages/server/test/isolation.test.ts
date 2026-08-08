@@ -242,6 +242,50 @@ suite("tenant isolation", () => {
     expect((await prisma.conversation.findUnique({ where: { id: convo.id } }))?.status).toBe("resolved");
   });
 
+  it("scopes widget config per org and gates writes to owner/admin", async () => {
+    const a = await signup("a@acme.test", "Acme");
+    const b = await signup("b@globex.test", "Globex");
+
+    const patchA = await app.inject({
+      method: "PATCH",
+      url: "/api/widget-config",
+      headers: { cookie: a.cookie, "content-type": "application/json" },
+      payload: { accentColor: "#2b3f8a", welcomeMessage: "Welcome to Acme" },
+    });
+    expect(patchA.statusCode).toBe(200);
+
+    // B's config is independent of A's write
+    expect((await get("/api/widget-config", b.cookie)).json().welcomeMessage).not.toBe("Welcome to Acme");
+
+    // public config by A's slug reflects A's settings
+    const aSlug = (await get("/api/org", a.cookie)).json().slug;
+    const pub = await app.inject({ method: "GET", url: `/api/widget/config?orgKey=${aSlug}` });
+    expect(pub.json()).toMatchObject({ accentColor: "#2b3f8a", welcomeMessage: "Welcome to Acme" });
+
+    // a member cannot change widget settings
+    const invite = await app.inject({
+      method: "POST",
+      url: "/api/org/invites",
+      headers: { cookie: a.cookie, "content-type": "application/json" },
+      payload: { email: "m@acme.test", role: "member" },
+    });
+    const token = (await prisma.invite.findUniqueOrThrow({ where: { id: invite.json().id } })).token;
+    const accept = await app.inject({
+      method: "POST",
+      url: `/api/invites/${token}/accept`,
+      headers: { "content-type": "application/json" },
+      payload: { name: "M", password: "password123" },
+    });
+    const memberCookie = `nexo_admin_session=${accept.cookies.find((c) => c.name === "nexo_admin_session")!.value}`;
+    const memberPatch = await app.inject({
+      method: "PATCH",
+      url: "/api/widget-config",
+      headers: { cookie: memberCookie, "content-type": "application/json" },
+      payload: { accentColor: "#204c40", welcomeMessage: "hijack" },
+    });
+    expect(memberPatch.statusCode).toBe(403);
+  });
+
   it("rejects unauthenticated access to scoped routes", async () => {
     for (const url of ["/api/sources", "/api/analytics", "/api/conversations", "/api/leads", "/api/org"]) {
       expect((await get(url)).statusCode).toBe(401);

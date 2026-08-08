@@ -33,13 +33,27 @@ export function Widget({ apiUrl, orgKey }: { apiUrl: string; orgKey: string }) {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
+  const [config, setConfig] = useState<{ accentColor: string; welcomeMessage: string }>({
+    accentColor: "#204c40",
+    welcomeMessage: GREETING,
+  });
   const sessionId = useRef(getSessionId());
   const scrollRef = useRef<HTMLDivElement>(null);
   const seen = useRef<Set<string>>(new Set());
   const cursor = useRef<string | null>(null);
 
+  const accent = config.accentColor;
   const escalated = status === "escalated";
   const resolved = status === "resolved";
+
+  useEffect(() => {
+    fetch(`${apiUrl}/api/widget/config?orgKey=${encodeURIComponent(orgKey)}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((c) => {
+        if (c) setConfig({ accentColor: c.accentColor, welcomeMessage: c.welcomeMessage });
+      })
+      .catch(() => {});
+  }, [apiUrl, orgKey]);
   const headerSub = escalated
     ? "A human will follow up shortly"
     : resolved
@@ -113,8 +127,8 @@ export function Widget({ apiUrl, orgKey }: { apiUrl: string; orgKey: string }) {
         }}
         aria-hidden={!open}
       >
-        <div style={styles.header}>
-          <div style={styles.mark}>N</div>
+        <div style={{ ...styles.header, background: accent }}>
+          <div style={{ ...styles.mark, background: "rgba(255,255,255,0.22)" }}>N</div>
           <div style={{ flex: 1 }}>
             <div style={styles.headTitle}>Nexo Support</div>
             <div style={styles.headSub}>{headerSub}</div>
@@ -132,7 +146,7 @@ export function Widget({ apiUrl, orgKey }: { apiUrl: string; orgKey: string }) {
 
         <div style={styles.messages} ref={scrollRef}>
           <div className="nexo-msg-enter" style={styles.assistantBubble}>
-            <div>{GREETING}</div>
+            <div>{config.welcomeMessage}</div>
           </div>
           {messages.map((m, i) => {
             const firstAgent = m.role === "agent" && messages.findIndex((x) => x.role === "agent") === i;
@@ -141,9 +155,15 @@ export function Widget({ apiUrl, orgKey }: { apiUrl: string; orgKey: string }) {
                 {firstAgent && <div style={styles.joinNote}>A support specialist has joined this conversation</div>}
                 <div
                   className="nexo-msg-enter"
-                  style={m.role === "user" ? styles.userBubble : m.role === "agent" ? styles.agentBubble : styles.assistantBubble}
+                  style={
+                    m.role === "user"
+                      ? styles.userBubble
+                      : m.role === "agent"
+                        ? { ...styles.agentBubble, borderColor: accent }
+                        : styles.assistantBubble
+                  }
                 >
-                  {m.role === "agent" && <div style={styles.agentLabel}>● Support specialist</div>}
+                  {m.role === "agent" && <div style={{ ...styles.agentLabel, color: accent }}>● Support specialist</div>}
                   <div>{m.content}</div>
                   {m.citations && m.citations.length > 0 && (
                     <div style={styles.citations}>
@@ -200,7 +220,7 @@ export function Widget({ apiUrl, orgKey }: { apiUrl: string; orgKey: string }) {
           />
           <button
             className="nexo-send-btn"
-            style={styles.sendButton}
+            style={{ ...styles.sendButton, background: accent }}
             onClick={() => send(input)}
             disabled={loading}
             tabIndex={open ? 0 : -1}
@@ -224,7 +244,7 @@ export function Widget({ apiUrl, orgKey }: { apiUrl: string; orgKey: string }) {
 
       <button
         className="nexo-launcher"
-        style={styles.launcher}
+        style={{ ...styles.launcher, background: accent }}
         onClick={() => setOpen((o) => !o)}
         aria-label="Open support chat"
       >

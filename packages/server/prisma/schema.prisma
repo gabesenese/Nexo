@@ -47,6 +47,17 @@ model Organization {
   sources       Source[]
   conversations Conversation[]
   leads         Lead[]
+  widgetConfig  WidgetConfig?
+}
+
+model WidgetConfig {
+  id             String       @id @default(cuid())
+  organizationId String       @unique
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  accentColor    String       @default("#204c40")
+  welcomeMessage String       @default("Hi! Ask me anything. I'll cite my sources, and you can talk to a human any time.")
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 }
 
 model Invite {

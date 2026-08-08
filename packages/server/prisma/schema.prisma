@@ -31,6 +31,10 @@ enum EscalationStatus {
   handed_off
 }
 
+enum NotificationType {
+  escalation
+}
+
 enum Role {
   owner
   admin
@@ -49,6 +53,7 @@ model Organization {
   conversations Conversation[]
   leads         Lead[]
   widgetConfig  WidgetConfig?
+  notifications Notification[]
 }
 
 model WidgetConfig {
@@ -135,6 +140,7 @@ model Conversation {
   updatedAt      DateTime           @updatedAt
   messages       Message[]
   escalations    Escalation[]
+  notifications  Notification[]
 
   @@index([sessionId])
   @@index([organizationId])
@@ -164,6 +170,21 @@ model Escalation {
   status         EscalationStatus  @default(pending)
   createdAt      DateTime          @default(now())
 
+  @@index([conversationId])
+}
+
+model Notification {
+  id             String            @id @default(cuid())
+  organizationId String
+  organization   Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  conversationId String
+  conversation   Conversation      @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  type           NotificationType  @default(escalation)
+  message        String
+  read           Boolean           @default(false)
+  createdAt      DateTime          @default(now())
+
+  @@index([organizationId, read])
   @@index([conversationId])
 }
 

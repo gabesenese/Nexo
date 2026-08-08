@@ -130,6 +130,15 @@ export interface Conversation {
   escalations: Escalation[];
 }
 
+export interface Notification {
+  id: string;
+  conversationId: string;
+  type: "escalation";
+  message: string;
+  read: boolean;
+  createdAt: string;
+}
+
 export interface Lead {
   id: string;
   name: string;
@@ -163,6 +172,8 @@ export const api = {
   resolveConversation: (id: string) =>
     request<{ ok: true }>(`/api/conversations/${id}/resolve`, { method: "POST" }),
   listLeads: () => request<Lead[]>("/api/leads"),
+  listNotifications: () => request<Notification[]>("/api/notifications"),
+  markNotificationsRead: () => request<{ ok: true }>("/api/notifications/read-all", { method: "POST" }),
   signup: (input: { name: string; email: string; password: string; companyName: string }) =>
     request<AuthUser>("/api/auth/signup", { method: "POST", body: JSON.stringify(input) }),
   login: (email: string, password: string) =>

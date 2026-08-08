@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { api, type Conversation } from "../api";
 
 function initials(sessionId: string) {
@@ -6,8 +7,9 @@ function initials(sessionId: string) {
 }
 
 export function ConversationsPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(searchParams.get("id"));
   const [replyText, setReplyText] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -21,6 +23,24 @@ export function ConversationsPage() {
     const id = setInterval(refresh, 4000);
     return () => clearInterval(id);
   }, []);
+
+  /** Deep-link support: a notification click sets ?id=, which may arrive after this page has already mounted. */
+  useEffect(() => {
+    const linkedId = searchParams.get("id");
+    if (linkedId && linkedId !== selectedId) {
+      setSelectedId(linkedId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
+  function selectConversation(id: string) {
+    setSelectedId(id);
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set("id", id);
+      return next;
+    });
+  }
 
   const selected = conversations.find((c) => c.id === selectedId) ?? null;
 
@@ -68,7 +88,7 @@ export function ConversationsPage() {
               className={`list-item${c.id === selectedId ? " selected" : ""}`}
               key={c.id}
               data-clickable
-              onClick={() => setSelectedId(c.id)}
+              onClick={() => selectConversation(c.id)}
             >
               <div className="avatar mono">{initials(c.sessionId)}</div>
               <div className="list-info">

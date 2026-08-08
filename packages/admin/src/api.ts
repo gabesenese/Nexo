@@ -3,7 +3,7 @@ const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
 export interface AuthUser {
   email: string;
   name: string;
-  organization: { id: string; name: string; slug: string };
+  organization: { id: string; name: string; slug: string; widgetKey: string };
 }
 
 export interface ChatCitation {
@@ -40,6 +40,7 @@ export interface OrgDetails {
   id: string;
   name: string;
   slug: string;
+  widgetKey: string;
   members: OrgMember[];
   invites: OrgInvite[];
 }
@@ -178,6 +179,7 @@ export const api = {
   createInvite: (email: string, role: "admin" | "member") =>
     request<OrgInvite>("/api/org/invites", { method: "POST", body: JSON.stringify({ email, role }) }),
   deleteInvite: (id: string) => request<{ ok: true }>(`/api/org/invites/${id}`, { method: "DELETE" }),
+  rotateWidgetKey: () => request<{ widgetKey: string }>("/api/widget-key/rotate", { method: "POST" }),
   getWidgetConfig: () => request<WidgetConfig>("/api/widget-config"),
   updateWidgetConfig: (input: WidgetConfig) =>
     request<WidgetConfig>("/api/widget-config", { method: "PATCH", body: JSON.stringify(input) }),

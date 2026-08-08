@@ -3,7 +3,7 @@ import type { FastifyInstance } from "fastify";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "../db/client.js";
-import { requireAuth, setSession } from "./auth.js";
+import { newWidgetKey, requireAuth, setSession } from "./auth.js";
 
 async function roleOf(userId: string, organizationId: string) {
   const membership = await prisma.membership.findUnique({
@@ -30,6 +30,7 @@ export async function orgRoutes(app: FastifyInstance) {
       id: org.id,
       name: org.name,
       slug: org.slug,
+      widgetKey: org.widgetKey,
       members: org.memberships.map((m) => ({ email: m.user.email, name: m.user.name, role: m.role })),
       invites: org.invites.map((i) => ({ id: i.id, email: i.email, role: i.role, token: i.token, createdAt: i.createdAt })),
     };
@@ -89,6 +90,19 @@ export async function orgRoutes(app: FastifyInstance) {
     }
     await prisma.invite.deleteMany({ where: { id: req.params.id, organizationId } });
     return { ok: true };
+  });
+
+  app.post("/api/widget-key/rotate", { preHandler: requireAuth }, async (req, reply) => {
+    const { userId, organizationId } = req.auth!;
+    const role = await roleOf(userId, organizationId);
+    if (role !== "owner" && role !== "admin") {
+      return reply.status(403).send({ error: "Only owners and admins can rotate the widget key." });
+    }
+    const org = await prisma.organization.update({
+      where: { id: organizationId },
+      data: { widgetKey: newWidgetKey() },
+    });
+    return { widgetKey: org.widgetKey };
   });
 
   app.get("/api/widget-config", { preHandler: requireAuth }, async (req) => {
@@ -184,7 +198,12 @@ export async function orgRoutes(app: FastifyInstance) {
     return {
       email: invite.email,
       name: existingUser?.name,
-      organization: { id: invite.organization.id, name: invite.organization.name, slug: invite.organization.slug },
+      organization: {
+        id: invite.organization.id,
+        name: invite.organization.name,
+        slug: invite.organization.slug,
+        widgetKey: invite.organization.widgetKey,
+      },
     };
   });
 }

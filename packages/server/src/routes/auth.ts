@@ -1,7 +1,13 @@
+import { randomUUID } from "node:crypto";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "../db/client.js";
+
+/** Opaque, unguessable public key a customer embeds as data-org-key. */
+export function newWidgetKey(): string {
+  return "wk_" + (randomUUID() + randomUUID()).replace(/-/g, "");
+}
 
 const COOKIE_NAME = "nexo_admin_session";
 const COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
@@ -76,7 +82,9 @@ export async function authRoutes(app: FastifyInstance) {
     const slug = await uniqueSlug(companyName);
 
     const { user, organization } = await prisma.$transaction(async (tx) => {
-      const organization = await tx.organization.create({ data: { name: companyName, slug } });
+      const organization = await tx.organization.create({
+        data: { name: companyName, slug, widgetKey: newWidgetKey() },
+      });
       const user = await tx.user.create({ data: { name, email, passwordHash } });
       await tx.membership.create({
         data: { userId: user.id, organizationId: organization.id, role: "owner" },
@@ -88,7 +96,12 @@ export async function authRoutes(app: FastifyInstance) {
     return {
       email: user.email,
       name: user.name,
-      organization: { id: organization.id, name: organization.name, slug: organization.slug },
+      organization: {
+        id: organization.id,
+        name: organization.name,
+        slug: organization.slug,
+        widgetKey: organization.widgetKey,
+      },
     };
   });
 
@@ -118,6 +131,7 @@ export async function authRoutes(app: FastifyInstance) {
         id: membership.organization.id,
         name: membership.organization.name,
         slug: membership.organization.slug,
+        widgetKey: membership.organization.widgetKey,
       },
     };
   });
@@ -145,6 +159,7 @@ export async function authRoutes(app: FastifyInstance) {
           id: membership.organization.id,
           name: membership.organization.name,
           slug: membership.organization.slug,
+          widgetKey: membership.organization.widgetKey,
         },
       };
     } catch {

@@ -15,8 +15,8 @@ async function main() {
 
     const organization = await prisma.organization.upsert({
       where: { slug: "legacy" },
-      update: {},
-      create: { name: "Legacy Workspace", slug: "legacy" },
+      update: { widgetKey: "legacy" },
+      create: { name: "Legacy Workspace", slug: "legacy", widgetKey: "legacy" },
     });
 
     const user = await prisma.user.upsert({

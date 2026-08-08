@@ -792,6 +792,24 @@ select:focus {
   margin-bottom: 4px;
 }
 
+.source-detail {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px 16px;
+  margin: 16px 0;
+  font-size: 13px;
+}
+
+.source-detail dt {
+  color: var(--slate-soft);
+}
+
+.source-detail dd {
+  margin: 0;
+  color: var(--ink);
+  word-break: break-word;
+}
+
 .reply-box {
   margin-top: 16px;
   border-top: 1px solid var(--line);

@@ -48,4 +48,14 @@ export async function sourcesRoutes(app: FastifyInstance) {
       return reply.status(502).send({ error: (err as Error).message });
     }
   });
+
+  app.delete<{ Params: { id: string } }>("/api/sources/:id", { preHandler: requireAuth }, async (req, reply) => {
+    const { count } = await prisma.source.deleteMany({
+      where: { id: req.params.id, organizationId: req.auth!.organizationId },
+    });
+    if (count === 0) {
+      return reply.status(404).send({ error: "source not found" });
+    }
+    return { ok: true };
+  });
 }

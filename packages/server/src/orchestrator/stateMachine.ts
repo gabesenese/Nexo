@@ -20,13 +20,13 @@ export interface ChatTurnResult {
 const chatProvider: ChatProvider = env.AI_PROVIDER === "cloud" ? anthropicChatProvider : ollamaChatProvider;
 const handoffAdapter: HandoffAdapter = mockHandoffAdapter;
 
-async function getOrCreateConversation(sessionId: string, channel: string) {
+async function getOrCreateConversation(sessionId: string, organizationId: string, channel: string) {
   const existing = await prisma.conversation.findFirst({
-    where: { sessionId, status: "active" },
+    where: { sessionId, organizationId, status: "active" },
     orderBy: { createdAt: "desc" },
   });
   if (existing) return existing;
-  return prisma.conversation.create({ data: { sessionId, channel } });
+  return prisma.conversation.create({ data: { sessionId, organizationId, channel } });
 }
 
 /**
@@ -39,13 +39,14 @@ async function getOrCreateConversation(sessionId: string, channel: string) {
  */
 export async function handleUserMessage(params: {
   sessionId: string;
+  organizationId: string;
   message: string;
   channel?: string;
   forceEscalate?: boolean;
 }): Promise<ChatTurnResult> {
-  const { sessionId, message, channel = "widget", forceEscalate = false } = params;
+  const { sessionId, organizationId, message, channel = "widget", forceEscalate = false } = params;
 
-  const conversation = await getOrCreateConversation(sessionId, channel);
+  const conversation = await getOrCreateConversation(sessionId, organizationId, channel);
 
   await prisma.message.create({
     data: { conversationId: conversation.id, role: "user", content: message },
@@ -70,7 +71,7 @@ export async function handleUserMessage(params: {
     .slice(0, -1)
     .map((m: Message) => ({ role: m.role, content: m.content }));
 
-  const retrieved = await hybridSearch(message);
+  const retrieved = await hybridSearch(message, organizationId);
   const context = retrieved.map((r) => ({ id: r.id, sourceName: r.sourceName, content: r.content }));
 
   const result = await chatProvider.generateResponse({ history, message, context });

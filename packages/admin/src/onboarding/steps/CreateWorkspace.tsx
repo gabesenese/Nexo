@@ -4,11 +4,11 @@ import { WizardShell } from "../WizardShell";
 const INDUSTRIES = ["SaaS", "E-commerce", "Property management", "Healthcare", "Financial services", "Other"];
 
 export function CreateWorkspaceStep({
-  onNext,
+  onSubmit,
   onBack,
   defaults,
 }: {
-  onNext: (data: { companyName: string; industry: string; website: string; supportEmail: string }) => void;
+  onSubmit: (data: { companyName: string; industry: string; website: string; supportEmail: string }) => Promise<void>;
   onBack: () => void;
   defaults: { companyName: string; industry: string; website: string; supportEmail: string };
 }) {
@@ -17,12 +17,19 @@ export function CreateWorkspaceStep({
   const [website, setWebsite] = useState(defaults.website);
   const [supportEmail, setSupportEmail] = useState(defaults.supportEmail);
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!companyName.trim()) return setError("Company name is required.");
     setError("");
-    onNext({ companyName: companyName.trim(), industry, website: website.trim(), supportEmail: supportEmail.trim() });
+    setSubmitting(true);
+    try {
+      await onSubmit({ companyName: companyName.trim(), industry, website: website.trim(), supportEmail: supportEmail.trim() });
+    } catch (err) {
+      setError((err as Error).message);
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -64,11 +71,11 @@ export function CreateWorkspaceStep({
         </div>
         {error && <p className="error-text">{error}</p>}
         <div className="onboard-actions">
-          <button type="button" className="onboard-back" onClick={onBack}>
+          <button type="button" className="onboard-back" onClick={onBack} disabled={submitting}>
             ← Back
           </button>
-          <button type="submit" className="btn btn-primary">
-            Continue
+          <button type="submit" className="btn btn-primary" disabled={submitting}>
+            {submitting ? "Creating workspace…" : "Create workspace"}
           </button>
         </div>
       </form>

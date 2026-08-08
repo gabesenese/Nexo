@@ -1,3 +1,5 @@
+import { ONBOARDING_URL } from "../config";
+
 export function Hero({ onOpenTrial }: { onOpenTrial: () => void }) {
   return (
     <div className="l-hero">
@@ -5,18 +7,18 @@ export function Hero({ onOpenTrial }: { onOpenTrial: () => void }) {
       <h1>
         Every answer has <span className="accent">an exit.</span>
       </h1>
-      <p>AI support that knows when to answer — and when your customers deserve a person.</p>
+      <p>AI support that knows when to answer, and when your customers deserve a person.</p>
       <div className="l-hero-ctas">
-        <button className="btn btn-primary" onClick={onOpenTrial}>
+        <a className="btn btn-primary" href={ONBOARDING_URL}>
           Start free trial
-        </button>
-        <a className="btn btn-ghost" href="#pricing">
-          See pricing →
         </a>
+        <button className="btn btn-ghost" onClick={onOpenTrial}>
+          Talk to us
+        </button>
       </div>
-      <div className="l-hero-note">No sales call required to get started.</div>
+      <div className="l-hero-note">Set it up yourself in minutes. No sales call required.</div>
 
-      <div className="proof-label">This is the actual product — not a mockup</div>
+      <div className="proof-label">This is the actual product, not a mockup</div>
       <div className="proof-card">
         <div className="proof-head">
           <div className="proof-mark">N</div>
@@ -26,11 +28,11 @@ export function Hero({ onOpenTrial }: { onOpenTrial: () => void }) {
           </div>
         </div>
         <div className="proof-msg user">
-          I was charged twice this month and I'm not sure why — can someone look into my account?
+          I was charged twice this month and I'm not sure why. Can someone look into my account?
         </div>
         <div className="proof-msg bot">
           I can see our billing policy, but this involves account-specific details I don't have full visibility into.
-          <div className="proof-flag">Low confidence — routing to a person</div>
+          <div className="proof-flag">Handing this to a human</div>
         </div>
         <div className="proof-handoff">
           <span className="label">Handed off to a human</span>

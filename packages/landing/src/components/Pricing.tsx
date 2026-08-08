@@ -28,7 +28,9 @@ const TIERS: Tier[] = [
   },
 ];
 
-export function Pricing({ onOpenTrial }: { onOpenTrial: () => void }) {
+import { ONBOARDING_URL } from "../config";
+
+export function Pricing() {
   return (
     <section className="l-section" style={{ paddingTop: 0 }} id="pricing">
       <div className="pricing-wrap">
@@ -50,9 +52,9 @@ export function Pricing({ onOpenTrial }: { onOpenTrial: () => void }) {
                   <li key={f}>{f}</li>
                 ))}
               </ul>
-              <button className={`btn ${tier.highlighted ? "btn-primary" : "btn-ghost"}`} onClick={onOpenTrial}>
+              <a className={`btn ${tier.highlighted ? "btn-primary" : "btn-ghost"}`} href={ONBOARDING_URL}>
                 Start free
-              </button>
+              </a>
             </div>
           ))}
         </div>

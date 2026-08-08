@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { ONBOARDING_URL, SIGN_IN_URL } from "../config";
 
 function LogoMark() {
   return (
@@ -59,12 +60,15 @@ export function Nav({ onOpenTrial }: { onOpenTrial: () => void }) {
           <a href="http://localhost:5174/">Widget demo</a>
         </div>
         <div className="l-nav-cta">
-          <a className="btn btn-ghost" href="http://localhost:5173/">
+          <a className="btn btn-ghost" href={SIGN_IN_URL}>
             Sign in
           </a>
-          <button className="btn btn-primary" onClick={handleOpenTrial}>
-            Start free
+          <button className="btn btn-ghost" onClick={handleOpenTrial}>
+            Talk to us
           </button>
+          <a className="btn btn-primary" href={ONBOARDING_URL}>
+            Start free
+          </a>
         </div>
         <button
           id="hamburger"
@@ -94,12 +98,15 @@ export function Nav({ onOpenTrial }: { onOpenTrial: () => void }) {
           Widget demo
         </a>
         <div className="l-nav-cta">
-          <a className="btn btn-ghost" href="http://localhost:5173/" tabIndex={menuOpen ? 0 : -1}>
+          <a className="btn btn-ghost" href={SIGN_IN_URL} tabIndex={menuOpen ? 0 : -1}>
             Sign in
           </a>
-          <button className="btn btn-primary" tabIndex={menuOpen ? 0 : -1} onClick={handleOpenTrial}>
-            Start free
+          <button className="btn btn-ghost" tabIndex={menuOpen ? 0 : -1} onClick={handleOpenTrial}>
+            Talk to us
           </button>
+          <a className="btn btn-primary" href={ONBOARDING_URL} tabIndex={menuOpen ? 0 : -1}>
+            Start free
+          </a>
         </div>
       </div>
     </>

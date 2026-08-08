@@ -86,6 +86,9 @@ button:focus-visible {
   height: 100%;
 }
 .l-nav-links {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   gap: 34px;
   font-size: 14px;

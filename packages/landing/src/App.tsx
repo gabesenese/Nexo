@@ -18,7 +18,7 @@ export default function App() {
       <MetricsStrip />
       <PhilosophySection />
       <KnowledgeSection />
-      <Pricing onOpenTrial={() => setTrialOpen(true)} />
+      <Pricing />
       <Footer />
       <TrialModal open={trialOpen} onClose={() => setTrialOpen(false)} />
     </>

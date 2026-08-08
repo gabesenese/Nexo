@@ -1,45 +1,25 @@
 import { useState } from "react";
 import { WizardShell } from "../WizardShell";
 
-const SNIPPET = `<script src="http://localhost:5174/dist/widget.js" data-api-url="http://localhost:4000"></script>`;
+const WIDGET_SRC = import.meta.env.VITE_WIDGET_URL ?? "http://localhost:5174/dist/widget.js";
+const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
 
-export function InstallStep({ onBack, onFinish }: { onBack: () => void; onFinish: () => void }) {
+export function InstallStep({
+  orgKey,
+  onBack,
+  onFinish,
+}: {
+  orgKey: string;
+  onBack: () => void;
+  onFinish: () => void;
+}) {
   const [copied, setCopied] = useState(false);
-  const [verifying, setVerifying] = useState(false);
-  const [verified, setVerified] = useState(false);
+  const snippet = `<script src="${WIDGET_SRC}" data-api-url="${API_URL}" data-org-key="${orgKey}"></script>`;
 
   async function handleCopy() {
-    await navigator.clipboard.writeText(SNIPPET);
+    await navigator.clipboard.writeText(snippet);
     setCopied(true);
     setTimeout(() => setCopied(false), 1800);
-  }
-
-  function handleVerify() {
-    setVerifying(true);
-    setTimeout(() => {
-      setVerifying(false);
-      setVerified(true);
-    }, 1200);
-  }
-
-  if (verified) {
-    return (
-      <WizardShell step={7} total={7} title="You're all set" subtitle="Nexo is live on your site.">
-        <div style={{ textAlign: "center" }}>
-          <div className="onboard-done-icon">✓</div>
-          <p style={{ color: "var(--slate-soft)", fontSize: 13.5 }}>
-            Your widget is installed. In the real product, this is where you'd land in your workspace dashboard and
-            watch conversations come in.
-          </p>
-        </div>
-        <div className="onboard-actions">
-          <span />
-          <button type="button" className="btn btn-primary" onClick={onFinish}>
-            Start over
-          </button>
-        </div>
-      </WizardShell>
-    );
   }
 
   return (
@@ -47,28 +27,25 @@ export function InstallStep({ onBack, onFinish }: { onBack: () => void; onFinish
       step={7}
       total={7}
       title="Install the widget"
-      subtitle="One script tag. Paste it before the closing </body> tag on your site."
+      subtitle="One script tag, keyed to your workspace. Paste it before the closing </body> tag on your site."
     >
       <div className="onboard-code">
-        <div className="onboard-code-text">{SNIPPET}</div>
+        <div className="onboard-code-text">{snippet}</div>
         <button type="button" className="onboard-copy" onClick={handleCopy}>
           {copied ? "Copied" : "Copy"}
         </button>
       </div>
 
-      {verifying && (
-        <div className="onboard-verify">
-          <span className="ov-spinner" />
-          Checking for the widget on your site…
-        </div>
-      )}
+      <p className="empty-note" style={{ marginTop: 4 }}>
+        The <code>data-org-key</code> ties the widget to your knowledge, so it only ever answers from your sources.
+      </p>
 
       <div className="onboard-actions">
         <button type="button" className="onboard-back" onClick={onBack}>
           ← Back
         </button>
-        <button type="button" className="btn btn-primary" disabled={verifying} onClick={handleVerify}>
-          {verifying ? "Verifying…" : "Verify installation"}
+        <button type="button" className="btn btn-primary" onClick={onFinish}>
+          Go to your dashboard →
         </button>
       </div>
     </WizardShell>

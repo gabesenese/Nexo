@@ -3,7 +3,21 @@ const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
 export interface AuthUser {
   email: string;
   name: string;
-  organization: { id: string; name: string };
+  organization: { id: string; name: string; slug: string };
+}
+
+export interface ChatCitation {
+  id: string;
+  sourceName: string;
+  headingPath: string[];
+}
+
+export interface ChatReply {
+  conversationId: string;
+  answer: string;
+  confidence: number | null;
+  citations: ChatCitation[];
+  escalated: boolean;
 }
 
 export type MemberRole = "owner" | "admin" | "member";
@@ -134,6 +148,8 @@ export const api = {
     return res.json();
   },
   deleteSource: (id: string) => request<{ ok: true }>(`/api/sources/${id}`, { method: "DELETE" }),
+  chat: (input: { orgKey: string; sessionId: string; message: string }) =>
+    request<ChatReply>("/api/chat", { method: "POST", body: JSON.stringify(input) }),
   getAnalytics: () => request<AnalyticsSummary>("/api/analytics"),
   listConversations: () => request<Conversation[]>("/api/conversations"),
   listLeads: () => request<Lead[]>("/api/leads"),

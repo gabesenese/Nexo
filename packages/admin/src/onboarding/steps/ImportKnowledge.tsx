@@ -5,16 +5,14 @@ type Method = "help_center" | "pdf" | "skip";
 
 export function ImportKnowledgeStep({
   onNext,
-  onBack,
   defaults,
 }: {
-  onNext: (data: { method: Method; helpCenterUrl?: string; pdfName?: string }) => void;
-  onBack: () => void;
+  onNext: (data: { method: Method; helpCenterUrl?: string; file?: File }) => void;
   defaults: { method?: Method; helpCenterUrl?: string };
 }) {
   const [method, setMethod] = useState<Method | null>(defaults.method ?? null);
   const [helpCenterUrl, setHelpCenterUrl] = useState(defaults.helpCenterUrl ?? "");
-  const [pdfName, setPdfName] = useState<string | null>(null);
+  const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState("");
 
   function handleContinue() {
@@ -24,9 +22,9 @@ export function ImportKnowledgeStep({
       return onNext({ method, helpCenterUrl: helpCenterUrl.trim() });
     }
     if (method === "pdf") {
-      if (!pdfName) return setError("Choose a PDF to upload.");
+      if (!file) return setError("Choose a PDF to upload.");
       setError("");
-      return onNext({ method, pdfName });
+      return onNext({ method, file });
     }
     onNext({ method: "skip" });
   }
@@ -69,7 +67,7 @@ export function ImportKnowledgeStep({
           <input
             type="file"
             accept="application/pdf"
-            onChange={(e) => setPdfName(e.target.files?.[0]?.name ?? null)}
+            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
           />
         )}
 
@@ -88,9 +86,7 @@ export function ImportKnowledgeStep({
 
       {error && <p className="error-text">{error}</p>}
       <div className="onboard-actions">
-        <button type="button" className="onboard-back" onClick={onBack}>
-          ← Back
-        </button>
+        <span />
         <button type="button" className="btn btn-primary" disabled={!method} onClick={handleContinue}>
           Continue
         </button>

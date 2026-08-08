@@ -114,31 +114,24 @@ export function Widget({ apiUrl, orgKey }: { apiUrl: string; orgKey: string }) {
         </div>
 
         <div style={styles.messages} ref={scrollRef}>
-          {messages.map((m, i) => {
-            const lowConfidence = m.role === "assistant" && m.escalated && m.confidence != null;
-            return (
-              <div
-                key={i}
-                className="nexo-msg-enter"
-                style={{
-                  ...(m.role === "user" ? styles.userBubble : styles.assistantBubble),
-                  ...(lowConfidence ? styles.lowConfBubble : {}),
-                }}
-              >
-                <div>{m.content}</div>
-                {m.citations && m.citations.length > 0 && (
-                  <div style={styles.citations}>
-                    {m.citations.map((c) => (
-                      <span key={c.id} style={styles.citationBadge} title={c.headingPath.join(" > ")}>
-                        {c.sourceName}
-                      </span>
-                    ))}
-                  </div>
-                )}
-                {lowConfidence && <div style={styles.lowConfFlag}>● Low confidence — routing to a person</div>}
-              </div>
-            );
-          })}
+          {messages.map((m, i) => (
+            <div
+              key={i}
+              className="nexo-msg-enter"
+              style={m.role === "user" ? styles.userBubble : styles.assistantBubble}
+            >
+              <div>{m.content}</div>
+              {m.citations && m.citations.length > 0 && (
+                <div style={styles.citations}>
+                  {m.citations.map((c) => (
+                    <span key={c.id} style={styles.citationBadge} title={c.headingPath.join(" > ")}>
+                      {c.sourceName}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
           {loading && (
             <div className="nexo-msg-enter" style={styles.assistantBubble}>
               <span className="nexo-typing">
@@ -351,19 +344,6 @@ const styles: Record<string, React.CSSProperties> = {
     maxWidth: "82%",
     fontSize: 13,
     lineHeight: 1.5,
-  },
-  lowConfBubble: {
-    border: "1px solid #ecd8b8",
-    background: "#fbf4e8",
-  },
-  lowConfFlag: {
-    fontFamily: mono,
-    fontSize: 10,
-    color: colors.amber,
-    display: "flex",
-    alignItems: "center",
-    gap: 5,
-    marginTop: 8,
   },
   citations: { marginTop: 7, display: "flex", flexWrap: "wrap", gap: 4 },
   citationBadge: {

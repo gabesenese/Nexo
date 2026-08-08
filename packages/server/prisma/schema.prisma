@@ -14,6 +14,15 @@ enum SourceType {
   pdf
 }
 
+enum SourceStatus {
+  queued
+  fetching
+  chunking
+  embedding
+  ready
+  failed
+}
+
 enum ConversationStatus {
   active
   resolved
@@ -103,15 +112,19 @@ model Membership {
 }
 
 model Source {
-  id             String        @id @default(cuid())
-  organizationId String?
-  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  type           SourceType
-  name           String
-  origin         String
-  lastSyncedAt   DateTime?
-  createdAt      DateTime      @default(now())
-  chunks         Chunk[]
+  id              String        @id @default(cuid())
+  organizationId  String?
+  organization    Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  type            SourceType
+  name            String
+  origin          String
+  status          SourceStatus  @default(queued)
+  errorMessage    String?
+  totalChunks     Int?
+  processedChunks Int           @default(0)
+  lastSyncedAt    DateTime?
+  createdAt       DateTime      @default(now())
+  chunks          Chunk[]
 
   @@index([organizationId])
 }

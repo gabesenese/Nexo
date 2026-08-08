@@ -72,19 +72,44 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json();
 }
 
+export type SourceStatus = "queued" | "fetching" | "chunking" | "embedding" | "ready" | "failed";
+
 export interface SourceSummary {
   id: string;
   type: "help_center" | "pdf";
   name: string;
   origin: string;
+  status: SourceStatus;
+  errorMessage: string | null;
+  totalChunks: number | null;
+  processedChunks: number;
   lastSyncedAt: string | null;
+  createdAt: string;
   chunkCount: number;
 }
 
-export interface IngestResult {
+export interface QueuedSource {
   sourceId: string;
   name: string;
-  chunkCount: number;
+}
+
+export const IN_PROGRESS_STATUSES: SourceStatus[] = ["queued", "fetching", "chunking", "embedding"];
+
+export function sourceStatusLabel(status: SourceStatus): string {
+  switch (status) {
+    case "queued":
+      return "Queued…";
+    case "fetching":
+      return "Fetching…";
+    case "chunking":
+      return "Chunking…";
+    case "embedding":
+      return "Embedding…";
+    case "ready":
+      return "Ready";
+    case "failed":
+      return "Needs attention";
+  }
 }
 
 export interface Escalation {
@@ -151,8 +176,8 @@ export interface Lead {
 export const api = {
   listSources: () => request<SourceSummary[]>("/api/sources"),
   addHelpCenterUrl: (url: string) =>
-    request<IngestResult>("/api/sources/help-center", { method: "POST", body: JSON.stringify({ url }) }),
-  uploadPdf: async (file: File): Promise<IngestResult> => {
+    request<QueuedSource>("/api/sources/help-center", { method: "POST", body: JSON.stringify({ url }) }),
+  uploadPdf: async (file: File): Promise<QueuedSource> => {
     const form = new FormData();
     form.append("file", file);
     const res = await fetch(`${API_URL}/api/sources/pdf`, { method: "POST", body: form, credentials: "include" });
@@ -162,6 +187,7 @@ export const api = {
     }
     return res.json();
   },
+  reindexSource: (id: string) => request<{ ok: true }>(`/api/sources/${id}/reindex`, { method: "POST" }),
   deleteSource: (id: string) => request<{ ok: true }>(`/api/sources/${id}`, { method: "DELETE" }),
   chat: (input: { orgKey: string; sessionId: string; message: string }) =>
     request<ChatReply>("/api/chat", { method: "POST", body: JSON.stringify(input) }),

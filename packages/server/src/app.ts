@@ -7,6 +7,7 @@ import multipart from "@fastify/multipart";
 import jwt from "@fastify/jwt";
 import cookie from "@fastify/cookie";
 import { env } from "./config/env.js";
+import { recoverInterruptedSources } from "./ingestion/pipeline.js";
 import { sourcesRoutes } from "./routes/sources.js";
 import { chatRoutes } from "./routes/chat.js";
 import { conversationsRoutes } from "./routes/conversations.js";
@@ -71,6 +72,8 @@ export async function buildApp(options: { logger?: boolean } = {}): Promise<Fast
   await app.register(notificationsRoutes);
   await app.register(analyticsRoutes);
   await app.register(leadsRoutes);
+
+  await recoverInterruptedSources();
 
   return app;
 }

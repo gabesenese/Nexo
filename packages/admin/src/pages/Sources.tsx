@@ -1,48 +1,75 @@
-import { useEffect, useState } from "react";
-import { api, type SourceSummary } from "../api";
+import { useEffect, useRef, useState } from "react";
+import { api, sourceStatusLabel, type SourceSummary } from "../api";
 
 type Notice =
   | { tone: "info"; text: string }
   | { tone: "success"; text: string }
   | { tone: "error"; text: string };
 
+function statusBadgeClass(status: SourceSummary["status"]) {
+  switch (status) {
+    case "ready":
+      return "healthy";
+    case "failed":
+      return "escalated";
+    case "queued":
+      return "neutral";
+    default:
+      return "active";
+  }
+}
+
+function progressLabel(source: SourceSummary): string {
+  if (source.status === "embedding" && source.totalChunks) {
+    return `Embedding… ${source.processedChunks}/${source.totalChunks} chunks`;
+  }
+  return sourceStatusLabel(source.status);
+}
+
 export function SourcesPage() {
   const [sources, setSources] = useState<SourceSummary[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [url, setUrl] = useState("");
   const [busy, setBusy] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [reindexingId, setReindexingId] = useState<string | null>(null);
   const [notice, setNotice] = useState<Notice | null>(null);
+  const noticeSourceId = useRef<string | null>(null);
 
   async function refresh() {
-    setSources(await api.listSources());
+    const next = await api.listSources();
+    setSources(next);
     setLoaded(true);
+
+    if (noticeSourceId.current) {
+      const watched = next.find((s) => s.id === noticeSourceId.current);
+      if (watched && watched.status !== "queued" && watched.status !== "fetching" && watched.status !== "chunking" && watched.status !== "embedding") {
+        setNotice(
+          watched.status === "ready"
+            ? { tone: "success", text: `“${watched.name}” is ready. Nexo can now answer from it.` }
+            : { tone: "error", text: watched.errorMessage ?? `“${watched.name}” failed to index.` },
+        );
+        noticeSourceId.current = null;
+      }
+    }
   }
 
   useEffect(() => {
     refresh();
+    const id = setInterval(refresh, 2000);
+    return () => clearInterval(id);
   }, []);
-
-  function reportIndexed(name: string, chunkCount: number) {
-    if (chunkCount === 0) {
-      setNotice({ tone: "error", text: `Indexed “${name}” but found no readable content. Check the file or URL.` });
-    } else {
-      setNotice({
-        tone: "success",
-        text: `Indexed “${name}”. ${chunkCount} chunk${chunkCount === 1 ? "" : "s"} added to Nexo's knowledge.`,
-      });
-    }
-  }
 
   async function handleAddUrl() {
     if (!url.trim()) return;
     setBusy(true);
-    setNotice({ tone: "info", text: "Fetching the page, chunking, and embedding it. This can take a few seconds." });
     try {
-      const result = await api.addHelpCenterUrl(url.trim());
+      const queued = await api.addHelpCenterUrl(url.trim());
       setUrl("");
+      noticeSourceId.current = queued.sourceId;
+      setNotice({ tone: "info", text: "Queued. Nexo is fetching, chunking, and embedding it now." });
       await refresh();
-      reportIndexed(result.name, result.chunkCount);
     } catch (err) {
       setNotice({ tone: "error", text: (err as Error).message });
     } finally {
@@ -54,16 +81,31 @@ export function SourcesPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     setBusy(true);
-    setNotice({ tone: "info", text: `Reading “${file.name}”, chunking, and embedding it. This can take a few seconds.` });
     try {
-      const result = await api.uploadPdf(file);
+      const queued = await api.uploadPdf(file);
+      noticeSourceId.current = queued.sourceId;
+      setNotice({ tone: "info", text: `Queued “${file.name}”. Nexo is reading, chunking, and embedding it now.` });
       await refresh();
-      reportIndexed(result.name, result.chunkCount);
     } catch (err) {
       setNotice({ tone: "error", text: (err as Error).message });
     } finally {
       setBusy(false);
       e.target.value = "";
+    }
+  }
+
+  async function handleReindex(source: SourceSummary) {
+    setReindexingId(source.id);
+    setNotice(null);
+    try {
+      await api.reindexSource(source.id);
+      noticeSourceId.current = source.id;
+      setNotice({ tone: "info", text: `Re-indexing “${source.name}”.` });
+      await refresh();
+    } catch (err) {
+      setNotice({ tone: "error", text: (err as Error).message });
+    } finally {
+      setReindexingId(null);
     }
   }
 
@@ -76,6 +118,7 @@ export function SourcesPage() {
     setNotice(null);
     try {
       await api.deleteSource(source.id);
+      if (selectedId === source.id) setSelectedId(null);
       await refresh();
       setNotice({ tone: "success", text: `Removed “${source.name}” from Nexo's knowledge.` });
     } catch (err) {
@@ -86,6 +129,7 @@ export function SourcesPage() {
   }
 
   const showEmptyHero = loaded && sources.length === 0;
+  const selected = sources.find((s) => s.id === selectedId) ?? null;
 
   return (
     <div>
@@ -146,7 +190,7 @@ export function SourcesPage() {
               disabled={busy}
             />
             <button className="btn btn-primary" onClick={handleAddUrl} disabled={busy}>
-              {busy ? "Indexing…" : "Add"}
+              {busy ? "Queuing…" : "Add"}
             </button>
           </div>
         </div>
@@ -165,35 +209,88 @@ export function SourcesPage() {
         </div>
       )}
 
-      <div className="card">
-        <h3>Ingested sources</h3>
-        <div className="card-sub">
-          {sources.length} source{sources.length === 1 ? "" : "s"}
-        </div>
-        {sources.map((s) => (
-          <div className="list-item" key={s.id}>
-            <div className="avatar mono">{s.type === "pdf" ? "PDF" : "HC"}</div>
-            <div className="list-info">
-              <div className="li-title">{s.name}</div>
-              <div className="li-sub">
-                {s.chunkCount} chunk{s.chunkCount === 1 ? "" : "s"} ·{" "}
-                {s.lastSyncedAt ? `synced ${new Date(s.lastSyncedAt).toLocaleString()}` : "not synced"}
-              </div>
-            </div>
-            <span className={`badge ${s.lastSyncedAt ? "healthy" : "escalated"}`}>
-              {s.lastSyncedAt ? "healthy" : "pending"}
-            </span>
-            <button
-              className="btn-small danger"
-              onClick={() => handleDelete(s)}
-              disabled={deletingId === s.id}
-            >
-              {deletingId === s.id ? "Deleting…" : "Delete"}
-            </button>
+      <div className="row" style={{ alignItems: "flex-start" }}>
+        <div className="card">
+          <h3>Ingested sources</h3>
+          <div className="card-sub">
+            {sources.length} source{sources.length === 1 ? "" : "s"}
           </div>
-        ))}
-        {loaded && sources.length === 0 && (
-          <p className="empty-note">No sources yet. Add a help-center URL or upload a PDF above.</p>
+          {sources.map((s) => (
+            <div
+              className={`list-item${s.id === selectedId ? " selected" : ""}`}
+              key={s.id}
+              data-clickable
+              onClick={() => setSelectedId(s.id)}
+            >
+              <div className="avatar mono">{s.type === "pdf" ? "PDF" : "HC"}</div>
+              <div className="list-info">
+                <div className="li-title">{s.name}</div>
+                <div className="li-sub">
+                  {s.status === "ready" || s.status === "failed"
+                    ? `${s.chunkCount} chunk${s.chunkCount === 1 ? "" : "s"} · ${
+                        s.lastSyncedAt ? `indexed ${new Date(s.lastSyncedAt).toLocaleString()}` : "never indexed"
+                      }`
+                    : progressLabel(s)}
+                </div>
+              </div>
+              <span className={`badge ${statusBadgeClass(s.status)}`}>{sourceStatusLabel(s.status)}</span>
+            </div>
+          ))}
+          {loaded && sources.length === 0 && (
+            <p className="empty-note">No sources yet. Add a help-center URL or upload a PDF above.</p>
+          )}
+        </div>
+
+        {selected && (
+          <div className="card">
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <h3>{selected.name}</h3>
+              <span className={`badge ${statusBadgeClass(selected.status)}`}>
+                {sourceStatusLabel(selected.status)}
+              </span>
+            </div>
+            <div className="card-sub">{selected.type === "pdf" ? "PDF" : "Help center article"}</div>
+
+            <dl className="source-detail">
+              <dt>Origin</dt>
+              <dd>{selected.origin}</dd>
+              <dt>Chunks</dt>
+              <dd>
+                {selected.status === "embedding" && selected.totalChunks
+                  ? `${selected.processedChunks} / ${selected.totalChunks}`
+                  : selected.chunkCount}
+              </dd>
+              <dt>Last indexed</dt>
+              <dd>{selected.lastSyncedAt ? new Date(selected.lastSyncedAt).toLocaleString() : "Never"}</dd>
+              <dt>Added</dt>
+              <dd>{new Date(selected.createdAt).toLocaleString()}</dd>
+            </dl>
+
+            {selected.status === "failed" && selected.errorMessage && (
+              <p className="error-text">{selected.errorMessage}</p>
+            )}
+
+            <div className="reply-actions">
+              {selected.type === "help_center" && (
+                <button
+                  className="btn-small"
+                  onClick={() => handleReindex(selected)}
+                  disabled={
+                    reindexingId === selected.id || (selected.status !== "ready" && selected.status !== "failed")
+                  }
+                >
+                  {reindexingId === selected.id ? "Re-indexing…" : "Re-index"}
+                </button>
+              )}
+              <button
+                className="btn-small danger"
+                onClick={() => handleDelete(selected)}
+                disabled={deletingId === selected.id}
+              >
+                {deletingId === selected.id ? "Removing…" : "Remove"}
+              </button>
+            </div>
+          </div>
         )}
       </div>
     </div>

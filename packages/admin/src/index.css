@@ -706,6 +706,15 @@ select:focus {
   margin-bottom: 10px;
 }
 
+.onboard-handoff-note {
+  font-size: 12px;
+  color: var(--slate-soft);
+  background: var(--paper-dim);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-top: 8px;
+}
+
 /* ---- onboarding wizard ---- */
 .onboard-screen {
   min-height: 100vh;
@@ -882,26 +891,47 @@ select:focus {
   margin-top: 2px;
 }
 
-.onboard-progressbar {
-  height: 8px;
-  background: var(--paper-dim);
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.onboard-progressbar-fill {
-  height: 100%;
-  background: var(--teal);
-  border-radius: 4px;
-  transition: width 200ms linear;
-}
-
-.onboard-indexing-status {
-  font-family: "IBM Plex Mono", monospace;
-  font-size: 12px;
-  color: var(--slate-soft);
+.onboard-indexing-live {
   display: flex;
-  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  font-size: 13.5px;
+  color: var(--slate);
+  padding: 6px 0 2px;
+}
+
+.onboard-index-result {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid rgba(47, 111, 94, 0.35);
+  background: rgba(47, 111, 94, 0.07);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+
+.onboard-index-result .oir-mark {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--teal);
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.onboard-index-result .oir-title {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.onboard-index-result .oir-sub {
+  font-size: 12.5px;
+  color: var(--slate-soft);
 }
 
 .onboard-chat {
@@ -913,6 +943,28 @@ select:focus {
   flex-direction: column;
   gap: 10px;
   min-height: 200px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.onboard-chat-empty {
+  margin: auto;
+  color: var(--slate-soft);
+  font-size: 13px;
+}
+
+.onboard-chat-loading {
+  color: var(--slate-soft);
+}
+
+.onboard-chat-input {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.onboard-chat-input input {
+  flex: 1;
 }
 
 .onboard-swatches {

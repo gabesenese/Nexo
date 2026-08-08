@@ -1,36 +1,105 @@
+import { useMemo, useRef, useState } from "react";
+import { api, type ChatReply } from "../../api";
 import { WizardShell } from "../WizardShell";
 
-export function TestNexoStep({ onNext, onBack }: { onNext: () => void; onBack: () => void }) {
+interface ChatMessage {
+  role: "user" | "bot";
+  content: string;
+  citations?: { id: string; sourceName: string }[];
+  escalated?: boolean;
+}
+
+export function TestNexoStep({
+  orgKey,
+  hasKnowledge,
+  onNext,
+}: {
+  orgKey: string;
+  hasKnowledge: boolean;
+  onNext: () => void;
+}) {
+  const sessionId = useMemo(() => `onboard-${crypto.randomUUID()}`, []);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [answered, setAnswered] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  async function send(message: string) {
+    const text = message.trim();
+    if (!text || loading) return;
+    setMessages((prev) => [...prev, { role: "user", content: text }]);
+    setInput("");
+    setLoading(true);
+    try {
+      const reply: ChatReply = await api.chat({ orgKey, sessionId, message: text });
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "bot",
+          content: reply.answer,
+          citations: reply.citations.map((c) => ({ id: c.id, sourceName: c.sourceName })),
+          escalated: reply.escalated,
+        },
+      ]);
+      setAnswered(true);
+    } catch (err) {
+      setMessages((prev) => [...prev, { role: "bot", content: (err as Error).message }]);
+    } finally {
+      setLoading(false);
+      requestAnimationFrame(() => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight }));
+    }
+  }
+
   return (
     <WizardShell
       step={5}
       total={7}
-      title="See it work"
-      subtitle="An example of what your customers will see — a confident answer, and an honest escalation."
+      title="Ask Nexo a real question"
+      subtitle={
+        hasKnowledge
+          ? "This is your live assistant, answering from the knowledge you just added."
+          : "You skipped importing, so Nexo will be honest about not knowing yet. Add knowledge from the dashboard to see grounded answers."
+      }
       wide
     >
-      <div className="onboard-chat">
-        <div className="msg user">What's your return policy?</div>
-        <div className="msg bot">
-          Returns are accepted within 30 days of delivery for unworn items with tags.
-          <div className="cite">source: Return Policy §2</div>
-        </div>
-        <div className="msg user">Can I get a refund for a custom order after 60 days?</div>
-        <div className="msg bot">
-          I can see our standard return policy, but this is a custom order past the window, which needs a person to
-          review.
-        </div>
-        <div className="escalation-note">
-          <strong>low confidence</strong> — routed to a human instead of guessing
-        </div>
+      <div className="onboard-chat" ref={scrollRef}>
+        {messages.length === 0 && (
+          <div className="onboard-chat-empty">Type a question your customers would ask.</div>
+        )}
+        {messages.map((m, i) => (
+          <div key={i} className={`msg ${m.role}`}>
+            {m.content}
+            {m.citations && m.citations.length > 0 && (
+              <div className="cite">
+                source{m.citations.length === 1 ? "" : "s"}: {m.citations.map((c) => c.sourceName).join(", ")}
+              </div>
+            )}
+            {m.escalated && (
+              <div className="onboard-handoff-note">Handing this to a human. They'll pick up with the full conversation.</div>
+            )}
+          </div>
+        ))}
+        {loading && <div className="msg bot onboard-chat-loading">Thinking…</div>}
+      </div>
+
+      <div className="onboard-chat-input">
+        <input
+          type="text"
+          placeholder="e.g. What is your return policy?"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && send(input)}
+        />
+        <button type="button" className="btn btn-primary" onClick={() => send(input)} disabled={loading || !input.trim()}>
+          Ask
+        </button>
       </div>
 
       <div className="onboard-actions">
-        <button type="button" className="onboard-back" onClick={onBack}>
-          ← Back
-        </button>
-        <button type="button" className="btn btn-primary" onClick={onNext}>
-          Continue
+        <span />
+        <button type="button" className="btn btn-primary" onClick={onNext} disabled={hasKnowledge && !answered}>
+          {hasKnowledge && !answered ? "Ask a question to continue" : "Continue"}
         </button>
       </div>
     </WizardShell>

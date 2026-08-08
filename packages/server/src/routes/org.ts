@@ -149,6 +149,10 @@ export async function orgRoutes(app: FastifyInstance) {
     ]);
 
     setSession(app, reply, { sub: userId, email: invite.email, orgId: invite.organizationId });
-    return { email: invite.email, name: existingUser?.name, organization: { id: invite.organization.id, name: invite.organization.name } };
+    return {
+      email: invite.email,
+      name: existingUser?.name,
+      organization: { id: invite.organization.id, name: invite.organization.name, slug: invite.organization.slug },
+    };
   });
 }

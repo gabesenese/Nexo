@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { api, type AuthUser } from "../api";
 import { CreateAccountStep } from "./steps/CreateAccount";
 import { CreateWorkspaceStep } from "./steps/CreateWorkspace";
 import { ImportKnowledgeStep } from "./steps/ImportKnowledge";
@@ -19,9 +21,13 @@ interface WizardData {
   supportEmail: string;
   importMethod?: ImportMethod;
   helpCenterUrl?: string;
-  pdfName?: string;
   widgetColor: string;
   welcomeMessage: string;
+}
+
+interface IndexResult {
+  sourceName: string;
+  chunkCount: number;
 }
 
 const INITIAL_DATA: WizardData = {
@@ -37,17 +43,15 @@ const INITIAL_DATA: WizardData = {
 };
 
 export function OnboardingWizard() {
+  const navigate = useNavigate();
   const [stepIndex, setStepIndex] = useState(0);
   const [data, setData] = useState<WizardData>(INITIAL_DATA);
+  const [auth, setAuth] = useState<AuthUser | null>(null);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [indexResult, setIndexResult] = useState<IndexResult | null>(null);
 
-  function next(index: number) {
-    setStepIndex(index);
-  }
-
-  function restart() {
-    setData(INITIAL_DATA);
-    setStepIndex(0);
-  }
+  const next = (index: number) => setStepIndex(index);
+  const skipped = data.importMethod === "skip" || !data.importMethod;
 
   switch (stepIndex) {
     case 0:
@@ -66,8 +70,15 @@ export function OnboardingWizard() {
         <CreateWorkspaceStep
           defaults={data}
           onBack={() => next(0)}
-          onNext={(patch) => {
+          onSubmit={async (patch) => {
+            const user = await api.signup({
+              name: data.name,
+              email: data.email,
+              password: data.password,
+              companyName: patch.companyName,
+            });
             setData((d) => ({ ...d, ...patch }));
+            setAuth(user);
             next(2);
           }}
         />
@@ -76,19 +87,33 @@ export function OnboardingWizard() {
       return (
         <ImportKnowledgeStep
           defaults={{ method: data.importMethod, helpCenterUrl: data.helpCenterUrl }}
-          onBack={() => next(1)}
           onNext={(patch) => {
-            setData((d) => ({ ...d, importMethod: patch.method, helpCenterUrl: patch.helpCenterUrl, pdfName: patch.pdfName }));
+            setData((d) => ({ ...d, importMethod: patch.method, helpCenterUrl: patch.helpCenterUrl }));
+            setPendingFile(patch.file ?? null);
             next(3);
           }}
         />
       );
     case 3:
       return (
-        <IndexingStep skipped={data.importMethod === "skip" || !data.importMethod} onBack={() => next(2)} onNext={() => next(4)} />
+        <IndexingStep
+          method={data.importMethod ?? "skip"}
+          helpCenterUrl={data.helpCenterUrl}
+          file={pendingFile}
+          onDone={(result) => {
+            setIndexResult(result);
+            next(4);
+          }}
+        />
       );
     case 4:
-      return <TestNexoStep onBack={() => next(3)} onNext={() => next(5)} />;
+      return (
+        <TestNexoStep
+          orgKey={auth?.organization.slug ?? ""}
+          hasKnowledge={!skipped && (indexResult?.chunkCount ?? 0) > 0}
+          onNext={() => next(5)}
+        />
+      );
     case 5:
       return (
         <CustomizeWidgetStep
@@ -101,7 +126,13 @@ export function OnboardingWizard() {
         />
       );
     case 6:
-      return <InstallStep onBack={() => next(5)} onFinish={restart} />;
+      return (
+        <InstallStep
+          orgKey={auth?.organization.slug ?? ""}
+          onBack={() => next(5)}
+          onFinish={() => navigate("/", { replace: true })}
+        />
+      );
     default:
       return null;
   }

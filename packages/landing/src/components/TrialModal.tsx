@@ -113,8 +113,11 @@ export function TrialModal({ open, onClose }: { open: boolean; onClose: () => vo
 
         {!success && (
           <form id="trial-form" onSubmit={handleSubmit} noValidate>
-            <h2 id="trial-modal-title">Start your free trial</h2>
-            <div className="modal-sub">Tell us who you are — no credit card, no sales call.</div>
+            <h2 id="trial-modal-title">Talk to us</h2>
+            <div className="modal-sub">
+              Prefer a hand getting set up? Tell us who you are and we'll reach out. You can also start on your own
+              anytime.
+            </div>
 
             <div className="field">
               <label htmlFor="trial-name">Name</label>
@@ -167,7 +170,7 @@ export function TrialModal({ open, onClose }: { open: boolean; onClose: () => vo
               tabIndex={open ? 0 : -1}
               disabled={submitting}
             >
-              {submitting ? "Submitting…" : "Start free trial"}
+              {submitting ? "Submitting…" : "Send"}
             </button>
           </form>
         )}
@@ -176,7 +179,7 @@ export function TrialModal({ open, onClose }: { open: boolean; onClose: () => vo
           <div id="trial-success" className="modal-success">
             <div className="ms-icon">✓</div>
             <h2>You're in</h2>
-            <p>Thanks — we've got your request. A team member will follow up at the email you gave us to get you set up.</p>
+            <p>Thanks, we've got your request. A team member will follow up at the email you gave us to get you set up.</p>
             <button
               id="trial-success-close"
               type="button"

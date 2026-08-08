@@ -85,7 +85,11 @@ export async function authRoutes(app: FastifyInstance) {
     });
 
     setSession(app, reply, { sub: user.id, email: user.email, orgId: organization.id });
-    return { email: user.email, name: user.name, organization: { id: organization.id, name: organization.name } };
+    return {
+      email: user.email,
+      name: user.name,
+      organization: { id: organization.id, name: organization.name, slug: organization.slug },
+    };
   });
 
   app.post("/api/auth/login", async (req, reply) => {
@@ -110,7 +114,11 @@ export async function authRoutes(app: FastifyInstance) {
     return {
       email: user.email,
       name: user.name,
-      organization: { id: membership.organization.id, name: membership.organization.name },
+      organization: {
+        id: membership.organization.id,
+        name: membership.organization.name,
+        slug: membership.organization.slug,
+      },
     };
   });
 
@@ -133,7 +141,11 @@ export async function authRoutes(app: FastifyInstance) {
       return {
         email: membership.user.email,
         name: membership.user.name,
-        organization: { id: membership.organization.id, name: membership.organization.name },
+        organization: {
+          id: membership.organization.id,
+          name: membership.organization.name,
+          slug: membership.organization.slug,
+        },
       };
     } catch {
       return reply.status(401).send({ error: "Not authenticated" });

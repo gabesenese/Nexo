@@ -11,8 +11,8 @@ export function MetricsStrip() {
           <div className="label">Canadian-hosted data by default</div>
         </div>
         <div className="stat">
-          <div className="num">1,000–50K</div>
-          <div className="label">conversations / mo — our sweet spot</div>
+          <div className="num">1,000-50K</div>
+          <div className="label">conversations / mo, our sweet spot</div>
         </div>
         <div className="stat">
           <div className="num">&lt;5 days</div>

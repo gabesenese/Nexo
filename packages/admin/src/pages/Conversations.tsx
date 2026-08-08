@@ -8,12 +8,48 @@ function initials(sessionId: string) {
 export function ConversationsPage() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState("");
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function refresh() {
+    setConversations(await api.listConversations());
+  }
 
   useEffect(() => {
-    api.listConversations().then(setConversations);
+    refresh();
+    const id = setInterval(refresh, 4000);
+    return () => clearInterval(id);
   }, []);
 
   const selected = conversations.find((c) => c.id === selectedId) ?? null;
+
+  async function handleSend() {
+    const text = replyText.trim();
+    if (!text || !selected || sending) return;
+    setSending(true);
+    setError(null);
+    try {
+      await api.replyToConversation(selected.id, text);
+      setReplyText("");
+      await refresh();
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setSending(false);
+    }
+  }
+
+  async function handleResolve() {
+    if (!selected) return;
+    setError(null);
+    try {
+      await api.resolveConversation(selected.id);
+      await refresh();
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  }
 
   return (
     <div>
@@ -49,10 +85,17 @@ export function ConversationsPage() {
 
         {selected && (
           <div className="card">
-            <h3>Transcript</h3>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <h3>Transcript</h3>
+              <span className={`badge ${selected.status}`}>{selected.status}</span>
+            </div>
             <div className="card-sub">{selected.sessionId.slice(0, 8)}… · {selected.channel}</div>
             {selected.messages.map((m) => (
-              <div key={m.id} className={`msg ${m.role === "user" ? "user" : "bot"}`}>
+              <div
+                key={m.id}
+                className={`msg ${m.role === "user" ? "user" : m.role === "agent" ? "agent" : "bot"}`}
+              >
+                {m.role === "agent" && <div className="msg-author">You</div>}
                 {m.content}
                 {m.citations && m.citations.length > 0 && (
                   <div>
@@ -70,15 +113,31 @@ export function ConversationsPage() {
                 )}
               </div>
             ))}
-            {selected.escalations.length > 0 && (
-              <>
-                <h4 style={{ fontSize: 13, marginTop: 18, marginBottom: 8 }}>Escalations</h4>
-                {selected.escalations.map((e) => (
-                  <div className="escalation-note" key={e.id}>
-                    <strong>{e.reason.replace(/_/g, " ")}</strong> — {e.summary}
-                  </div>
-                ))}
-              </>
+
+            {selected.status === "resolved" ? (
+              <p className="empty-note" style={{ marginTop: 14 }}>This conversation is resolved.</p>
+            ) : (
+              <div className="reply-box">
+                <textarea
+                  className="reply-input"
+                  placeholder="Type your reply to the customer…"
+                  value={replyText}
+                  onChange={(e) => setReplyText(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleSend();
+                  }}
+                  rows={3}
+                />
+                {error && <p className="error-text">{error}</p>}
+                <div className="reply-actions">
+                  <button className="btn-small" onClick={handleResolve}>
+                    Resolve
+                  </button>
+                  <button className="btn btn-primary" onClick={handleSend} disabled={sending || !replyText.trim()}>
+                    {sending ? "Sending…" : "Send reply"}
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         )}

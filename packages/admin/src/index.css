@@ -685,6 +685,51 @@ select:focus {
   border-bottom-right-radius: 3px;
 }
 
+.msg.agent {
+  background: #e7efec;
+  border: 1px solid var(--teal);
+  color: var(--ink);
+  margin-left: auto;
+  border-bottom-right-radius: 3px;
+}
+
+.msg .msg-author {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 10px;
+  color: var(--teal-dark);
+  margin-bottom: 4px;
+}
+
+.reply-box {
+  margin-top: 16px;
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+}
+
+.reply-input {
+  width: 100%;
+  resize: vertical;
+  font-family: "IBM Plex Sans", sans-serif;
+  font-size: 13px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--white);
+  color: var(--ink);
+}
+
+.reply-input:focus {
+  outline: none;
+  border-color: var(--teal);
+}
+
+.reply-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+}
+
 .cite {
   font-family: "IBM Plex Mono", monospace;
   font-size: 10px;

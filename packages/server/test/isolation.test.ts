@@ -202,6 +202,46 @@ suite("tenant isolation", () => {
     expect(unknown.statusCode).toBe(404);
   });
 
+  it("scopes operator reply and resolve to the caller's org", async () => {
+    const a = await signup("a@acme.test", "Acme");
+    const b = await signup("b@globex.test", "Globex");
+    const convo = await prisma.conversation.create({
+      data: { organizationId: a.org.id, sessionId: "acme-c1", status: "escalated" },
+    });
+
+    const bReply = await app.inject({
+      method: "POST",
+      url: `/api/conversations/${convo.id}/reply`,
+      headers: { cookie: b.cookie, "content-type": "application/json" },
+      payload: { message: "sneaky" },
+    });
+    expect(bReply.statusCode).toBe(404);
+
+    const bResolve = await app.inject({
+      method: "POST",
+      url: `/api/conversations/${convo.id}/resolve`,
+      headers: { cookie: b.cookie },
+    });
+    expect(bResolve.statusCode).toBe(404);
+
+    const aReply = await app.inject({
+      method: "POST",
+      url: `/api/conversations/${convo.id}/reply`,
+      headers: { cookie: a.cookie, "content-type": "application/json" },
+      payload: { message: "Hi, I can help with that." },
+    });
+    expect(aReply.statusCode).toBe(200);
+    expect(aReply.json().role).toBe("agent");
+
+    const aResolve = await app.inject({
+      method: "POST",
+      url: `/api/conversations/${convo.id}/resolve`,
+      headers: { cookie: a.cookie },
+    });
+    expect(aResolve.statusCode).toBe(200);
+    expect((await prisma.conversation.findUnique({ where: { id: convo.id } }))?.status).toBe("resolved");
+  });
+
   it("rejects unauthenticated access to scoped routes", async () => {
     for (const url of ["/api/sources", "/api/analytics", "/api/conversations", "/api/leads", "/api/org"]) {
       expect((await get(url)).statusCode).toBe(401);

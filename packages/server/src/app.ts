@@ -6,6 +6,7 @@ import cookie from "@fastify/cookie";
 import { env } from "./config/env.js";
 import { sourcesRoutes } from "./routes/sources.js";
 import { chatRoutes } from "./routes/chat.js";
+import { conversationsRoutes } from "./routes/conversations.js";
 import { analyticsRoutes } from "./routes/analytics.js";
 import { leadsRoutes } from "./routes/leads.js";
 import { authRoutes } from "./routes/auth.js";
@@ -32,6 +33,7 @@ export async function buildApp(options: { logger?: boolean } = {}): Promise<Fast
   await app.register(orgRoutes);
   await app.register(sourcesRoutes);
   await app.register(chatRoutes);
+  await app.register(conversationsRoutes);
   await app.register(analyticsRoutes);
   await app.register(leadsRoutes);
 

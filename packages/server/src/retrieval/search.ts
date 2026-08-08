@@ -41,7 +41,7 @@ function normalize(rows: RawRow[]): RawRow[] {
  * addition on top of this merged candidate set, not implemented in this
  * pass.
  */
-export async function hybridSearch(query: string, topK = 6): Promise<RetrievedChunk[]> {
+export async function hybridSearch(query: string, organizationId: string, topK = 6): Promise<RetrievedChunk[]> {
   const [queryEmbedding] = await embeddingProvider.embed([query]);
   const vectorLiteral = `[${queryEmbedding.join(",")}]`;
 
@@ -50,7 +50,7 @@ export async function hybridSearch(query: string, topK = 6): Promise<RetrievedCh
       (1 - (c.embedding <=> ${vectorLiteral}::vector))::float AS score
     FROM "Chunk" c
     JOIN "Source" s ON s.id = c."sourceId"
-    WHERE c.embedding IS NOT NULL
+    WHERE c.embedding IS NOT NULL AND s."organizationId" = ${organizationId}
     ORDER BY c.embedding <=> ${vectorLiteral}::vector
     LIMIT ${topK * 2}
   `;
@@ -61,6 +61,7 @@ export async function hybridSearch(query: string, topK = 6): Promise<RetrievedCh
     FROM "Chunk" c
     JOIN "Source" s ON s.id = c."sourceId"
     WHERE to_tsvector('english', c.content) @@ websearch_to_tsquery('english', ${query})
+      AND s."organizationId" = ${organizationId}
     ORDER BY score DESC
     LIMIT ${topK * 2}
   `;

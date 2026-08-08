@@ -61,6 +61,12 @@ export interface SourceSummary {
   chunkCount: number;
 }
 
+export interface IngestResult {
+  sourceId: string;
+  name: string;
+  chunkCount: number;
+}
+
 export interface Escalation {
   id: string;
   conversationId: string;
@@ -116,14 +122,18 @@ export interface Lead {
 export const api = {
   listSources: () => request<SourceSummary[]>("/api/sources"),
   addHelpCenterUrl: (url: string) =>
-    request("/api/sources/help-center", { method: "POST", body: JSON.stringify({ url }) }),
-  uploadPdf: async (file: File) => {
+    request<IngestResult>("/api/sources/help-center", { method: "POST", body: JSON.stringify({ url }) }),
+  uploadPdf: async (file: File): Promise<IngestResult> => {
     const form = new FormData();
     form.append("file", file);
     const res = await fetch(`${API_URL}/api/sources/pdf`, { method: "POST", body: form, credentials: "include" });
-    if (!res.ok) throw new Error(`Upload failed with ${res.status}`);
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.error ?? `Upload failed with ${res.status}`);
+    }
     return res.json();
   },
+  deleteSource: (id: string) => request<{ ok: true }>(`/api/sources/${id}`, { method: "DELETE" }),
   getAnalytics: () => request<AnalyticsSummary>("/api/analytics"),
   listConversations: () => request<Conversation[]>("/api/conversations"),
   listLeads: () => request<Lead[]>("/api/leads"),

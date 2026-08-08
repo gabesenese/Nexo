@@ -32,7 +32,7 @@ function getSessionId(): string {
   return id;
 }
 
-export function Widget({ apiUrl }: { apiUrl: string }) {
+export function Widget({ apiUrl, orgKey }: { apiUrl: string; orgKey: string }) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
     { role: "assistant", content: "Hi! Ask me anything. I'll cite my sources, and you can talk to a human any time." },
@@ -56,7 +56,7 @@ export function Widget({ apiUrl }: { apiUrl: string }) {
       const res = await fetch(`${apiUrl}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId: sessionId.current, message: message || "Talk to a human", forceEscalate }),
+        body: JSON.stringify({ sessionId: sessionId.current, orgKey, message: message || "Talk to a human", forceEscalate }),
       });
       const data: ChatApiResponse = await res.json();
       setMessages((prev) => [

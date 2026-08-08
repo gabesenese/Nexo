@@ -4,11 +4,13 @@ import { Widget } from "./Widget";
 declare global {
   interface Window {
     NEXO_API_URL?: string;
+    NEXO_ORG_KEY?: string;
   }
 }
 
 const scriptEl = document.currentScript as HTMLScriptElement | null;
 const apiUrl = scriptEl?.dataset.apiUrl ?? window.NEXO_API_URL ?? "http://localhost:4000";
+const orgKey = scriptEl?.dataset.orgKey ?? window.NEXO_ORG_KEY ?? "";
 
 const fontLinkId = "nexo-widget-fonts";
 if (!document.getElementById(fontLinkId)) {
@@ -28,4 +30,4 @@ if (!container) {
   document.body.appendChild(container);
 }
 
-createRoot(container).render(<Widget apiUrl={apiUrl} />);
+createRoot(container).render(<Widget apiUrl={apiUrl} orgKey={orgKey} />);

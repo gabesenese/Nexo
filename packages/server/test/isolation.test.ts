@@ -181,6 +181,27 @@ suite("tenant isolation", () => {
     expect(memberInvite.statusCode).toBe(403);
   });
 
+  it("scopes the public widget chat to a valid org key", async () => {
+    const a = await signup("a@acme.test", "Acme");
+    const aOrg = (await get("/api/org", a.cookie)).json();
+
+    const missing = await app.inject({
+      method: "POST",
+      url: "/api/chat",
+      headers: { "content-type": "application/json" },
+      payload: { sessionId: "s1", message: "hi" },
+    });
+    expect(missing.statusCode).toBe(400);
+
+    const unknown = await app.inject({
+      method: "POST",
+      url: "/api/chat",
+      headers: { "content-type": "application/json" },
+      payload: { sessionId: "s1", orgKey: `${aOrg.slug}-not-real`, message: "hi" },
+    });
+    expect(unknown.statusCode).toBe(404);
+  });
+
   it("rejects unauthenticated access to scoped routes", async () => {
     for (const url of ["/api/sources", "/api/analytics", "/api/conversations", "/api/leads", "/api/org"]) {
       expect((await get(url)).statusCode).toBe(401);

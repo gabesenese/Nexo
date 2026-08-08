@@ -1,3 +1,6 @@
+import { readFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
 import Fastify, { type FastifyInstance } from "fastify";
 import cors from "@fastify/cors";
 import multipart from "@fastify/multipart";
@@ -17,8 +20,15 @@ export async function buildApp(options: { logger?: boolean } = {}): Promise<Fast
     logger: options.logger === false ? false : { transport: { target: "pino-pretty" } },
   });
 
+  /**
+   * The widget is embedded on arbitrary customer domains and calls the public
+   * endpoints (chat, messages, widget config) from there, so CORS reflects any
+   * origin. Admin/auth endpoints stay safe because the session cookie is
+   * SameSite=lax (see setSession): cross-site requests never carry it, so they
+   * 401 regardless of the reflected origin.
+   */
   await app.register(cors, {
-    origin: env.CORS_ORIGIN.split(",").map((s) => s.trim()),
+    origin: true,
     credentials: true,
   });
   await app.register(multipart, {
@@ -28,6 +38,29 @@ export async function buildApp(options: { logger?: boolean } = {}): Promise<Fast
   await app.register(cookie);
 
   app.get("/health", async () => ({ status: "ok" }));
+
+  /**
+   * Serve the built widget bundle so customers embed a single-origin snippet:
+   * <script src="{API}/widget.js" data-org-key="..." data-api-url="{API}">.
+   * The bundle is produced by `npm run build --workspace=@nexo/widget`.
+   */
+  const widgetBundlePath = env.WIDGET_BUNDLE_PATH
+    ? path.resolve(env.WIDGET_BUNDLE_PATH)
+    : fileURLToPath(new URL("../../widget/dist/widget.js", import.meta.url));
+  app.get("/widget.js", async (_req, reply) => {
+    try {
+      const bundle = await readFile(widgetBundlePath);
+      return reply
+        .header("content-type", "application/javascript; charset=utf-8")
+        .header("cache-control", "public, max-age=300")
+        .send(bundle);
+    } catch {
+      return reply
+        .status(503)
+        .header("content-type", "application/javascript; charset=utf-8")
+        .send("// Nexo widget bundle not built. Run: npm run build --workspace=@nexo/widget");
+    }
+  });
 
   await app.register(authRoutes);
   await app.register(orgRoutes);

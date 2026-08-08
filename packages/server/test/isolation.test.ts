@@ -286,6 +286,14 @@ suite("tenant isolation", () => {
     expect(memberPatch.statusCode).toBe(403);
   });
 
+  it("serves the widget bundle route and reflects any origin for embedding", async () => {
+    const widget = await app.inject({ method: "GET", url: "/widget.js" });
+    expect(widget.headers["content-type"]).toContain("javascript");
+
+    const cors = await app.inject({ method: "GET", url: "/health", headers: { origin: "https://a-customer-site.example" } });
+    expect(cors.headers["access-control-allow-origin"]).toBe("https://a-customer-site.example");
+  });
+
   it("rejects unauthenticated access to scoped routes", async () => {
     for (const url of ["/api/sources", "/api/analytics", "/api/conversations", "/api/leads", "/api/org"]) {
       expect((await get(url)).statusCode).toBe(401);

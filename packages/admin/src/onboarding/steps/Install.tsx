@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { WizardShell } from "../WizardShell";
 
-const WIDGET_SRC = import.meta.env.VITE_WIDGET_URL ?? "http://localhost:5174/dist/widget.js";
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
+const WIDGET_SRC = import.meta.env.VITE_WIDGET_URL ?? `${API_URL}/widget.js`;
 
 export function InstallStep({
   orgKey,

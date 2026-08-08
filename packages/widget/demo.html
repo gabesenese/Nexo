@@ -7,12 +7,15 @@
   <body>
     <h1 style="font-family: sans-serif">Example host site</h1>
     <p style="font-family: sans-serif">
-      This page embeds the built widget the same way a real customer would: a single script tag.
-      Run <code>npm run build --workspace=@nexo/widget</code> first, then serve this file
-      (e.g. <code>npx serve packages/widget</code>) so <code>dist/widget.js</code> resolves.
+      This page embeds the widget the same way a real customer would: one script tag, served by the
+      Nexo server. Build the widget once (<code>npm run build --workspace=@nexo/widget</code>) so the
+      server has a bundle to serve, then open this file from any origin.
     </p>
 
-    <!-- data-api-url points the widget at the running Nexo server -->
-    <script src="./dist/widget.js" data-api-url="http://localhost:4000"></script>
+    <script
+      src="http://localhost:4000/widget.js"
+      data-api-url="http://localhost:4000"
+      data-org-key="legacy"
+    ></script>
   </body>
 </html>

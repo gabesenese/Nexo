@@ -85,6 +85,11 @@ export function AnalyticsPage() {
         <div className="kpi">
           <div className="kl">Resolution rate</div>
           <div className="kv">{hasConversations ? `${(data.resolutionRate * 100).toFixed(0)}%` : "—"}</div>
+          {data.reopenedConversations > 0 && (
+            <div className="kpi-note">
+              {data.reopenedConversations} came back after being resolved
+            </div>
+          )}
         </div>
         <div className="kpi">
           <div className="kl">Escalation rate</div>

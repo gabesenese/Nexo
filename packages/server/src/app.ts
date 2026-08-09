@@ -13,6 +13,7 @@ import { chatRoutes } from "./routes/chat.js";
 import { conversationsRoutes } from "./routes/conversations.js";
 import { notificationsRoutes } from "./routes/notifications.js";
 import { analyticsRoutes } from "./routes/analytics.js";
+import { attentionRoutes } from "./routes/attention.js";
 import { leadsRoutes } from "./routes/leads.js";
 import { authRoutes } from "./routes/auth.js";
 import { orgRoutes } from "./routes/org.js";
@@ -71,6 +72,7 @@ export async function buildApp(options: { logger?: boolean } = {}): Promise<Fast
   await app.register(conversationsRoutes);
   await app.register(notificationsRoutes);
   await app.register(analyticsRoutes);
+  await app.register(attentionRoutes);
   await app.register(leadsRoutes);
 
   await recoverInterruptedSources();

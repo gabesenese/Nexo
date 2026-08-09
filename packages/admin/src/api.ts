@@ -125,9 +125,21 @@ export interface AnalyticsSummary {
   totalConversations: number;
   resolvedConversations: number;
   escalatedConversations: number;
+  openConversations: number;
   resolutionRate: number;
   escalationRate: number;
   recentEscalations: Escalation[];
+}
+
+export type AttentionType = "waiting_for_human" | "customer_replied";
+
+export interface AttentionItem {
+  conversationId: string;
+  sessionId: string;
+  type: AttentionType;
+  since: string;
+  reason: string | null;
+  preview: string;
 }
 
 export interface Citation {
@@ -192,6 +204,7 @@ export const api = {
   chat: (input: { orgKey: string; sessionId: string; message: string }) =>
     request<ChatReply>("/api/chat", { method: "POST", body: JSON.stringify(input) }),
   getAnalytics: () => request<AnalyticsSummary>("/api/analytics"),
+  getAttention: () => request<AttentionItem[]>("/api/attention"),
   listConversations: () => request<Conversation[]>("/api/conversations"),
   replyToConversation: (id: string, message: string) =>
     request<Message>(`/api/conversations/${id}/reply`, { method: "POST", body: JSON.stringify({ message }) }),

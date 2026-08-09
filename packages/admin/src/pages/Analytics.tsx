@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api, type AnalyticsSummary, type Conversation, type SourceSummary } from "../api";
+import { NeedsAttention } from "../components/NeedsAttention";
 
 function initials(sessionId: string) {
   return sessionId.slice(0, 2).toUpperCase();
@@ -90,10 +91,12 @@ export function AnalyticsPage() {
           <div className="kv">{hasConversations ? `${(data.escalationRate * 100).toFixed(0)}%` : "—"}</div>
         </div>
         <div className="kpi">
-          <div className="kl">Escalated conversations</div>
-          <div className="kv">{data.escalatedConversations}</div>
+          <div className="kl">Open conversations</div>
+          <div className="kv">{data.openConversations}</div>
         </div>
       </div>
+
+      {hasConversations && <NeedsAttention />}
 
       <div className="row">
         <div className="card">

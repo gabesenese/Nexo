@@ -17,6 +17,10 @@ export async function analyticsRoutes(app: FastifyInstance) {
      */
     const resolvedConversations = totalConversations - escalatedConversations;
 
+    const openConversations = await prisma.conversation.count({
+      where: { organizationId, status: { in: ["active", "escalated"] } },
+    });
+
     const recentEscalations = await prisma.escalation.findMany({
       where: { conversation: { organizationId } },
       orderBy: { createdAt: "desc" },
@@ -27,6 +31,7 @@ export async function analyticsRoutes(app: FastifyInstance) {
       totalConversations,
       resolvedConversations,
       escalatedConversations,
+      openConversations,
       resolutionRate: totalConversations ? resolvedConversations / totalConversations : 0,
       escalationRate: totalConversations ? escalatedConversations / totalConversations : 0,
       recentEscalations,

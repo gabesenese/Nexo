@@ -198,7 +198,7 @@ button:focus-visible {
   transform: translateY(0);
   pointer-events: auto;
 }
-.mobile-panel a {
+.mobile-panel > a {
   display: block;
   font-family: "Fraunces", serif;
   font-size: 26px;
@@ -221,7 +221,7 @@ button:focus-visible {
 .l-hero {
   max-width: 1080px;
   margin: 0 auto;
-  padding: 100px 48px 70px;
+  padding: 76px 48px 52px;
   text-align: center;
 }
 .l-eyebrow {
@@ -254,14 +254,14 @@ button:focus-visible {
   font-size: 17px;
   color: var(--slate-soft);
   max-width: 520px;
-  margin: 0 auto 34px;
+  margin: 0 auto 28px;
   line-height: 1.6;
 }
 .l-hero-ctas {
   display: flex;
   gap: 14px;
   justify-content: center;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   flex-wrap: wrap;
 }
 .l-hero-note {
@@ -277,7 +277,7 @@ button:focus-visible {
   text-transform: uppercase;
   letter-spacing: 0.06em;
   text-align: center;
-  margin: 56px 0 14px;
+  margin: 40px 0 14px;
 }
 .proof-card {
   max-width: 520px;
@@ -393,7 +393,7 @@ button:focus-visible {
 .l-strip-inner {
   max-width: 1080px;
   margin: 0 auto;
-  padding: 36px 48px;
+  padding: 28px 48px;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 24px;
@@ -401,15 +401,15 @@ button:focus-visible {
 
 .why-section {
   text-align: center;
-  padding-top: 70px;
-  padding-bottom: 70px;
+  padding-top: 36px;
+  padding-bottom: 32px;
 }
 .why-section h2 {
   font-size: clamp(28px, 4vw, 38px);
   line-height: 1.3;
   color: var(--ink);
   max-width: 640px;
-  margin: 0 auto 40px;
+  margin: 0 auto 26px;
 }
 .why-section h2 .accent {
   color: var(--teal);
@@ -436,15 +436,15 @@ button:focus-visible {
   font-size: clamp(22px, 3vw, 28px);
   color: var(--ink);
   max-width: 560px;
-  margin: 64px auto 36px;
+  margin: 34px auto 22px;
 }
 
 .compare-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 36px;
+  gap: 32px;
   max-width: 600px;
-  margin: 0 auto 72px;
+  margin: 0 auto 36px;
   text-align: left;
 }
 .compare-label {
@@ -486,49 +486,6 @@ button:focus-visible {
   color: var(--teal);
 }
 
-.conf-flow {
-  max-width: 420px;
-  margin: 0 auto 56px;
-}
-.cf-step {
-  font-size: 14px;
-  color: var(--slate);
-}
-.cf-arrow {
-  color: #9a958a;
-  font-family: "IBM Plex Mono", monospace;
-  font-size: 16px;
-  margin: 10px 0;
-}
-.cf-branches {
-  display: flex;
-  justify-content: center;
-  gap: 48px;
-  margin-top: 6px;
-}
-.cf-branch {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-.cf-conf {
-  font-family: "Fraunces", serif;
-  font-size: 19px;
-  font-weight: 600;
-}
-.cf-conf.high {
-  color: var(--teal);
-}
-.cf-conf.low {
-  color: var(--amber);
-}
-.cf-outcome {
-  font-size: 12px;
-  color: var(--slate-soft);
-  font-family: "IBM Plex Mono", monospace;
-}
-
 .why-signature {
   font-family: "Fraunces", serif;
   font-style: italic;
@@ -544,7 +501,7 @@ button:focus-visible {
 }
 .ks-head {
   max-width: 520px;
-  margin: 0 auto 44px;
+  margin: 0 auto 32px;
 }
 .ks-head h2 {
   font-size: clamp(26px, 3.5vw, 32px);
@@ -566,7 +523,7 @@ button:focus-visible {
 }
 .ks-label.muted {
   color: var(--slate-soft);
-  margin-top: 36px;
+  margin-top: 26px;
 }
 .ks-row {
   display: flex;
@@ -591,7 +548,7 @@ button:focus-visible {
   font-weight: 400;
 }
 .ks-trust {
-  margin-top: 44px;
+  margin-top: 32px;
   font-size: 13px;
   color: var(--slate-soft);
   font-family: "IBM Plex Mono", monospace;
@@ -622,11 +579,11 @@ button:focus-visible {
 .l-section {
   max-width: 1080px;
   margin: 0 auto;
-  padding: 90px 48px;
+  padding: 56px 48px;
 }
 .l-section-head {
   max-width: 560px;
-  margin-bottom: 48px;
+  margin-bottom: 36px;
 }
 .l-section-head .l-eyebrow {
   margin-bottom: 16px;
@@ -645,12 +602,12 @@ button:focus-visible {
 .pricing-wrap {
   background: var(--ink);
   border-radius: 16px;
-  padding: 60px 48px;
+  padding: 48px 48px;
 }
 .pricing-head {
   text-align: center;
   color: var(--paper);
-  margin-bottom: 42px;
+  margin-bottom: 32px;
 }
 .pricing-head .l-eyebrow {
   background: var(--line-dark);
@@ -764,6 +721,9 @@ button:focus-visible {
   .l-nav-links {
     display: none;
   }
+  .l-nav > .l-nav-cta {
+    display: none;
+  }
   .hamburger {
     display: flex;
   }
@@ -776,13 +736,13 @@ button:focus-visible {
     padding: 12px 20px;
   }
   .l-hero {
-    padding: 64px 24px 48px;
+    padding: 48px 24px 36px;
   }
   .l-section {
-    padding: 56px 24px;
+    padding: 44px 24px;
   }
   .l-strip-inner {
-    padding: 28px 24px;
+    padding: 22px 24px;
     grid-template-columns: 1fr 1fr;
     gap: 20px 16px;
   }
@@ -793,11 +753,8 @@ button:focus-visible {
   .compare-grid {
     gap: 28px;
   }
-  .cf-branches {
-    gap: 32px;
-  }
   .pricing-wrap {
-    padding: 40px 24px;
+    padding: 32px 24px;
   }
   .l-footer {
     padding: 24px 20px;

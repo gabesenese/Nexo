@@ -8,7 +8,7 @@ export function MetricsStrip() {
         </div>
         <div className="stat hi">
           <div className="num">🇨🇦</div>
-          <div className="label">Canadian-hosted data by default</div>
+          <div className="label">Data residency, by design</div>
         </div>
         <div className="stat">
           <div className="num">1,000-50K</div>

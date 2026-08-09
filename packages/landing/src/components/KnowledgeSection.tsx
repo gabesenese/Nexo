@@ -27,7 +27,7 @@ export function KnowledgeSection() {
         ))}
       </div>
 
-      <div className="ks-trust">🇨🇦 Canadian-hosted by default. Your knowledge stays yours.</div>
+      <div className="ks-trust">Your knowledge stays yours.</div>
     </section>
   );
 }

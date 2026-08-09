@@ -31,23 +31,6 @@ export function PhilosophySection() {
         </div>
       </div>
 
-      <div className="conf-flow">
-        <div className="cf-step">Customer asks a question</div>
-        <div className="cf-arrow">↓</div>
-        <div className="cf-step">Nexo checks what it knows</div>
-        <div className="cf-arrow">↓</div>
-        <div className="cf-branches">
-          <div className="cf-branch">
-            <div className="cf-conf high">Knows the answer</div>
-            <div className="cf-outcome">Answered instantly</div>
-          </div>
-          <div className="cf-branch">
-            <div className="cf-conf low">Not sure</div>
-            <div className="cf-outcome">Handed to a human</div>
-          </div>
-        </div>
-      </div>
-
       <p className="why-signature">
         The smartest AI isn't the one that answers every question.
         <br />

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ONBOARDING_URL, SIGN_IN_URL } from "../config";
+import { ONBOARDING_URL, SIGN_IN_URL, WIDGET_DEMO_URL } from "../config";
 
 function LogoMark() {
   return (
@@ -57,7 +57,7 @@ export function Nav({ onOpenTrial }: { onOpenTrial: () => void }) {
         <div className="l-nav-links">
           <a href="#product">Product</a>
           <a href="#pricing">Pricing</a>
-          <a href="http://localhost:5174/">Widget demo</a>
+          <a href={WIDGET_DEMO_URL}>Widget demo</a>
         </div>
         <div className="l-nav-cta">
           <a className="btn btn-ghost" href={SIGN_IN_URL}>
@@ -94,7 +94,7 @@ export function Nav({ onOpenTrial }: { onOpenTrial: () => void }) {
         <a href="#pricing" tabIndex={menuOpen ? 0 : -1} onClick={() => setMenuOpen(false)}>
           Pricing
         </a>
-        <a href="http://localhost:5174/" tabIndex={menuOpen ? 0 : -1} onClick={() => setMenuOpen(false)}>
+        <a href={WIDGET_DEMO_URL} tabIndex={menuOpen ? 0 : -1} onClick={() => setMenuOpen(false)}>
           Widget demo
         </a>
         <div className="l-nav-cta">

@@ -56,16 +56,20 @@ Open http://localhost:5175 for the marketing landing page, http://localhost:5173
 dashboard (add a help-center URL or upload a PDF under **Knowledge**), then http://localhost:5174
 to try the chat widget against that content.
 
-The landing page can run Nexo's own support widget on itself, but only when it is told which
-workspace to talk to. Set these in `packages/landing/.env` (all optional, all build-time):
+The landing page reads these at **build time**, in `packages/landing/.env`. Vite inlines them, so
+whatever is set when `vite build` runs is what ships:
 
-| Variable | Default | Purpose |
-| --- | --- | --- |
-| `VITE_WIDGET_ORG_KEY` | unset | Widget key of the workspace the landing page should chat with. Without it, no widget is loaded at all. |
-| `VITE_WIDGET_SCRIPT_URL` | `http://localhost:5174/dist/widget.js` | Where `widget.js` is served from. |
-| `VITE_API_URL` | `http://localhost:4000` | API the widget calls. |
-| `VITE_APP_URL` | `http://localhost:5173` | Admin app, for the sign-in and onboarding links. |
-| `VITE_WIDGET_URL` | `http://localhost:5174/` | Widget demo page linked from the nav. |
+| Variable | Dev default | Required in production | Purpose |
+| --- | --- | --- | --- |
+| `VITE_APP_URL` | `http://localhost:5173` | yes | Admin app, behind every sign-in and onboarding CTA. |
+| `VITE_WIDGET_URL` | `http://localhost:5174/` | yes | Widget demo page linked from the nav. |
+| `VITE_WIDGET_ORG_KEY` | unset | no | Widget key of the workspace the landing page should chat with. Without it, no widget is loaded at all. |
+| `VITE_WIDGET_SCRIPT_URL` | `http://localhost:5174/dist/widget.js` | only with a widget key | Where `widget.js` is served from. |
+| `VITE_API_URL` | `http://localhost:4000` | only with a widget key | API the widget calls. |
+
+A production build (`npm run build --workspace=@nexo/landing`) **fails** if a required variable is
+missing or still points at localhost. Without that guard the build would succeed and every call to
+action on the page would silently link to the visitor's own machine.
 
 To try the widget the way an actual customer would embed it (a single `<script>` tag):
 

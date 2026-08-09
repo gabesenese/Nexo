@@ -135,6 +135,23 @@ export interface AnalyticsSummary {
   recentEscalations: Escalation[];
 }
 
+export interface KnowledgeGapVariant {
+  question: string;
+  conversationId: string;
+  createdAt: string;
+}
+
+export interface KnowledgeGap {
+  id: string;
+  question: string;
+  occurrences: number;
+  firstSeen: string;
+  lastSeen: string;
+  averageConfidence: number | null;
+  unanswered: number;
+  variants: KnowledgeGapVariant[];
+}
+
 export type AttentionType = "waiting_for_human" | "customer_replied" | "reopened";
 
 export interface Assignee {
@@ -220,6 +237,7 @@ export const api = {
   chat: (input: { orgKey: string; sessionId: string; message: string }) =>
     request<ChatReply>("/api/chat", { method: "POST", body: JSON.stringify(input) }),
   getAnalytics: () => request<AnalyticsSummary>("/api/analytics"),
+  getKnowledgeGaps: () => request<KnowledgeGap[]>("/api/knowledge-gaps"),
   getAttention: () => request<AttentionItem[]>("/api/attention"),
   listConversations: () => request<Conversation[]>("/api/conversations"),
   replyToConversation: (id: string, message: string) =>

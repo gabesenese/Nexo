@@ -3,6 +3,7 @@ import { NavLink, Navigate, Route, Routes, useNavigate } from "react-router-dom"
 import { SourcesPage } from "./pages/Sources";
 import { ConversationsPage } from "./pages/Conversations";
 import { AnalyticsPage } from "./pages/Analytics";
+import { KnowledgeGapsPage } from "./pages/KnowledgeGaps";
 import { LeadsPage } from "./pages/Leads";
 import { LoginPage } from "./pages/Login";
 import { SignupPage } from "./pages/Signup";
@@ -87,6 +88,10 @@ function Dashboard() {
             <span className="dot" />
             Knowledge
           </NavLink>
+          <NavLink to="/knowledge-gaps">
+            <span className="dot" />
+            Knowledge gaps
+          </NavLink>
           <NavLink to="/conversations">
             <span className="dot" />
             Conversations
@@ -110,6 +115,7 @@ function Dashboard() {
         <Routes>
           <Route path="/" element={<AnalyticsPage />} />
           <Route path="/sources" element={<SourcesPage />} />
+          <Route path="/knowledge-gaps" element={<KnowledgeGapsPage />} />
           <Route path="/conversations" element={<ConversationsPage />} />
           <Route path="/leads" element={<LeadsPage />} />
           <Route

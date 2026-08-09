@@ -1,6 +1,7 @@
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
 
 export interface AuthUser {
+  id: string;
   email: string;
   name: string;
   organization: { id: string; name: string; slug: string; widgetKey: string };
@@ -23,6 +24,7 @@ export interface ChatReply {
 export type MemberRole = "owner" | "admin" | "member";
 
 export interface OrgMember {
+  id: string;
   email: string;
   name: string;
   role: MemberRole;
@@ -135,6 +137,11 @@ export interface AnalyticsSummary {
 
 export type AttentionType = "waiting_for_human" | "customer_replied" | "reopened";
 
+export interface Assignee {
+  id: string;
+  name: string;
+}
+
 export interface AttentionItem {
   conversationId: string;
   sessionId: string;
@@ -143,6 +150,7 @@ export interface AttentionItem {
   reason: string | null;
   preview: string;
   reopenCount: number;
+  assignee: Assignee | null;
 }
 
 export interface Citation {
@@ -169,6 +177,8 @@ export interface Conversation {
   resolvedAt: string | null;
   reopenCount: number;
   lastReopenedAt: string | null;
+  assignedUserId: string | null;
+  assignedUser: (Assignee & { email: string }) | null;
   messages: Message[];
   escalations: Escalation[];
 }
@@ -214,6 +224,8 @@ export const api = {
   listConversations: () => request<Conversation[]>("/api/conversations"),
   replyToConversation: (id: string, message: string) =>
     request<Message>(`/api/conversations/${id}/reply`, { method: "POST", body: JSON.stringify({ message }) }),
+  assignConversation: (id: string, userId: string | null) =>
+    request<Conversation>(`/api/conversations/${id}/assign`, { method: "POST", body: JSON.stringify({ userId }) }),
   resolveConversation: (id: string) =>
     request<{ ok: true }>(`/api/conversations/${id}/resolve`, { method: "POST" }),
   listLeads: () => request<Lead[]>("/api/leads"),

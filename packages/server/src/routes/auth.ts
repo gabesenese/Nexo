@@ -94,6 +94,7 @@ export async function authRoutes(app: FastifyInstance) {
 
     setSession(app, reply, { sub: user.id, email: user.email, orgId: organization.id });
     return {
+      id: user.id,
       email: user.email,
       name: user.name,
       organization: {
@@ -125,6 +126,7 @@ export async function authRoutes(app: FastifyInstance) {
 
     setSession(app, reply, { sub: user.id, email: user.email, orgId: membership.organizationId });
     return {
+      id: user.id,
       email: user.email,
       name: user.name,
       organization: {
@@ -153,6 +155,7 @@ export async function authRoutes(app: FastifyInstance) {
       });
       if (!membership) return reply.status(401).send({ error: "Not authenticated" });
       return {
+        id: membership.user.id,
         email: membership.user.email,
         name: membership.user.name,
         organization: {

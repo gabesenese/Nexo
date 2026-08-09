@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { api, type Conversation } from "../api";
+import { api, type Conversation, type OrgMember } from "../api";
 
 function initials(sessionId: string) {
   return sessionId.slice(0, 2).toUpperCase();
@@ -25,6 +25,7 @@ export function ConversationsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(searchParams.get("id"));
+  const [members, setMembers] = useState<OrgMember[]>([]);
   const [replyText, setReplyText] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,6 +38,10 @@ export function ConversationsPage() {
     refresh();
     const id = setInterval(refresh, 4000);
     return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    api.getOrg().then((org) => setMembers(org.members)).catch(() => {});
   }, []);
 
   /** Deep-link support: a notification click sets ?id=, which may arrive after this page has already mounted. */
@@ -73,6 +78,17 @@ export function ConversationsPage() {
       setError((err as Error).message);
     } finally {
       setSending(false);
+    }
+  }
+
+  async function handleAssign(userId: string) {
+    if (!selected) return;
+    setError(null);
+    try {
+      await api.assignConversation(selected.id, userId || null);
+      await refresh();
+    } catch (err) {
+      setError((err as Error).message);
     }
   }
 
@@ -131,6 +147,23 @@ export function ConversationsPage() {
             <div className="card-sub">
               {selected.sessionId.slice(0, 8)}… · {selected.channel}
               {selected.reopenCount > 0 && ` · ${recurrenceLabel(selected.reopenCount).toLowerCase()}`}
+            </div>
+
+            <div className="assign-row">
+              <label htmlFor="assignee">Owner</label>
+              <select
+                id="assignee"
+                className="assign-select"
+                value={selected.assignedUserId ?? ""}
+                onChange={(e) => handleAssign(e.target.value)}
+              >
+                <option value="">Unassigned</option>
+                {members.map((m) => (
+                  <option value={m.id} key={m.id}>
+                    {m.name}
+                  </option>
+                ))}
+              </select>
             </div>
             {selected.messages.map((m) => (
               <Fragment key={m.id}>

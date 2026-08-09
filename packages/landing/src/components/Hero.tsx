@@ -18,7 +18,7 @@ export function Hero({ onOpenTrial }: { onOpenTrial: () => void }) {
       </div>
       <div className="l-hero-note">Set it up yourself in minutes. No sales call required.</div>
 
-      <div className="proof-label">This is the actual product, not a mockup</div>
+      <div className="proof-label">An illustration of the handoff. Real screenshots further down.</div>
       <div className="proof-card">
         <div className="proof-head">
           <div className="proof-mark">N</div>

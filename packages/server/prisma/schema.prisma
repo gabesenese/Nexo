@@ -191,6 +191,9 @@ model Escalation {
   status         EscalationStatus  @default(pending)
   createdAt      DateTime          @default(now())
 
+  question          String?
+  questionEmbedding Unsupported("vector(768)")?
+
   @@index([conversationId])
 }
 

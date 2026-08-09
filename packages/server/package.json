@@ -12,7 +12,8 @@
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
     "db:seed": "tsx prisma/seed.ts",
-    "db:seed:demo": "tsx prisma/demo-seed.ts"
+    "db:seed:demo": "tsx prisma/demo-seed.ts",
+    "db:backfill:escalation-questions": "tsx prisma/backfill-escalation-questions.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.32.1",

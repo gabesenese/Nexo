@@ -8,6 +8,7 @@ import type { ChatProvider, ChatTurn } from "../llm/provider.js";
 import { mockHandoffAdapter } from "../handoff/mockAdapter.js";
 import type { HandoffAdapter } from "../handoff/adapter.js";
 import { computeCombinedConfidence, shouldEscalate } from "./confidence.js";
+import { storeEscalationQuestion } from "../knowledge/gaps.js";
 
 export interface ChatTurnResult {
   conversationId: string;
@@ -103,6 +104,7 @@ export async function handleUserMessage(params: {
       confidence: null,
       answer: "Connecting you with a human agent now.",
       citations: [],
+      question: message,
     });
   }
 
@@ -135,6 +137,7 @@ export async function handleUserMessage(params: {
       confidence: combinedConfidence,
       answer: result.answer,
       citations,
+      question: message,
     });
   }
 
@@ -164,8 +167,9 @@ async function escalate(params: {
   confidence: number | null;
   answer: string;
   citations: { id: string; sourceName: string; headingPath: string[] }[];
+  question: string;
 }): Promise<ChatTurnResult> {
-  const { conversationId, organizationId, reason, confidence, answer, citations } = params;
+  const { conversationId, organizationId, reason, confidence, answer, citations, question } = params;
 
   await prisma.message.create({
     data: {
@@ -195,13 +199,14 @@ async function escalate(params: {
     sources: citations.map((c) => ({ id: c.id, sourceName: c.sourceName })),
   });
 
-  await prisma.$transaction([
+  const [, escalation] = await prisma.$transaction([
     prisma.conversation.update({ where: { id: conversationId }, data: { status: "escalated" } }),
     prisma.escalation.create({
       data: {
         conversationId,
         reason,
         summary,
+        question,
         handoffPayload: handoffResult.raw as Prisma.InputJsonValue,
       },
     }),
@@ -209,6 +214,13 @@ async function escalate(params: {
       data: { organizationId, conversationId, type: "escalation", message: summary },
     }),
   ]);
+
+  /**
+   * Embedding happens outside the transaction so a slow model never holds
+   * database locks, and a failure leaves `questionEmbedding` null for the
+   * backfill to pick up rather than stranding a customer mid-handoff.
+   */
+  await storeEscalationQuestion(escalation.id, question).catch(() => {});
 
   return { conversationId, answer, confidence, citations, escalated: true };
 }

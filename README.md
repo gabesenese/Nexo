@@ -56,6 +56,17 @@ Open http://localhost:5175 for the marketing landing page, http://localhost:5173
 dashboard (add a help-center URL or upload a PDF under **Knowledge**), then http://localhost:5174
 to try the chat widget against that content.
 
+The landing page can run Nexo's own support widget on itself, but only when it is told which
+workspace to talk to. Set these in `packages/landing/.env` (all optional, all build-time):
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `VITE_WIDGET_ORG_KEY` | unset | Widget key of the workspace the landing page should chat with. Without it, no widget is loaded at all. |
+| `VITE_WIDGET_SCRIPT_URL` | `http://localhost:5174/dist/widget.js` | Where `widget.js` is served from. |
+| `VITE_API_URL` | `http://localhost:4000` | API the widget calls. |
+| `VITE_APP_URL` | `http://localhost:5173` | Admin app, for the sign-in and onboarding links. |
+| `VITE_WIDGET_URL` | `http://localhost:5174/` | Widget demo page linked from the nav. |
+
 To try the widget the way an actual customer would embed it (a single `<script>` tag):
 
 ```bash

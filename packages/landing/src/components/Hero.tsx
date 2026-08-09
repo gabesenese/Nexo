@@ -7,7 +7,7 @@ export function Hero({ onOpenTrial }: { onOpenTrial: () => void }) {
       <h1>
         Every answer has <span className="accent">an exit.</span>
       </h1>
-      <p>AI support that knows when to answer, and when your customers deserve a person.</p>
+      <p>AI support that knows when to answer, and when to bring in a person.</p>
       <div className="l-hero-ctas">
         <a className="btn btn-primary" href={ONBOARDING_URL}>
           Start free trial

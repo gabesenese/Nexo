@@ -4,9 +4,11 @@
 **Working name: Nexo** (subject to trademark clearance — see note below)
 
 > This document is the single source of truth for **project status and sequencing**.
-> `project-brief.md` holds the durable why/what (market, positioning, architecture).
+> `PHILOSOPHY.md` holds the durable company thesis (why Nexo exists, what it refuses to
+> become). `project-brief.md` holds the durable why/what (market, positioning, architecture).
 > `README.md` holds the how (as-built architecture, setup). When those disagree with
-> this file on *what comes next*, this file wins.
+> this file on *what comes next*, this file wins; when this file conflicts with
+> `PHILOSOPHY.md` on strategic direction, `PHILOSOPHY.md` wins.
 
 ---
 

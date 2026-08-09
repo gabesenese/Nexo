@@ -10,44 +10,6 @@ export function PhilosophySection() {
         <p className="why-line resolve">Nexo escalates when it isn't.</p>
       </div>
 
-      <h3 className="compare-heading">Enterprise software makes enterprise assumptions.</h3>
-
-      <div className="compare-grid">
-        <div className="compare-col">
-          <div className="compare-label">Enterprise platforms assume</div>
-          <ul className="compare-list">
-            <li>Dedicated AI teams</li>
-            <li>Long implementations</li>
-            <li>Expensive contracts</li>
-          </ul>
-        </div>
-        <div className="compare-col hi">
-          <div className="compare-label">Growing businesses need</div>
-          <ul className="compare-list">
-            <li>Live in days, not months</li>
-            <li>Simple enough to manage yourself</li>
-            <li>Confidence they won't lose customers</li>
-          </ul>
-        </div>
-      </div>
-
-      <div className="conf-flow">
-        <div className="cf-step">Customer asks a question</div>
-        <div className="cf-arrow">↓</div>
-        <div className="cf-step">Nexo checks what it knows</div>
-        <div className="cf-arrow">↓</div>
-        <div className="cf-branches">
-          <div className="cf-branch">
-            <div className="cf-conf high">Knows the answer</div>
-            <div className="cf-outcome">Answered instantly</div>
-          </div>
-          <div className="cf-branch">
-            <div className="cf-conf low">Not sure</div>
-            <div className="cf-outcome">Handed to a human</div>
-          </div>
-        </div>
-      </div>
-
       <p className="why-signature">
         The smartest AI isn't the one that answers every question.
         <br />

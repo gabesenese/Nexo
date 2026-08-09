@@ -1,18 +1,44 @@
 import { useEffect, useState } from "react";
-import { ONBOARDING_URL, SIGN_IN_URL } from "../config";
+import { ONBOARDING_URL, SIGN_IN_URL, WIDGET_DEMO_URL } from "../config";
 
-function LogoMark() {
+function SunIcon() {
   return (
-    <svg viewBox="0 0 20 20" fill="none">
-      <circle cx="10" cy="10" r="9" stroke="#2f6f5e" strokeWidth="1.4" />
-      <path d="M6 13V7l8 6V7" stroke="#181b1d" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+      <circle cx="10" cy="10" r="3.5" />
+      <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.5 4.5l-1.4 1.4M5.9 14.1l-1.4 1.4M15.5 15.5l-1.4-1.4M5.9 5.9L4.5 4.5" />
     </svg>
   );
+}
+
+function MoonIcon() {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M16.5 12.3A7 7 0 0 1 7.7 3.5 7 7 0 1 0 16.5 12.3Z" />
+    </svg>
+  );
+}
+
+type Theme = "light" | "dark";
+
+function useTheme() {
+  const [theme, setTheme] = useState<Theme>(
+    () => (document.documentElement.getAttribute("data-theme") as Theme | null) ?? "light",
+  );
+
+  function toggle() {
+    const next: Theme = theme === "dark" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    localStorage.setItem("nexo-theme", next);
+    setTheme(next);
+  }
+
+  return { theme, toggle };
 }
 
 export function Nav({ onOpenTrial }: { onOpenTrial: () => void }) {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const { theme, toggle } = useTheme();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -45,21 +71,21 @@ export function Nav({ onOpenTrial }: { onOpenTrial: () => void }) {
     onOpenTrial();
   }
 
+  const themeLabel = theme === "dark" ? "Switch to light mode" : "Switch to dark mode";
+
   return (
     <>
       <nav id="nav" className={`l-nav${scrolled ? " scrolled" : ""}`}>
-        <div className="l-logo">
-          <span className="mark">
-            <LogoMark />
-          </span>
-          Nexo
-        </div>
+        <div className="l-logo">Nexo</div>
         <div className="l-nav-links">
           <a href="#product">Product</a>
           <a href="#pricing">Pricing</a>
-          <a href="http://localhost:5174/">Widget demo</a>
+          <a href={WIDGET_DEMO_URL}>Widget demo</a>
         </div>
         <div className="l-nav-cta">
+          <button className="theme-toggle" aria-label={themeLabel} title={themeLabel} onClick={toggle}>
+            {theme === "dark" ? <SunIcon /> : <MoonIcon />}
+          </button>
           <a className="btn btn-ghost" href={SIGN_IN_URL}>
             Sign in
           </a>
@@ -78,10 +104,10 @@ export function Nav({ onOpenTrial }: { onOpenTrial: () => void }) {
           aria-label="Toggle menu"
           onClick={() => setMenuOpen((o) => !o)}
         >
-          <svg className="icon-open" viewBox="0 0 20 20" fill="none" stroke="#181b1d" strokeWidth="1.6" strokeLinecap="round">
+          <svg className="icon-open" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
             <path d="M3 6h14M3 10h14M3 14h14" />
           </svg>
-          <svg className="icon-close" viewBox="0 0 20 20" fill="none" stroke="#181b1d" strokeWidth="1.6" strokeLinecap="round">
+          <svg className="icon-close" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
             <path d="M4 4l12 12M16 4L4 16" />
           </svg>
         </button>
@@ -94,10 +120,19 @@ export function Nav({ onOpenTrial }: { onOpenTrial: () => void }) {
         <a href="#pricing" tabIndex={menuOpen ? 0 : -1} onClick={() => setMenuOpen(false)}>
           Pricing
         </a>
-        <a href="http://localhost:5174/" tabIndex={menuOpen ? 0 : -1} onClick={() => setMenuOpen(false)}>
+        <a href={WIDGET_DEMO_URL} tabIndex={menuOpen ? 0 : -1} onClick={() => setMenuOpen(false)}>
           Widget demo
         </a>
         <div className="l-nav-cta">
+          <button
+            className="theme-toggle"
+            aria-label={themeLabel}
+            tabIndex={menuOpen ? 0 : -1}
+            onClick={toggle}
+          >
+            {theme === "dark" ? <SunIcon /> : <MoonIcon />}
+            <span>{theme === "dark" ? "Light mode" : "Dark mode"}</span>
+          </button>
           <a className="btn btn-ghost" href={SIGN_IN_URL} tabIndex={menuOpen ? 0 : -1}>
             Sign in
           </a>

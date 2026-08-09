@@ -8,9 +8,6 @@ const APP_URL = import.meta.env.VITE_APP_URL ?? (import.meta.env.DEV ? "http://l
 
 export const ONBOARDING_URL = `${APP_URL}/onboarding`;
 export const SIGN_IN_URL = `${APP_URL}/login`;
-export const WIDGET_DEMO_URL =
-  import.meta.env.VITE_WIDGET_URL ?? (import.meta.env.DEV ? "http://localhost:5174/" : "");
-
 export const API_URL =
   import.meta.env.VITE_API_URL ?? (import.meta.env.DEV ? "http://localhost:4000" : "");
 export const WIDGET_SCRIPT_URL =

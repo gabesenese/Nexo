@@ -2,7 +2,8 @@
 
 AI customer-support agent for Canadian/North American SMB and low-mid-market companies, the Ada
 alternative for teams too small for Ada's enterprise floor and too serious for a basic chatbot.
-See `project-brief.md` and `structured-plan.md` for the full product/business plan.
+See `PHILOSOPHY.md` for the company thesis, and `project-brief.md` and `structured-plan.md` for
+the full product/business plan.
 
 > **CTO rule: never build an isolated layer. Build complete user journeys.**
 > We ship Nexo in vertical slices, one milestone at a time. A milestone is done only when a

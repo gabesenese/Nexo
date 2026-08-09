@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ONBOARDING_URL, SIGN_IN_URL, WIDGET_DEMO_URL } from "../config";
+import { ONBOARDING_URL, SIGN_IN_URL } from "../config";
 
 function SunIcon() {
   return (
@@ -80,7 +80,6 @@ export function Nav({ onOpenTrial }: { onOpenTrial: () => void }) {
         <div className="l-nav-links">
           <a href="#product">Product</a>
           <a href="#pricing">Pricing</a>
-          <a href={WIDGET_DEMO_URL}>Widget demo</a>
         </div>
         <div className="l-nav-cta">
           <button className="theme-toggle" aria-label={themeLabel} title={themeLabel} onClick={toggle}>
@@ -119,9 +118,6 @@ export function Nav({ onOpenTrial }: { onOpenTrial: () => void }) {
         </a>
         <a href="#pricing" tabIndex={menuOpen ? 0 : -1} onClick={() => setMenuOpen(false)}>
           Pricing
-        </a>
-        <a href={WIDGET_DEMO_URL} tabIndex={menuOpen ? 0 : -1} onClick={() => setMenuOpen(false)}>
-          Widget demo
         </a>
         <div className="l-nav-cta">
           <button

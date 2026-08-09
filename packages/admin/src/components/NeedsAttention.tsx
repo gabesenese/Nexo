@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { api, type AttentionItem } from "../api";
+import { api, type AttentionItem, type AuthUser } from "../api";
 
 const REFRESH_MS = 10000;
 
@@ -37,6 +37,11 @@ function recurrenceLabel(count: number) {
   return count === 1 ? "reopened once" : `reopened ${count} times`;
 }
 
+function ownerLabel(item: AttentionItem, meId: string | undefined) {
+  if (!item.assignee) return "Nobody has picked this up";
+  return item.assignee.id === meId ? "Assigned to you" : `Assigned to ${item.assignee.name}`;
+}
+
 function severity(items: AttentionItem[]) {
   if (items.length === 0) return "clear";
   if (items.some((i) => i.type === "waiting_for_human")) return "urgent";
@@ -46,7 +51,13 @@ function severity(items: AttentionItem[]) {
 
 export function NeedsAttention() {
   const [items, setItems] = useState<AttentionItem[] | null>(null);
+  const [me, setMe] = useState<AuthUser | null>(null);
+  const [mineOnly, setMineOnly] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    api.me().then(setMe);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -64,24 +75,39 @@ export function NeedsAttention() {
 
   if (!items) return null;
 
+  const mineCount = items.filter((i) => i.assignee?.id === me?.id).length;
+  const visible = mineOnly ? items.filter((i) => i.assignee?.id === me?.id) : items;
+
   return (
     <div className="card attention-card">
       <div className="attention-head">
         <h3>Needs attention</h3>
-        <span className={`attention-count ${severity(items)}`}>
-          {items.length === 0
-            ? "All clear"
-            : `${items.length} ${items.length === 1 ? "conversation" : "conversations"}`}
-        </span>
+        <div className="attention-head-right">
+          <div className="attention-filter" role="group" aria-label="Filter by owner">
+            <button className={mineOnly ? "" : "on"} onClick={() => setMineOnly(false)}>
+              Everyone
+            </button>
+            <button className={mineOnly ? "on" : ""} onClick={() => setMineOnly(true)}>
+              Mine {mineCount > 0 && <span className="filter-count">{mineCount}</span>}
+            </button>
+          </div>
+          <span className={`attention-count ${severity(visible)}`}>
+            {visible.length === 0
+              ? "All clear"
+              : `${visible.length} ${visible.length === 1 ? "conversation" : "conversations"}`}
+          </span>
+        </div>
       </div>
 
-      {items.length === 0 && (
+      {visible.length === 0 && (
         <p className="empty-note">
-          No one is waiting on a human right now. New escalations show up here.
+          {mineOnly
+            ? "Nothing is assigned to you right now."
+            : "No one is waiting on a human right now. New escalations show up here."}
         </p>
       )}
 
-      {items.map((item) => (
+      {visible.map((item) => (
         <div
           className="list-item attention-item"
           key={item.conversationId}
@@ -98,7 +124,8 @@ export function NeedsAttention() {
             </div>
             <div className="li-sub attention-preview">{item.preview}</div>
             <div className="attention-meta">
-              {detail(item)} · waiting {waitedFor(item.since)}
+              {detail(item)} · waiting {waitedFor(item.since)} ·{" "}
+              <span className={item.assignee ? "owner-set" : "owner-none"}>{ownerLabel(item, me?.id)}</span>
             </div>
           </div>
           <span className="attention-action">{actionLabel(item)} →</span>

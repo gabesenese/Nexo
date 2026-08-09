@@ -90,12 +90,13 @@ model Invite {
 }
 
 model User {
-  id           String       @id @default(cuid())
-  email        String       @unique
-  passwordHash String
-  name         String
-  createdAt    DateTime     @default(now())
-  memberships  Membership[]
+  id                    String         @id @default(cuid())
+  email                 String         @unique
+  passwordHash          String
+  name                  String
+  createdAt             DateTime       @default(now())
+  memberships           Membership[]
+  assignedConversations Conversation[] @relation("ConversationAssignee")
 }
 
 model Membership {
@@ -149,6 +150,9 @@ model Conversation {
   sessionId      String
   channel        String             @default("widget")
   status         ConversationStatus @default(active)
+  assignedUserId String?
+  assignedUser   User?              @relation("ConversationAssignee", fields: [assignedUserId], references: [id], onDelete: SetNull)
+  assignedAt     DateTime?
   resolvedAt     DateTime?
   reopenCount    Int                @default(0)
   lastReopenedAt DateTime?
@@ -160,6 +164,7 @@ model Conversation {
 
   @@index([sessionId])
   @@index([organizationId])
+  @@index([assignedUserId])
 }
 
 model Message {

@@ -31,7 +31,7 @@ export async function orgRoutes(app: FastifyInstance) {
       name: org.name,
       slug: org.slug,
       widgetKey: org.widgetKey,
-      members: org.memberships.map((m) => ({ email: m.user.email, name: m.user.name, role: m.role })),
+      members: org.memberships.map((m) => ({ id: m.user.id, email: m.user.email, name: m.user.name, role: m.role })),
       invites: org.invites.map((i) => ({ id: i.id, email: i.email, role: i.role, token: i.token, createdAt: i.createdAt })),
     };
   });

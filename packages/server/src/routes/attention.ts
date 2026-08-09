@@ -4,6 +4,11 @@ import { requireAuth } from "./auth.js";
 
 export type AttentionType = "waiting_for_human" | "customer_replied" | "reopened";
 
+export interface AttentionAssignee {
+  id: string;
+  name: string;
+}
+
 export interface AttentionItem {
   conversationId: string;
   sessionId: string;
@@ -12,6 +17,7 @@ export interface AttentionItem {
   reason: string | null;
   preview: string;
   reopenCount: number;
+  assignee: AttentionAssignee | null;
 }
 
 const PREVIEW_MAX = 240;
@@ -43,6 +49,7 @@ export async function attentionRoutes(app: FastifyInstance) {
       include: {
         escalations: { orderBy: { createdAt: "asc" } },
         messages: { orderBy: { createdAt: "desc" }, take: MESSAGE_WINDOW },
+        assignedUser: { select: { id: true, name: true } },
       },
     });
 
@@ -56,6 +63,9 @@ export async function attentionRoutes(app: FastifyInstance) {
         conversationId: conversation.id,
         sessionId: conversation.sessionId,
         reopenCount: conversation.reopenCount,
+        assignee: conversation.assignedUser
+          ? { id: conversation.assignedUser.id, name: conversation.assignedUser.name }
+          : null,
       };
 
       if (pending) {

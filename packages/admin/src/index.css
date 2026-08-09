@@ -1375,3 +1375,65 @@ select:focus {
   font-size: 11px;
   color: var(--slate-soft);
 }
+
+.attention-head-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.attention-filter {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.attention-filter button {
+  border: none;
+  background: transparent;
+  padding: 4px 12px;
+  font-size: 11.5px;
+  color: var(--slate-soft);
+  cursor: pointer;
+}
+
+.attention-filter button.on {
+  background: var(--paper-dim);
+  color: var(--ink);
+}
+
+.filter-count {
+  margin-left: 5px;
+  color: var(--teal);
+}
+
+.owner-none {
+  color: var(--amber);
+}
+
+.owner-set {
+  color: var(--slate);
+}
+
+.assign-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 16px;
+}
+
+.assign-row label {
+  font-size: 11.5px;
+  color: var(--slate-soft);
+}
+
+.assign-select {
+  font: inherit;
+  font-size: 12.5px;
+  padding: 5px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--white);
+  color: var(--ink);
+}

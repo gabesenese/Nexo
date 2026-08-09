@@ -125,7 +125,9 @@ export interface AnalyticsSummary {
   totalConversations: number;
   resolvedConversations: number;
   escalatedConversations: number;
+  everEscalatedConversations: number;
   openConversations: number;
+  reopenedConversations: number;
   resolutionRate: number;
   escalationRate: number;
   recentEscalations: Escalation[];

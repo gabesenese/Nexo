@@ -10,7 +10,7 @@ import react from "@vitejs/plugin-react";
  */
 function assertProductionUrls(env: Record<string, string>) {
   /** VITE_API_URL is unconditional: the "Talk to us" form posts leads to it. */
-  const required = ["VITE_APP_URL", "VITE_WIDGET_URL", "VITE_API_URL"];
+  const required = ["VITE_APP_URL", "VITE_API_URL"];
   if (env.VITE_WIDGET_ORG_KEY) {
     required.push("VITE_WIDGET_SCRIPT_URL");
   }

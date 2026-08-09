@@ -62,10 +62,9 @@ whatever is set when `vite build` runs is what ships:
 | Variable | Dev default | Required in production | Purpose |
 | --- | --- | --- | --- |
 | `VITE_APP_URL` | `http://localhost:5173` | yes | Admin app, behind every sign-in and onboarding CTA. |
-| `VITE_WIDGET_URL` | `http://localhost:5174/` | yes | Widget demo page linked from the nav. |
 | `VITE_WIDGET_ORG_KEY` | unset | no | Widget key of the workspace the landing page should chat with. Without it, no widget is loaded at all. |
 | `VITE_WIDGET_SCRIPT_URL` | `http://localhost:5174/dist/widget.js` | only with a widget key | Where `widget.js` is served from. |
-| `VITE_API_URL` | `http://localhost:4000` | only with a widget key | API the widget calls. |
+| `VITE_API_URL` | `http://localhost:4000` | yes | API the "Talk to us" lead form posts to, and the widget calls. |
 
 A production build (`npm run build --workspace=@nexo/landing`) **fails** if a required variable is
 missing or still points at localhost. Without that guard the build would succeed and every call to

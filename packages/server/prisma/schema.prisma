@@ -149,6 +149,9 @@ model Conversation {
   sessionId      String
   channel        String             @default("widget")
   status         ConversationStatus @default(active)
+  resolvedAt     DateTime?
+  reopenCount    Int                @default(0)
+  lastReopenedAt DateTime?
   createdAt      DateTime           @default(now())
   updatedAt      DateTime           @updatedAt
   messages       Message[]

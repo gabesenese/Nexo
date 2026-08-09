@@ -2,7 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { prisma } from "../db/client.js";
 import { requireAuth } from "./auth.js";
 
-export type AttentionType = "waiting_for_human" | "customer_replied";
+export type AttentionType = "waiting_for_human" | "customer_replied" | "reopened";
 
 export interface AttentionItem {
   conversationId: string;
@@ -11,21 +11,33 @@ export interface AttentionItem {
   since: string;
   reason: string | null;
   preview: string;
+  reopenCount: number;
 }
 
 const PREVIEW_MAX = 240;
 const MESSAGE_WINDOW = 10;
-const TYPE_RANK: Record<AttentionType, number> = { waiting_for_human: 0, customer_replied: 1 };
+const TYPE_RANK: Record<AttentionType, number> = {
+  waiting_for_human: 0,
+  customer_replied: 1,
+  reopened: 2,
+};
 
 /**
  * An escalation flips from `pending` to `handed_off` the moment an operator
  * replies, so pending is an exact "nobody has answered this customer yet"
  * signal without scanning the transcript for agent messages.
+ *
+ * A reopened conversation stays listed even when the AI answered it, because
+ * a customer returning to something the team called resolved is the signal
+ * that the resolution did not hold. Resolving it again clears it.
  */
 export async function attentionRoutes(app: FastifyInstance) {
   app.get("/api/attention", { preHandler: requireAuth }, async (req) => {
     const conversations = await prisma.conversation.findMany({
-      where: { organizationId: req.auth!.organizationId, status: "escalated" },
+      where: {
+        organizationId: req.auth!.organizationId,
+        OR: [{ status: "escalated" }, { status: "active", reopenCount: { gt: 0 } }],
+      },
       orderBy: { updatedAt: "desc" },
       take: 50,
       include: {
@@ -37,15 +49,18 @@ export async function attentionRoutes(app: FastifyInstance) {
     const items: AttentionItem[] = [];
 
     for (const conversation of conversations) {
-      if (conversation.escalations.length === 0) continue;
       const lastMessage = conversation.messages[0];
       const lastUserMessage = conversation.messages.find((m) => m.role === "user");
       const pending = conversation.escalations.find((e) => e.status === "pending");
+      const base = {
+        conversationId: conversation.id,
+        sessionId: conversation.sessionId,
+        reopenCount: conversation.reopenCount,
+      };
 
       if (pending) {
         items.push({
-          conversationId: conversation.id,
-          sessionId: conversation.sessionId,
+          ...base,
           type: "waiting_for_human",
           since: pending.createdAt.toISOString(),
           reason: pending.reason,
@@ -54,14 +69,24 @@ export async function attentionRoutes(app: FastifyInstance) {
         continue;
       }
 
-      if (lastMessage?.role === "user") {
+      if (conversation.escalations.length > 0 && lastMessage?.role === "user") {
         items.push({
-          conversationId: conversation.id,
-          sessionId: conversation.sessionId,
+          ...base,
           type: "customer_replied",
           since: lastMessage.createdAt.toISOString(),
           reason: null,
           preview: lastMessage.content.slice(0, PREVIEW_MAX),
+        });
+        continue;
+      }
+
+      if (conversation.reopenCount > 0 && conversation.lastReopenedAt) {
+        items.push({
+          ...base,
+          type: "reopened",
+          since: conversation.lastReopenedAt.toISOString(),
+          reason: null,
+          preview: (lastUserMessage?.content || "").slice(0, PREVIEW_MAX),
         });
       }
     }

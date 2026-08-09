@@ -131,7 +131,7 @@ export interface AnalyticsSummary {
   recentEscalations: Escalation[];
 }
 
-export type AttentionType = "waiting_for_human" | "customer_replied";
+export type AttentionType = "waiting_for_human" | "customer_replied" | "reopened";
 
 export interface AttentionItem {
   conversationId: string;
@@ -140,6 +140,7 @@ export interface AttentionItem {
   since: string;
   reason: string | null;
   preview: string;
+  reopenCount: number;
 }
 
 export interface Citation {
@@ -163,6 +164,9 @@ export interface Conversation {
   status: "active" | "resolved" | "escalated";
   channel: string;
   createdAt: string;
+  resolvedAt: string | null;
+  reopenCount: number;
+  lastReopenedAt: string | null;
   messages: Message[];
   escalations: Escalation[];
 }

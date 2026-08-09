@@ -1,9 +1,24 @@
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { api, type Conversation } from "../api";
 
 function initials(sessionId: string) {
   return sessionId.slice(0, 2).toUpperCase();
+}
+
+function recurrenceLabel(count: number) {
+  return count === 1 ? "Reopened once" : `Reopened ${count} times`;
+}
+
+/**
+ * The reopen marker sits before the first message that arrived after the most
+ * recent reopen, which is the customer's returning message.
+ */
+function reopenMarkerId(conversation: Conversation): string | null {
+  if (!conversation.lastReopenedAt) return null;
+  const reopenedAt = new Date(conversation.lastReopenedAt).getTime();
+  const first = conversation.messages.find((m) => new Date(m.createdAt).getTime() >= reopenedAt);
+  return first?.id ?? null;
 }
 
 export function ConversationsPage() {
@@ -43,6 +58,7 @@ export function ConversationsPage() {
   }
 
   const selected = conversations.find((c) => c.id === selectedId) ?? null;
+  const markerId = selected ? reopenMarkerId(selected) : null;
 
   async function handleSend() {
     const text = replyText.trim();
@@ -92,7 +108,10 @@ export function ConversationsPage() {
             >
               <div className="avatar mono">{initials(c.sessionId)}</div>
               <div className="list-info">
-                <div className="li-title">{c.sessionId.slice(0, 8)}…</div>
+                <div className="li-title">
+                  {c.sessionId.slice(0, 8)}…
+                  {c.reopenCount > 0 && <span className="recurrence-tag">{recurrenceLabel(c.reopenCount)}</span>}
+                </div>
                 <div className="li-sub">{new Date(c.createdAt).toLocaleString()}</div>
               </div>
               <span className={`badge ${c.status}`}>{c.status}</span>
@@ -109,29 +128,38 @@ export function ConversationsPage() {
               <h3>Transcript</h3>
               <span className={`badge ${selected.status}`}>{selected.status}</span>
             </div>
-            <div className="card-sub">{selected.sessionId.slice(0, 8)}… · {selected.channel}</div>
+            <div className="card-sub">
+              {selected.sessionId.slice(0, 8)}… · {selected.channel}
+              {selected.reopenCount > 0 && ` · ${recurrenceLabel(selected.reopenCount).toLowerCase()}`}
+            </div>
             {selected.messages.map((m) => (
-              <div
-                key={m.id}
-                className={`msg ${m.role === "user" ? "user" : m.role === "agent" ? "agent" : "bot"}`}
-              >
-                {m.role === "agent" && <div className="msg-author">You</div>}
-                {m.content}
-                {m.citations && m.citations.length > 0 && (
-                  <div>
-                    {m.citations.map((c) => (
-                      <span className="cite" key={c.id}>
-                        {c.sourceName}
-                      </span>
-                    ))}
+              <Fragment key={m.id}>
+                {m.id === markerId && (
+                  <div className="reopen-marker">
+                    <span>
+                      Reopened {new Date(selected.lastReopenedAt!).toLocaleString()}, after this was resolved
+                    </span>
                   </div>
                 )}
-                {m.confidence != null && (
-                  <div style={{ fontSize: 11, color: "var(--slate-soft)", marginTop: 6 }}>
-                    confidence {m.confidence.toFixed(2)}
-                  </div>
-                )}
-              </div>
+                <div className={`msg ${m.role === "user" ? "user" : m.role === "agent" ? "agent" : "bot"}`}>
+                  {m.role === "agent" && <div className="msg-author">You</div>}
+                  {m.content}
+                  {m.citations && m.citations.length > 0 && (
+                    <div>
+                      {m.citations.map((c) => (
+                        <span className="cite" key={c.id}>
+                          {c.sourceName}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  {m.confidence != null && (
+                    <div style={{ fontSize: 11, color: "var(--slate-soft)", marginTop: 6 }}>
+                      confidence {m.confidence.toFixed(2)}
+                    </div>
+                  )}
+                </div>
+              </Fragment>
             ))}
 
             {selected.status === "resolved" ? (

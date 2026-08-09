@@ -10,9 +10,11 @@ import { EnterpriseComparison } from "./components/EnterpriseComparison";
 import { Pricing } from "./components/Pricing";
 import { Footer } from "./components/Footer";
 import { TrialModal } from "./components/TrialModal";
+import { useSupportWidget } from "./useSupportWidget";
 
 export default function App() {
   const [trialOpen, setTrialOpen] = useState(false);
+  useSupportWidget();
 
   return (
     <>

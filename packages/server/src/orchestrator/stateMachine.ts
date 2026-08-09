@@ -23,14 +23,43 @@ const handoffAdapter: HandoffAdapter = mockHandoffAdapter;
 async function getOrCreateConversation(sessionId: string, organizationId: string, channel: string) {
   /**
    * A session's thread continues across `active` and `escalated` (a human
-   * taking over must not fork a new conversation). Only a `resolved`
-   * conversation starts a fresh thread on the next message.
+   * taking over must not fork a new conversation).
    */
   const existing = await prisma.conversation.findFirst({
     where: { sessionId, organizationId, status: { in: ["active", "escalated"] } },
     orderBy: { createdAt: "desc" },
   });
   if (existing) return existing;
+
+  /**
+   * A customer who comes back soon after a resolution is almost always
+   * raising the same issue again, so the thread reopens instead of forking a
+   * new conversation that hides the recurrence. `reopenCount` is what makes
+   * the recurrence visible to operators; a resolution that predates this
+   * feature has no `resolvedAt` and so is never reopened. Past the window,
+   * the next message is treated as a genuinely new conversation.
+   */
+  const reopenCutoff = new Date(Date.now() - env.REOPEN_WINDOW_HOURS * 60 * 60 * 1000);
+  const reopenable = await prisma.conversation.findFirst({
+    where: {
+      sessionId,
+      organizationId,
+      status: "resolved",
+      resolvedAt: { gte: reopenCutoff },
+    },
+    orderBy: { resolvedAt: "desc" },
+  });
+  if (reopenable) {
+    return prisma.conversation.update({
+      where: { id: reopenable.id },
+      data: {
+        status: "active",
+        reopenCount: { increment: 1 },
+        lastReopenedAt: new Date(),
+      },
+    });
+  }
+
   return prisma.conversation.create({ data: { sessionId, organizationId, channel } });
 }
 

@@ -15,11 +15,13 @@ function waitedFor(iso: string) {
 }
 
 function headline(item: AttentionItem) {
+  if (item.type === "reopened") return "Came back after being resolved";
   if (item.type === "customer_replied") return "Customer replied after handoff";
   return item.reason === "user_requested" ? "Customer asked for a person" : "Nexo could not answer";
 }
 
 function detail(item: AttentionItem) {
+  if (item.type === "reopened") return "The customer raised this again on a resolved conversation";
   if (item.type === "customer_replied") return "Waiting on your follow-up";
   return item.reason === "user_requested"
     ? "Escalated on request"
@@ -27,7 +29,19 @@ function detail(item: AttentionItem) {
 }
 
 function actionLabel(item: AttentionItem) {
+  if (item.type === "reopened") return "Review";
   return item.type === "customer_replied" ? "Reply" : "Open conversation";
+}
+
+function recurrenceLabel(count: number) {
+  return count === 1 ? "reopened once" : `reopened ${count} times`;
+}
+
+function severity(items: AttentionItem[]) {
+  if (items.length === 0) return "clear";
+  if (items.some((i) => i.type === "waiting_for_human")) return "urgent";
+  if (items.some((i) => i.type === "customer_replied")) return "warn";
+  return "muted";
 }
 
 export function NeedsAttention() {
@@ -54,7 +68,7 @@ export function NeedsAttention() {
     <div className="card attention-card">
       <div className="attention-head">
         <h3>Needs attention</h3>
-        <span className={`attention-count${items.length === 0 ? " clear" : ""}`}>
+        <span className={`attention-count ${severity(items)}`}>
           {items.length === 0
             ? "All clear"
             : `${items.length} ${items.length === 1 ? "conversation" : "conversations"}`}
@@ -76,7 +90,12 @@ export function NeedsAttention() {
         >
           <span className={`attention-dot ${item.type}`} aria-hidden="true" />
           <div className="list-info">
-            <div className="li-title">{headline(item)}</div>
+            <div className="li-title">
+              {headline(item)}
+              {item.reopenCount > 0 && (
+                <span className="recurrence-tag">{recurrenceLabel(item.reopenCount)}</span>
+              )}
+            </div>
             <div className="li-sub attention-preview">{item.preview}</div>
             <div className="attention-meta">
               {detail(item)} · waiting {waitedFor(item.since)}

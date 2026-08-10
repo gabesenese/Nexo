@@ -103,14 +103,22 @@ export function Widget({ apiUrl, orgKey }: { apiUrl: string; orgKey: string }) {
       });
       /**
        * fetch only rejects on network failure, so a refused request lands here
-       * rather than in the catch. Without this the visitor's message would
-       * disappear with no answer and no explanation.
+       * rather than in the catch. The server stored nothing, so the transcript
+       * has to keep the visitor's own message too. Dropping it would leave them
+       * staring at a refusal with no record of what they asked, and retyping it.
        */
       if (!res.ok) {
+        const now = Date.now();
         setMessages((prev) => [
           ...prev,
           {
-            id: `err-${Date.now()}`,
+            id: `sent-${now}`,
+            role: "user",
+            content: message || "Talk to a human",
+            createdAt: new Date().toISOString(),
+          },
+          {
+            id: `err-${now}`,
             role: "assistant",
             /** Deliberately says nothing about the account: that is between us and the business. */
             content:

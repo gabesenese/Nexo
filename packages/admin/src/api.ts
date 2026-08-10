@@ -135,6 +135,13 @@ export interface AnalyticsSummary {
   recentEscalations: Escalation[];
 }
 
+export interface PlanUsage {
+  plan: { id: string; name: string; conversationsPerMonth: number; knowledgeSources: number | null };
+  periodStart: string;
+  conversations: { used: number; limit: number; remaining: number; overage: number; percentUsed: number };
+  knowledgeSources: { used: number; limit: number | null; remaining: number | null; atLimit: boolean };
+}
+
 export interface ImpactSummary {
   windowDays: number;
   since: string;
@@ -250,6 +257,7 @@ export const api = {
   chat: (input: { orgKey: string; sessionId: string; message: string }) =>
     request<ChatReply>("/api/chat", { method: "POST", body: JSON.stringify(input) }),
   getAnalytics: () => request<AnalyticsSummary>("/api/analytics"),
+  getPlan: () => request<PlanUsage>("/api/plan"),
   getImpact: () => request<ImpactSummary>("/api/impact"),
   setImpactAssumptions: (body: { averageHandleMinutes: number | null; supportHourlyCostCad: number | null }) =>
     request<{ averageHandleMinutes: number | null; supportHourlyCostCad: number | null }>("/api/impact/assumptions", {

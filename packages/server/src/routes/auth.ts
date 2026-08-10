@@ -171,6 +171,13 @@ export async function authRoutes(app: FastifyInstance) {
   });
 }
 
+export async function roleOf(userId: string, organizationId: string) {
+  const membership = await prisma.membership.findUnique({
+    where: { userId_organizationId: { userId, organizationId } },
+  });
+  return membership?.role ?? null;
+}
+
 export async function requireAuth(req: FastifyRequest, reply: FastifyReply) {
   const token = req.cookies?.[COOKIE_NAME];
   if (!token) {

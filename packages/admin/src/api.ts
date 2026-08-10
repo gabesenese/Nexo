@@ -135,6 +135,19 @@ export interface AnalyticsSummary {
   recentEscalations: Escalation[];
 }
 
+export interface ImpactSummary {
+  windowDays: number;
+  since: string;
+  conversations: number;
+  resolvedAutomatically: number;
+  resolvedWithHuman: number;
+  stillOpen: number;
+  escalated: number;
+  automationRate: number;
+  assumptions: { averageHandleMinutes: number | null; supportHourlyCostCad: number | null };
+  estimated: { hoursAvoided: number; costAvoidedCad: number } | null;
+}
+
 export interface KnowledgeGapVariant {
   question: string;
   conversationId: string;
@@ -237,6 +250,12 @@ export const api = {
   chat: (input: { orgKey: string; sessionId: string; message: string }) =>
     request<ChatReply>("/api/chat", { method: "POST", body: JSON.stringify(input) }),
   getAnalytics: () => request<AnalyticsSummary>("/api/analytics"),
+  getImpact: () => request<ImpactSummary>("/api/impact"),
+  setImpactAssumptions: (body: { averageHandleMinutes: number | null; supportHourlyCostCad: number | null }) =>
+    request<{ averageHandleMinutes: number | null; supportHourlyCostCad: number | null }>("/api/impact/assumptions", {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    }),
   getKnowledgeGaps: () => request<KnowledgeGap[]>("/api/knowledge-gaps"),
   getAttention: () => request<AttentionItem[]>("/api/attention"),
   listConversations: () => request<Conversation[]>("/api/conversations"),

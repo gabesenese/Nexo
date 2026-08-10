@@ -17,6 +17,8 @@ const envSchema = z.object({
 
   EMBEDDING_DIMENSIONS: z.coerce.number().int().positive().default(768),
 
+  HANDOFF_ADAPTER: z.enum(["webhook", "mock"]).default("webhook"),
+
   PORT: z.coerce.number().default(4000),
   CORS_ORIGIN: z.string().default("http://localhost:5173"),
   WIDGET_BUNDLE_PATH: z.string().optional(),

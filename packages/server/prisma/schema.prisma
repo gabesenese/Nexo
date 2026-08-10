@@ -56,6 +56,39 @@ enum Plan {
   growth
 }
 
+enum WebhookDeliveryStatus {
+  succeeded
+  failed
+}
+
+model WebhookEndpoint {
+  id             String            @id @default(cuid())
+  organizationId String            @unique
+  organization   Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  url            String
+  secret         String
+  enabled        Boolean           @default(true)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  deliveries     WebhookDelivery[]
+}
+
+model WebhookDelivery {
+  id             String                @id @default(cuid())
+  endpointId     String
+  endpoint       WebhookEndpoint       @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+  conversationId String?
+  event          String
+  status         WebhookDeliveryStatus
+  statusCode     Int?
+  attempts       Int                   @default(1)
+  error          String?
+  durationMs     Int?
+  createdAt      DateTime              @default(now())
+
+  @@index([endpointId, createdAt])
+}
+
 model Organization {
   id            String         @id @default(cuid())
   name          String
@@ -74,6 +107,7 @@ model Organization {
   leads         Lead[]
   widgetConfig  WidgetConfig?
   notifications Notification[]
+  webhookEndpoint WebhookEndpoint?
 }
 
 model WidgetConfig {

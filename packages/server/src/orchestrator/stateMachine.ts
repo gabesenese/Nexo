@@ -6,6 +6,7 @@ import { anthropicChatProvider } from "../llm/anthropic.js";
 import { ollamaChatProvider } from "../llm/ollama.js";
 import type { ChatProvider, ChatTurn } from "../llm/provider.js";
 import { mockHandoffAdapter } from "../handoff/mockAdapter.js";
+import { webhookHandoffAdapter } from "../handoff/webhookAdapter.js";
 import type { HandoffAdapter } from "../handoff/adapter.js";
 import { computeCombinedConfidence, shouldEscalate } from "./confidence.js";
 import { storeEscalationQuestion } from "../knowledge/gaps.js";
@@ -19,7 +20,13 @@ export interface ChatTurnResult {
 }
 
 const chatProvider: ChatProvider = env.AI_PROVIDER === "cloud" ? anthropicChatProvider : ollamaChatProvider;
-const handoffAdapter: HandoffAdapter = mockHandoffAdapter;
+/**
+ * The webhook adapter falls back to doing nothing when a workspace has not
+ * configured an endpoint, so it is safe as the default. The mock stays for
+ * local work where no receiver is running.
+ */
+const handoffAdapter: HandoffAdapter =
+  env.HANDOFF_ADAPTER === "mock" ? mockHandoffAdapter : webhookHandoffAdapter;
 
 async function getOrCreateConversation(sessionId: string, organizationId: string, channel: string) {
   /**
@@ -193,6 +200,7 @@ async function escalate(params: {
 
   const handoffResult = await handoffAdapter.createTicket({
     conversationId,
+    organizationId,
     reason,
     summary,
     transcript: allMessages.map((m: Message) => ({ role: m.role === "user" ? "user" : "assistant", content: m.content })),

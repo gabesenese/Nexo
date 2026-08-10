@@ -3,6 +3,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "../db/client.js";
+import { trialEndDate } from "../billing/trial.js";
 
 /** Opaque, unguessable public key a customer embeds as data-org-key. */
 export function newWidgetKey(): string {
@@ -83,7 +84,7 @@ export async function authRoutes(app: FastifyInstance) {
 
     const { user, organization } = await prisma.$transaction(async (tx) => {
       const organization = await tx.organization.create({
-        data: { name: companyName, slug, widgetKey: newWidgetKey() },
+        data: { name: companyName, slug, widgetKey: newWidgetKey(), trialEndsAt: trialEndDate() },
       });
       const user = await tx.user.create({ data: { name, email, passwordHash } });
       await tx.membership.create({

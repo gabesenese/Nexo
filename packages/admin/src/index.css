@@ -1719,3 +1719,35 @@ select:focus {
   font-size: 12px;
   flex-shrink: 0;
 }
+
+.trial-banner {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 13px 18px;
+  border-radius: 9px;
+  margin-bottom: 22px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  border: 1px solid;
+}
+
+.trial-banner.ending {
+  background: #f7efe1;
+  border-color: #e3d3b4;
+  color: #6f4d19;
+}
+
+.trial-banner.expired {
+  background: #f6e5e0;
+  border-color: #e0c4bb;
+  color: #7a3324;
+}
+
+.trial-banner .tb-text {
+  flex: 1;
+}
+
+.trial-banner .btn-small {
+  flex-shrink: 0;
+}

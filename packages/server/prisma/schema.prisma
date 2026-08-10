@@ -97,6 +97,7 @@ model Organization {
   createdAt     DateTime       @default(now())
 
   plan          Plan           @default(essentials)
+  trialEndsAt   DateTime?
 
   averageHandleMinutes Int?
   supportHourlyCostCad Float?

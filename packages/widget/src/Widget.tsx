@@ -96,11 +96,40 @@ export function Widget({ apiUrl, orgKey }: { apiUrl: string; orgKey: string }) {
     setInput("");
     setLoading(true);
     try {
-      await fetch(`${apiUrl}/api/chat`, {
+      const res = await fetch(`${apiUrl}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sessionId: sessionId.current, orgKey, message: message || "Talk to a human", forceEscalate }),
       });
+      /**
+       * fetch only rejects on network failure, so a refused request lands here
+       * rather than in the catch. The server stored nothing, so the transcript
+       * has to keep the visitor's own message too. Dropping it would leave them
+       * staring at a refusal with no record of what they asked, and retyping it.
+       */
+      if (!res.ok) {
+        const now = Date.now();
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `sent-${now}`,
+            role: "user",
+            content: message || "Talk to a human",
+            createdAt: new Date().toISOString(),
+          },
+          {
+            id: `err-${now}`,
+            role: "assistant",
+            /** Deliberately says nothing about the account: that is between us and the business. */
+            content:
+              res.status === 402
+                ? "Support is unavailable right now. Please try again later."
+                : "Sorry, something went wrong reaching support.",
+            createdAt: new Date().toISOString(),
+          },
+        ]);
+        return;
+      }
       await reconcile();
     } catch {
       setMessages((prev) => [

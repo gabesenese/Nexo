@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { prisma } from "../db/client.js";
 import { handleUserMessage } from "../orchestrator/stateMachine.js";
+import { canStartNewConversation } from "../billing/trial.js";
 
 interface ChatBody {
   sessionId: string;
@@ -67,6 +68,22 @@ export async function chatRoutes(app: FastifyInstance) {
     const org = await prisma.organization.findUnique({ where: { widgetKey: orgKey }, select: { id: true } });
     if (!org) {
       return reply.status(404).send({ error: "Unknown widget key" });
+    }
+
+    /**
+     * An expired trial stops new conversations, never one already underway.
+     * Cutting someone off mid-question to collect payment would punish the
+     * customer's customer for a decision they had no part in.
+     */
+    const existing = await prisma.conversation.findFirst({
+      where: { sessionId, organizationId: org.id, status: { in: ["active", "escalated"] } },
+      select: { id: true },
+    });
+    if (!existing && !(await canStartNewConversation(org.id))) {
+      return reply.status(402).send({
+        error: "trial_expired",
+        message: "This workspace's trial has ended.",
+      });
     }
 
     try {

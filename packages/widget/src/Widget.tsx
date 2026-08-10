@@ -96,11 +96,32 @@ export function Widget({ apiUrl, orgKey }: { apiUrl: string; orgKey: string }) {
     setInput("");
     setLoading(true);
     try {
-      await fetch(`${apiUrl}/api/chat`, {
+      const res = await fetch(`${apiUrl}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sessionId: sessionId.current, orgKey, message: message || "Talk to a human", forceEscalate }),
       });
+      /**
+       * fetch only rejects on network failure, so a refused request lands here
+       * rather than in the catch. Without this the visitor's message would
+       * disappear with no answer and no explanation.
+       */
+      if (!res.ok) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `err-${Date.now()}`,
+            role: "assistant",
+            /** Deliberately says nothing about the account: that is between us and the business. */
+            content:
+              res.status === 402
+                ? "Support is unavailable right now. Please try again later."
+                : "Sorry, something went wrong reaching support.",
+            createdAt: new Date().toISOString(),
+          },
+        ]);
+        return;
+      }
       await reconcile();
     } catch {
       setMessages((prev) => [

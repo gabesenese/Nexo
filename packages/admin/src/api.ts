@@ -150,11 +150,18 @@ export type WebhookConfig =
   | { configured: false }
   | { configured: true; url: string; secret: string; enabled: boolean; deliveries: WebhookDelivery[] };
 
+export interface TrialStatus {
+  state: "none" | "active" | "expired";
+  endsAt: string | null;
+  daysRemaining: number | null;
+}
+
 export interface PlanUsage {
   plan: { id: string; name: string; conversationsPerMonth: number; knowledgeSources: number | null };
   periodStart: string;
   conversations: { used: number; limit: number; remaining: number; overage: number; percentUsed: number };
   knowledgeSources: { used: number; limit: number | null; remaining: number | null; atLimit: boolean };
+  trial: TrialStatus;
 }
 
 export interface ImpactSummary {

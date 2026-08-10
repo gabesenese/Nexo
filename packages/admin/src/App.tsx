@@ -5,6 +5,7 @@ import { ConversationsPage } from "./pages/Conversations";
 import { AnalyticsPage } from "./pages/Analytics";
 import { KnowledgeGapsPage } from "./pages/KnowledgeGaps";
 import { ImpactPage } from "./pages/Impact";
+import { TrialBanner } from "./components/TrialBanner";
 import { LeadsPage } from "./pages/Leads";
 import { LoginPage } from "./pages/Login";
 import { SignupPage } from "./pages/Signup";
@@ -117,6 +118,7 @@ function Dashboard() {
         </button>
       </nav>
       <main className="content">
+        <TrialBanner />
         <Routes>
           <Route path="/" element={<AnalyticsPage />} />
           <Route path="/sources" element={<SourcesPage />} />

@@ -61,8 +61,9 @@ export function Pricing() {
         </div>
         <p className="pricing-included">
           Every plan includes the whole product: AI answers with cited sources, one-click handoff to
-          a human with the full conversation, the escalation queue, conversation ownership, and
-          reports on the questions Nexo could not answer.
+          a human with the full conversation, the escalation queue, conversation ownership, reports
+          on the questions Nexo could not answer, and a signed webhook that posts every handoff to
+          your helpdesk.
         </p>
       </div>
     </section>

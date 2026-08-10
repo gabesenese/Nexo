@@ -11,20 +11,20 @@ const TIERS: Tier[] = [
     name: "Essentials",
     price: "C$149",
     desc: "For teams just starting with AI support",
-    features: ["Up to 1,500 conversations/mo", "2 knowledge sources", "1 helpdesk integration"],
+    features: ["Up to 1,500 conversations/mo", "2 knowledge sources", "Email support"],
   },
   {
     name: "Professional",
     price: "C$499",
     desc: "Most mid-market teams start here",
-    features: ["Up to 8,000 conversations/mo", "Unlimited knowledge sources", "All helpdesk integrations"],
+    features: ["Up to 8,000 conversations/mo", "Unlimited knowledge sources", "Priority support"],
     highlighted: true,
   },
   {
     name: "Growth",
     price: "C$1,500",
     desc: "For higher-volume support teams",
-    features: ["Up to 50,000 conversations/mo", "Custom flows + analytics API", "Priority onboarding"],
+    features: ["Up to 50,000 conversations/mo", "Unlimited knowledge sources", "Priority onboarding"],
   },
 ];
 
@@ -59,6 +59,11 @@ export function Pricing() {
             </div>
           ))}
         </div>
+        <p className="pricing-included">
+          Every plan includes the whole product: AI answers with cited sources, one-click handoff to
+          a human with the full conversation, the escalation queue, conversation ownership, and
+          reports on the questions Nexo could not answer.
+        </p>
       </div>
     </section>
   );

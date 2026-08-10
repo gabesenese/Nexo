@@ -844,6 +844,14 @@ button:focus-visible {
   font-size: 13px;
   margin-top: 10px;
 }
+.pricing-included {
+  color: #b7b0a2;
+  font-size: 13.5px;
+  line-height: 1.65;
+  text-align: center;
+  max-width: 620px;
+  margin: 28px auto 0;
+}
 .pgrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

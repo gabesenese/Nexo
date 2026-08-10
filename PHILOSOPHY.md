@@ -112,8 +112,33 @@ That's what a CFO buys. This mirrors where Zendesk and Intercom are already push
 (resolution/outcome as the economic unit) — but we should not copy their pricing blindly.
 Usage-based per-resolution billing is already drawing customer complaints about unpredictability
 at scale. A more predictable tiered model (base resolutions + agents + overage) is the current
-hypothesis, but **pricing stays open until we've run real customer interviews** — do not finalize
-it from first principles.
+hypothesis.
+
+### Pricing basis (decided 2026-08-09)
+
+This section previously held pricing open until customer interviews. That is superseded:
+pricing is set from **competitive benchmarking**, which is market evidence rather than
+invention from first principles. Interviews remain worth running, but they are no longer a
+gate on shipping a price.
+
+The market splits into outcome-priced products and flat-fee tooling. Intercom Fin publishes
+$0.99 per resolution, Zendesk bills roughly $1.50 to $2.00 per automated resolution on top of
+per-agent Suite fees, and Ada adds a platform fee to a similar per-resolution rate. Freshdesk
+Freddy is the cheapest credible product comparable at roughly $0.10 per chat session. Botpress
+and Voiceflow look cheap at $60 to $495 because the customer builds the agent themselves.
+
+Normalised to our tiers at a 50% resolution rate, a Canadian buyer pays about C$1,035/month to
+Intercom at 1,500 conversations and about C$34,500 at 50,000. Our original C$149 to C$1,500
+sat below every product competitor including the cheapest, and only at parity with self-build
+toolkits, so it was raised to **C$249 / C$899 / C$2,499**. That still undercuts Intercom by
+roughly four to fourteen times while pricing above the toolkits, which is where a finished
+product belongs.
+
+**We stay flat-rate, not per-resolution.** Ada moved away from outcome pricing because buyers
+wanted predictable bills, and per-resolution billing charges the customer more precisely when
+the product works better. Our demo corpus resolves 66% automatically; at that rate an
+incumbent's bill goes up while ours does not. "Your bill does not grow when the AI gets
+better" is a real difference, not a slogan.
 
 ---
 

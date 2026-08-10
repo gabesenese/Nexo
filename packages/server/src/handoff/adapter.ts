@@ -5,6 +5,7 @@ export interface HandoffTranscriptEntry {
 
 export interface HandoffPayload {
   conversationId: string;
+  organizationId: string;
   reason: string;
   summary: string;
   transcript: HandoffTranscriptEntry[];

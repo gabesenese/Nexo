@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api, type OrgDetails, type OrgInvite } from "../api";
 import { PlanUsageCard } from "../components/PlanUsageCard";
+import { WebhookCard } from "../components/WebhookCard";
 
 function initials(name: string) {
   const parts = name.trim().split(/\s+/);
@@ -197,6 +198,8 @@ export function SettingsPage({ onWorkspaceRenamed }: { onWorkspaceRenamed?: (nam
           </div>
         </div>
       </div>
+
+      <WebhookCard />
 
       <div className="card">
         <h3>Members</h3>

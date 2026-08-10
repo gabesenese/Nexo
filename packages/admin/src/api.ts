@@ -135,6 +135,21 @@ export interface AnalyticsSummary {
   recentEscalations: Escalation[];
 }
 
+export interface WebhookDelivery {
+  id: string;
+  event: string;
+  status: "succeeded" | "failed";
+  statusCode: number | null;
+  attempts: number;
+  error: string | null;
+  durationMs: number | null;
+  createdAt: string;
+}
+
+export type WebhookConfig =
+  | { configured: false }
+  | { configured: true; url: string; secret: string; enabled: boolean; deliveries: WebhookDelivery[] };
+
 export interface PlanUsage {
   plan: { id: string; name: string; conversationsPerMonth: number; knowledgeSources: number | null };
   periodStart: string;
@@ -257,6 +272,18 @@ export const api = {
   chat: (input: { orgKey: string; sessionId: string; message: string }) =>
     request<ChatReply>("/api/chat", { method: "POST", body: JSON.stringify(input) }),
   getAnalytics: () => request<AnalyticsSummary>("/api/analytics"),
+  getWebhook: () => request<WebhookConfig>("/api/webhook"),
+  saveWebhook: (url: string, enabled: boolean) =>
+    request<{ url: string; enabled: boolean; secret: string }>("/api/webhook", {
+      method: "PUT",
+      body: JSON.stringify({ url, enabled }),
+    }),
+  deleteWebhook: () => request<{ configured: boolean }>("/api/webhook", { method: "DELETE" }),
+  testWebhook: () =>
+    request<{ status: string; statusCode: number | null; attempts: number; error: string | null; durationMs: number }>(
+      "/api/webhook/test",
+      { method: "POST", body: JSON.stringify({}) },
+    ),
   getPlan: () => request<PlanUsage>("/api/plan"),
   getImpact: () => request<ImpactSummary>("/api/impact"),
   setImpactAssumptions: (body: { averageHandleMinutes: number | null; supportHourlyCostCad: number | null }) =>

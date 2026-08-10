@@ -2,6 +2,17 @@ import type { FastifyInstance } from "fastify";
 import { prisma } from "../db/client.js";
 import { queueHelpCenterUrl, queuePdf, reindexSource } from "../ingestion/pipeline.js";
 import { requireAuth } from "./auth.js";
+import { canAddKnowledgeSource } from "../billing/usage.js";
+
+async function rejectIfAtSourceLimit(organizationId: string) {
+  const check = await canAddKnowledgeSource(organizationId);
+  if (check.allowed) return null;
+  return {
+    error:
+      `${check.planName} includes ${check.limit} knowledge ${check.limit === 1 ? "source" : "sources"}. ` +
+      `Remove one or move to a plan with more.`,
+  };
+}
 
 function serializeSource(s: {
   id: string;
@@ -46,11 +57,19 @@ export async function sourcesRoutes(app: FastifyInstance) {
     if (!url) {
       return reply.status(400).send({ error: "url is required" });
     }
+    const denied = await rejectIfAtSourceLimit(req.auth!.organizationId);
+    if (denied) {
+      return reply.status(403).send(denied);
+    }
     const queued = await queueHelpCenterUrl(url, req.auth!.organizationId);
     return reply.status(202).send(queued);
   });
 
   app.post("/api/sources/pdf", { preHandler: requireAuth }, async (req, reply) => {
+    const denied = await rejectIfAtSourceLimit(req.auth!.organizationId);
+    if (denied) {
+      return reply.status(403).send(denied);
+    }
     const file = await req.file();
     if (!file) {
       return reply.status(400).send({ error: "a PDF file is required (multipart field 'file')" });

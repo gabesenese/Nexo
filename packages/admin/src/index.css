@@ -1601,3 +1601,63 @@ select:focus {
   gap: 10px;
   margin-top: 4px;
 }
+
+.usage-row {
+  margin-top: 16px;
+}
+
+.usage-row:first-of-type {
+  margin-top: 8px;
+}
+
+.usage-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 13.5px;
+  color: var(--slate);
+  margin-bottom: 7px;
+}
+
+.usage-figures {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12.5px;
+  color: var(--slate-soft);
+}
+
+.usage-bar {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--paper-dim);
+  overflow: hidden;
+}
+
+.usage-fill {
+  height: 100%;
+  background: var(--teal);
+  border-radius: 3px;
+  transition: width 300ms ease;
+}
+
+.usage-fill.near {
+  background: #c9873a;
+}
+
+.usage-fill.over {
+  background: #a8503a;
+}
+
+.usage-note {
+  font-size: 12.5px;
+  line-height: 1.55;
+  margin: 8px 0 0;
+  max-width: 560px;
+}
+
+.usage-note.near {
+  color: #8a5a1f;
+}
+
+.usage-note.over {
+  color: #8a3a2a;
+}

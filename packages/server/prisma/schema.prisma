@@ -50,12 +50,20 @@ enum Role {
   member
 }
 
+enum Plan {
+  essentials
+  professional
+  growth
+}
+
 model Organization {
   id            String         @id @default(cuid())
   name          String
   slug          String         @unique
   widgetKey     String         @unique
   createdAt     DateTime       @default(now())
+
+  plan          Plan           @default(essentials)
 
   averageHandleMinutes Int?
   supportHourlyCostCad Float?

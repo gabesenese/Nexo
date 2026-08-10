@@ -8,7 +8,29 @@ Ada (ada.cx), the dominant AI customer-support platform, is built exclusively fo
 - No published pricing — requires a sales call and multi-month procurement
 - 8–16 week implementation despite "no-code" marketing
 
-This structurally excludes the SMB and low-mid-market segment (roughly 1,000–50,000 conversations/month) — a large, underserved market with no strong Canadian-headquartered player.
+This structurally excludes the SMB and low-mid-market segment (roughly 1,000–50,000 conversations/month), a large and underserved market.
+
+### The Canadian field (verified 2026-08-09)
+
+Canada is not empty. It holds four credible players, and they divide into two camps, neither of which is what we are building:
+
+| Company | HQ | Sells | Pricing |
+| --- | --- | --- | --- |
+| Ada | Toronto | Finished enterprise support product | Unpublished, est. $30K–$300K+/yr |
+| Coveo | Quebec City | AI relevance and search, incl. Service | Unpublished, est. $30K–$500K+ |
+| Botpress | Montreal | Agent builder, open source | Published: free, $89, ~$495, ~$2K |
+| Voiceflow | Toronto | Agent design and build platform | Published: free, $60, $150, +$50/editor seat |
+| Heyday | Montreal | Ecommerce chat, bundled into Hootsuite | Bundled (acquired 2021, CA$60M) |
+
+**Camp one, enterprise products that hide their price.** Ada and Coveo both sell finished software, both refuse to publish, both require a sales cycle. They have conceded the mid-market by construction.
+
+**Camp two, transparent tooling that makes you build it yourself.** Botpress and Voiceflow publish prices and start cheap precisely because the customer does the work. They sell a builder, not a resolved conversation.
+
+So the accurate claim is narrower than "no strong Canadian player": **nobody in Canada sells a finished support product at a published mid-market price.** That gap is the opportunity, and it survives contact with all four.
+
+**The real competitor is Botpress, not Ada.** Montreal, roughly $40M raised, backed by Deloitte Ventures and HubSpot Ventures, repositioned during 2025–26 from chatbot builder to AI agent platform. Their $89 tier already includes human handoff, which is our escalation wedge. They are one opinionated support template away from compressing us from below, with distribution we do not have. Ada is the louder name and the weaker threat: enterprise sales motions rarely move down-market. Treat a self-serve Ada launch as the signal that changes.
+
+**Currency is a differentiator, not a detail.** Botpress and Voiceflow price in USD (to be confirmed), so a Canadian buyer absorbs the exchange rate. At 1.394, Botpress Team lands near C$690, above our Professional tier at C$499. Pricing in CAD, billing in CAD, and holding data in Canada is a combination none of the four leads with: Ada is Canadian but enterprise-only and opaque, Botpress and Voiceflow are Canadian but sell toolkits and invoice in USD.
 
 Beyond pricing, Ada has documented product weaknesses we can build against directly:
 - **Context loss / looping**: end-user reviews (Trustpilot 2.0/5) cite conversations losing context and getting stuck, despite admin-side reviews (G2 4.6/5) being positive — a real product gap, not just a pricing gap.

@@ -56,6 +56,9 @@ model Organization {
   slug          String         @unique
   widgetKey     String         @unique
   createdAt     DateTime       @default(now())
+
+  averageHandleMinutes Int?
+  supportHourlyCostCad Float?
   memberships   Membership[]
   invites       Invite[]
   sources       Source[]

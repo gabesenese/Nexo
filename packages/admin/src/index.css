@@ -1517,3 +1517,87 @@ select:focus {
   align-self: flex-start;
   margin-top: 6px;
 }
+
+.impact-statement p {
+  font-family: "Fraunces", serif;
+  font-size: 19px;
+  line-height: 1.65;
+  color: var(--ink);
+  margin: 0;
+}
+
+.impact-statement strong {
+  color: var(--teal-dark);
+  font-weight: 600;
+}
+
+.impact-economics {
+  display: flex;
+  align-items: flex-start;
+  gap: 48px;
+  flex-wrap: wrap;
+  padding-top: 6px;
+}
+
+.ie-figure {
+  min-width: 180px;
+}
+
+.ie-value {
+  font-family: "Fraunces", serif;
+  font-size: 34px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.15;
+}
+
+.ie-label {
+  font-size: 12.5px;
+  color: var(--slate-soft);
+  margin-top: 4px;
+  max-width: 240px;
+  line-height: 1.5;
+}
+
+.impact-economics .btn-small {
+  margin-left: auto;
+  align-self: center;
+}
+
+.impact-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 420px;
+  padding-top: 4px;
+}
+
+.impact-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--slate);
+}
+
+.impact-form input {
+  font-family: "IBM Plex Sans", sans-serif;
+  font-size: 14px;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--white);
+  color: var(--ink);
+}
+
+.impact-form input:focus {
+  outline: 2px solid var(--teal);
+  outline-offset: -1px;
+  border-color: transparent;
+}
+
+.impact-form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}

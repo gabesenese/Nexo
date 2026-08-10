@@ -3,14 +3,7 @@ import type { FastifyInstance } from "fastify";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "../db/client.js";
-import { newWidgetKey, requireAuth, setSession } from "./auth.js";
-
-async function roleOf(userId: string, organizationId: string) {
-  const membership = await prisma.membership.findUnique({
-    where: { userId_organizationId: { userId, organizationId } },
-  });
-  return membership?.role ?? null;
-}
+import { newWidgetKey, requireAuth, roleOf, setSession } from "./auth.js";
 
 function newToken() {
   return (randomUUID() + randomUUID()).replace(/-/g, "");

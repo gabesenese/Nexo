@@ -16,6 +16,7 @@ import { analyticsRoutes } from "./routes/analytics.js";
 import { attentionRoutes } from "./routes/attention.js";
 import { leadsRoutes } from "./routes/leads.js";
 import { knowledgeGapsRoutes } from "./routes/knowledgeGaps.js";
+import { impactRoutes } from "./routes/impact.js";
 import { authRoutes } from "./routes/auth.js";
 import { orgRoutes } from "./routes/org.js";
 
@@ -76,6 +77,7 @@ export async function buildApp(options: { logger?: boolean } = {}): Promise<Fast
   await app.register(attentionRoutes);
   await app.register(leadsRoutes);
   await app.register(knowledgeGapsRoutes);
+  await app.register(impactRoutes);
 
   await recoverInterruptedSources();
 

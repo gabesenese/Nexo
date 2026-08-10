@@ -9,20 +9,20 @@ interface Tier {
 const TIERS: Tier[] = [
   {
     name: "Essentials",
-    price: "C$149",
+    price: "C$249",
     desc: "For teams just starting with AI support",
     features: ["Up to 1,500 conversations/mo", "2 knowledge sources", "Email support"],
   },
   {
     name: "Professional",
-    price: "C$499",
+    price: "C$899",
     desc: "Most mid-market teams start here",
     features: ["Up to 8,000 conversations/mo", "Unlimited knowledge sources", "Priority support"],
     highlighted: true,
   },
   {
     name: "Growth",
-    price: "C$1,500",
+    price: "C$2,499",
     desc: "For higher-volume support teams",
     features: ["Up to 50,000 conversations/mo", "Unlimited knowledge sources", "Priority onboarding"],
   },

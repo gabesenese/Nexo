@@ -839,6 +839,11 @@ button:focus-visible {
   font-size: 30px;
   margin-top: 16px;
 }
+.pricing-currency {
+  color: #b7b0a2;
+  font-size: 13px;
+  margin-top: 10px;
+}
 .pgrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

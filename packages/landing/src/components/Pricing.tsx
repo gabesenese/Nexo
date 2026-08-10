@@ -9,20 +9,20 @@ interface Tier {
 const TIERS: Tier[] = [
   {
     name: "Essentials",
-    price: "$149",
+    price: "C$149",
     desc: "For teams just starting with AI support",
     features: ["Up to 1,500 conversations/mo", "2 knowledge sources", "1 helpdesk integration"],
   },
   {
     name: "Professional",
-    price: "$499",
+    price: "C$499",
     desc: "Most mid-market teams start here",
     features: ["Up to 8,000 conversations/mo", "Unlimited knowledge sources", "All helpdesk integrations"],
     highlighted: true,
   },
   {
     name: "Growth",
-    price: "$1,500",
+    price: "C$1,500",
     desc: "For higher-volume support teams",
     features: ["Up to 50,000 conversations/mo", "Custom flows + analytics API", "Priority onboarding"],
   },
@@ -37,6 +37,7 @@ export function Pricing() {
         <div className="pricing-head">
           <span className="l-eyebrow">Simple pricing</span>
           <h2>No demos. No hidden pricing. No enterprise sales calls.</h2>
+          <p className="pricing-currency">All prices in Canadian dollars, plus applicable taxes.</p>
         </div>
         <div className="pgrid">
           {TIERS.map((tier) => (

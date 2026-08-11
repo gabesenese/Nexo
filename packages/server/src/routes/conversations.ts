@@ -96,6 +96,53 @@ export async function conversationsRoutes(app: FastifyInstance) {
     },
   );
 
+  /**
+   * Operator-initiated handoff, for a thread Nexo answered without flagging
+   * but a person judges needs human hands. Already-escalated conversations are
+   * returned unchanged rather than treated as an error, so a double click does
+   * not stack duplicate escalations or fire a second notification.
+   */
+  app.post<{ Params: { id: string }; Body: { note?: string } }>(
+    "/api/conversations/:id/escalate",
+    { preHandler: requireAuth },
+    async (req, reply) => {
+      const { organizationId, userId } = req.auth!;
+      const conversation = await prisma.conversation.findFirst({
+        where: { id: req.params.id, organizationId },
+        include: { escalations: true },
+      });
+      if (!conversation) {
+        return reply.status(404).send({ error: "conversation not found" });
+      }
+      if (conversation.status === "escalated") {
+        return { ok: true, alreadyEscalated: true };
+      }
+
+      const note = req.body?.note?.trim();
+      const summary = note || "An operator flagged this conversation for a human.";
+
+      await prisma.$transaction([
+        prisma.conversation.update({
+          where: { id: conversation.id },
+          data: { status: "escalated" },
+        }),
+        prisma.escalation.create({
+          data: { conversationId: conversation.id, reason: "agent_requested", summary },
+        }),
+        prisma.notification.create({
+          data: { organizationId, conversationId: conversation.id, type: "escalation", message: summary },
+        }),
+      ]);
+
+      req.log.info({ conversationId: conversation.id, userId }, "conversation escalated by operator");
+
+      notifyOrg(organizationId, ["conversations", "attention", "notifications"]);
+      notifySession(organizationId, conversation.sessionId);
+
+      return { ok: true, alreadyEscalated: false };
+    },
+  );
+
   app.post<{ Params: { id: string } }>(
     "/api/conversations/:id/resolve",
     { preHandler: requireAuth },

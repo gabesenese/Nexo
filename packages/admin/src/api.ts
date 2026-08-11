@@ -121,6 +121,8 @@ export interface Escalation {
   summary: string;
   status: string;
   createdAt: string;
+  /** The question that triggered the handoff. Null on escalations recorded before it was captured. */
+  question: string | null;
 }
 
 export interface AnalyticsSummary {
@@ -307,6 +309,8 @@ export const api = {
     request<Conversation>(`/api/conversations/${id}/assign`, { method: "POST", body: JSON.stringify({ userId }) }),
   resolveConversation: (id: string) =>
     request<{ ok: true }>(`/api/conversations/${id}/resolve`, { method: "POST" }),
+  escalateConversation: (id: string) =>
+    request<{ ok: true; alreadyEscalated: boolean }>(`/api/conversations/${id}/escalate`, { method: "POST" }),
   listLeads: () => request<Lead[]>("/api/leads"),
   listNotifications: () => request<Notification[]>("/api/notifications"),
   markNotificationsRead: () => request<{ ok: true }>("/api/notifications/read-all", { method: "POST" }),

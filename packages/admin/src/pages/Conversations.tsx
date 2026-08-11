@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { api, type Conversation, type Message, type OrgMember } from "../api";
+import { api, type Conversation, type Escalation, type Message, type OrgMember } from "../api";
 import { subscribeToUpdates } from "../realtime";
 import { Select } from "../components/Select";
 
@@ -54,6 +54,48 @@ function previewOf(conversation: Conversation): string {
   if (!last) return "";
   const who = last.role === "user" ? "Customer" : last.role === "agent" ? "You" : "Nexo";
   return `${who}: ${last.content.trim()}`;
+}
+
+const REASON_LABELS: Record<string, string> = {
+  low_confidence: "Nexo was not confident enough to answer",
+  user_requested: "The customer asked for a person",
+  agent_requested: "An operator flagged this for a human",
+};
+
+function reasonLabel(reason: string): string {
+  return REASON_LABELS[reason] ?? reason.replace(/_/g, " ");
+}
+
+/** The handoff that is still open, falling back to the most recent one for resolved threads. */
+function activeEscalation(conversation: Conversation) {
+  return (
+    conversation.escalations.find((e) => e.status === "pending") ??
+    conversation.escalations[conversation.escalations.length - 1] ??
+    null
+  );
+}
+
+/**
+ * What the customer asked when the handoff happened. Escalations recorded
+ * before the question was captured have none, so it falls back to their last
+ * message before that moment rather than showing nothing or inventing a label.
+ */
+function triggeringQuestion(conversation: Conversation, escalation: Escalation): string | null {
+  if (escalation.question) return escalation.question;
+  const at = new Date(escalation.createdAt).getTime();
+  const before = conversation.messages.filter(
+    (m) => m.role === "user" && new Date(m.createdAt).getTime() <= at,
+  );
+  return before[before.length - 1]?.content.trim() ?? null;
+}
+
+/** Every source Nexo cited in this thread, deduplicated, so the operator sees what it read. */
+function knowledgeUsed(conversation: Conversation): string[] {
+  const names = new Set<string>();
+  for (const message of conversation.messages) {
+    for (const citation of message.citations ?? []) names.add(citation.sourceName);
+  }
+  return [...names];
 }
 
 /** Waiting on a person: the customer spoke last, or a handoff is still pending. */
@@ -203,6 +245,17 @@ export function ConversationsPage() {
     }
   }
 
+  async function handleEscalate() {
+    if (!selected) return;
+    setError(null);
+    try {
+      await api.escalateConversation(selected.id);
+      await refresh();
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  }
+
   return (
     <div>
       <div className="page-top">
@@ -300,6 +353,59 @@ export function ConversationsPage() {
               </div>
             </div>
 
+            {/**
+             * Everything the person taking over needs before they read a word
+             * of the transcript: why Nexo stopped, what was asked, and which
+             * sources it had. Fields with no data are omitted rather than
+             * shown empty, so the panel never pads itself out.
+             */}
+            {(() => {
+              const escalation = activeEscalation(selected);
+              if (!escalation) return null;
+              const asked = triggeringQuestion(selected, escalation);
+              const sources = knowledgeUsed(selected);
+              return (
+                <div className="conv-context">
+                  <div className="conv-context-head">Context for your team</div>
+                  <dl className="conv-context-grid">
+                    <dt>Reason</dt>
+                    <dd>{reasonLabel(escalation.reason)}</dd>
+
+                    {asked && (
+                      <>
+                        <dt>They asked</dt>
+                        <dd className="conv-context-quote">“{asked}”</dd>
+                      </>
+                    )}
+
+                    <dt>Knowledge used</dt>
+                    <dd>
+                      {sources.length > 0 ? (
+                        <span className="conv-context-sources">
+                          {sources.map((s) => (
+                            <span className="cite" key={s}>
+                              {s}
+                            </span>
+                          ))}
+                        </span>
+                      ) : (
+                        <span className="conv-context-none">
+                          Nothing matched, which is usually the gap itself
+                        </span>
+                      )}
+                    </dd>
+
+                    <dt>Handed off</dt>
+                    <dd>
+                      {new Date(escalation.createdAt).toLocaleString()} ·{" "}
+                      {escalation.status === "pending" ? "still waiting" : "picked up"}
+                    </dd>
+                  </dl>
+                  <p className="conv-context-summary">{escalation.summary}</p>
+                </div>
+              );
+            })()}
+
             <div className="conv-transcript">
               {selected.messages.map((m) => (
                 <Fragment key={m.id}>
@@ -351,6 +457,11 @@ export function ConversationsPage() {
                 <div className="reply-actions">
                   <span className="reply-hint">Ctrl + Enter to send</span>
                   <div className="page-actions">
+                    {selected.status !== "escalated" && (
+                      <button className="btn-small" onClick={handleEscalate}>
+                        Escalate
+                      </button>
+                    )}
                     <button className="btn-small" onClick={handleResolve}>
                       Resolve
                     </button>

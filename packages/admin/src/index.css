@@ -1477,6 +1477,79 @@ textarea::placeholder {
   flex-shrink: 0;
 }
 
+.conv-context {
+  flex-shrink: 0;
+  background: var(--paper);
+  border-bottom: 1px solid var(--paper-dim);
+  padding: var(--s4) var(--s6);
+}
+
+.conv-context-head {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--slate-soft);
+  margin-bottom: var(--s3);
+}
+
+.conv-context-grid {
+  display: grid;
+  grid-template-columns: 130px minmax(0, 1fr);
+  gap: var(--s2) var(--s4);
+  margin: 0;
+}
+
+.conv-context-grid dt {
+  font-size: var(--t-sm);
+  color: var(--slate-soft);
+}
+
+.conv-context-grid dd {
+  margin: 0;
+  font-size: var(--t-base);
+  color: var(--ink);
+  min-width: 0;
+}
+
+.conv-context-quote {
+  font-style: italic;
+  line-height: 1.5;
+}
+
+.conv-context-sources {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s1);
+}
+
+.conv-context-sources .cite {
+  margin-top: 0;
+}
+
+.conv-context-none {
+  color: var(--amber);
+  font-size: var(--t-sm);
+}
+
+.conv-context-summary {
+  margin: var(--s3) 0 0;
+  font-size: var(--t-sm);
+  color: var(--slate-soft);
+  line-height: 1.55;
+}
+
+@media (max-width: 760px) {
+  .conv-context-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px var(--s2);
+  }
+
+  .conv-context-grid dd {
+    margin-bottom: var(--s2);
+  }
+}
+
 .conv-transcript {
   flex: 1;
   min-height: 0;

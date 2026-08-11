@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { api, type OrgDetails, type OrgInvite } from "../api";
 import { PlanUsageCard } from "../components/PlanUsageCard";
 import { WebhookCard } from "../components/WebhookCard";
+import { Select } from "../components/Select";
 
 function initials(name: string) {
   const parts = name.trim().split(/\s+/);
@@ -137,14 +138,20 @@ export function SettingsPage({ onWorkspaceRenamed }: { onWorkspaceRenamed?: (nam
       <div className="card">
         <h3>Workspace</h3>
         <div className="card-sub">The name your team and customers see.</div>
-        <form onSubmit={saveName} className="settings-row">
-          <div className="field" style={{ flex: 1, margin: 0 }}>
+        <form onSubmit={saveName}>
+          <div className="field-row">
             <label htmlFor="ws-name">Workspace name</label>
-            <input id="ws-name" type="text" value={name} onChange={(e) => setName(e.target.value)} required />
+            <div className="field-control">
+              <input id="ws-name" type="text" value={name} onChange={(e) => setName(e.target.value)} required />
+            </div>
+            <button
+              type="submit"
+              className="btn btn-primary field-action"
+              disabled={savingName || name.trim() === org?.name}
+            >
+              {savingName ? "Saving…" : nameSaved ? "Saved" : "Save"}
+            </button>
           </div>
-          <button type="submit" className="btn btn-primary" disabled={savingName || name.trim() === org?.name}>
-            {savingName ? "Saving…" : nameSaved ? "Saved" : "Save"}
-          </button>
         </form>
       </div>
 
@@ -152,49 +159,61 @@ export function SettingsPage({ onWorkspaceRenamed }: { onWorkspaceRenamed?: (nam
         <h3>Widget</h3>
         <div className="card-sub">The branding your customers see in the chat widget.</div>
         <form onSubmit={saveWidget}>
-          <div className="field">
-            <label>Accent color</label>
-            <div className="onboard-swatches">
-              {WIDGET_COLORS.map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  className={`onboard-swatch${widget.accentColor === c ? " selected" : ""}`}
-                  style={{ background: c }}
-                  aria-label={`Choose ${c}`}
-                  onClick={() => setWidget((w) => ({ ...w, accentColor: c }))}
-                />
-              ))}
+          <div className="field-row">
+            <span className="field-label">Accent color</span>
+            <div className="field-control">
+              <div className="onboard-swatches">
+                {WIDGET_COLORS.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    className={`onboard-swatch${widget.accentColor === c ? " selected" : ""}`}
+                    style={{ background: c }}
+                    aria-label={`Choose ${c}`}
+                    aria-pressed={widget.accentColor === c}
+                    onClick={() => setWidget((w) => ({ ...w, accentColor: c }))}
+                  />
+                ))}
+              </div>
             </div>
           </div>
-          <div className="field">
+          <div className="field-row">
             <label htmlFor="widget-welcome">Welcome message</label>
-            <input
-              id="widget-welcome"
-              type="text"
-              value={widget.welcomeMessage}
-              onChange={(e) => setWidget((w) => ({ ...w, welcomeMessage: e.target.value }))}
-            />
+            <div className="field-control">
+              <input
+                id="widget-welcome"
+                type="text"
+                value={widget.welcomeMessage}
+                onChange={(e) => setWidget((w) => ({ ...w, welcomeMessage: e.target.value }))}
+              />
+              <p className="field-help">The first thing a visitor sees when they open the chat.</p>
+              {widgetError && <p className="error-text">{widgetError}</p>}
+            </div>
+            <button
+              type="submit"
+              className="btn btn-primary field-action"
+              disabled={savingWidget || !widget.welcomeMessage.trim()}
+            >
+              {savingWidget ? "Saving…" : widgetSaved ? "Saved" : "Save"}
+            </button>
           </div>
-          {widgetError && <p className="error-text">{widgetError}</p>}
-          <button type="submit" className="btn btn-primary" disabled={savingWidget || !widget.welcomeMessage.trim()}>
-            {savingWidget ? "Saving…" : widgetSaved ? "Saved" : "Save"}
-          </button>
         </form>
 
-        <div className="field" style={{ marginTop: 18 }}>
-          <label>Widget key</label>
-          <div className="card-sub" style={{ marginBottom: 8 }}>
-            The public key in your embed snippet. Rotating it disables existing embeds until you update them.
-          </div>
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <input className="mono" style={{ flex: 1 }} readOnly value={org?.widgetKey ?? ""} />
-            <button type="button" className="btn-small" onClick={copyWidgetKey}>
-              {keyCopied ? "Copied" : "Copy"}
-            </button>
-            <button type="button" className="btn-small danger" onClick={rotateWidgetKey} disabled={rotating}>
-              {rotating ? "Rotating…" : "Rotate"}
-            </button>
+        <div className="field-row">
+          <span className="field-label">Widget key</span>
+          <div className="field-control">
+            <div className="field-inline">
+              <input className="mono" readOnly value={org?.widgetKey ?? ""} aria-label="Widget key" />
+              <button type="button" className="btn-small" onClick={copyWidgetKey}>
+                {keyCopied ? "Copied" : "Copy"}
+              </button>
+              <button type="button" className="btn-small danger" onClick={rotateWidgetKey} disabled={rotating}>
+                {rotating ? "Rotating…" : "Rotate"}
+              </button>
+            </div>
+            <p className="field-help">
+              The public key in your embed snippet. Rotating it disables existing embeds until you update them.
+            </p>
           </div>
         </div>
       </div>
@@ -219,21 +238,34 @@ export function SettingsPage({ onWorkspaceRenamed }: { onWorkspaceRenamed?: (nam
       <div className="card">
         <h3>Invite a teammate</h3>
         <div className="card-sub">They join this workspace and see the same data. Share the invite link with them.</div>
-        <form onSubmit={sendInvite} className="settings-row">
-          <div className="field" style={{ flex: 1, margin: 0 }}>
+        <form onSubmit={sendInvite}>
+          <div className="field-row">
             <label htmlFor="invite-email">Work email</label>
-            <input id="invite-email" type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} required />
+            <div className="field-control">
+              <div className="field-inline">
+                <input
+                  id="invite-email"
+                  type="email"
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                  required
+                />
+                <Select
+                  id="invite-role"
+                  ariaLabel="Role"
+                  value={inviteRole}
+                  onChange={(v) => setInviteRole(v as "admin" | "member")}
+                  options={[
+                    { value: "member", label: "Member" },
+                    { value: "admin", label: "Admin" },
+                  ]}
+                />
+              </div>
+            </div>
+            <button type="submit" className="btn btn-primary field-action" disabled={inviting}>
+              {inviting ? "Creating…" : "Create invite"}
+            </button>
           </div>
-          <div className="field" style={{ margin: 0 }}>
-            <label htmlFor="invite-role">Role</label>
-            <select id="invite-role" value={inviteRole} onChange={(e) => setInviteRole(e.target.value as "admin" | "member")}>
-              <option value="member">Member</option>
-              <option value="admin">Admin</option>
-            </select>
-          </div>
-          <button type="submit" className="btn btn-primary" disabled={inviting}>
-            {inviting ? "Creating…" : "Create invite"}
-          </button>
         </form>
         {inviteError && <p className="error-text">{inviteError}</p>}
 

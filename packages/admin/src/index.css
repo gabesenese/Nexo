@@ -11,6 +11,62 @@
   --line-dark: #33383b;
   --white: #ffffff;
   --red: #b3452f;
+
+  --sky: #e4e8f3;
+  --sky-ink: #2b3f8a;
+  --mist: #e3ede9;
+  --sand: #f3e7d6;
+  --sand-ink: #8a5a1f;
+
+  /**
+   * Only colour was tokenised before, so every section picked its own spacing,
+   * type size and radius by hand. That drift is what reads as unfinished, so
+   * the scales below are the single source for the whole console.
+   */
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s5: 20px;
+  --s6: 24px;
+  --s7: 32px;
+  --s8: 40px;
+  --s9: 56px;
+
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-pill: 999px;
+
+  --t-xs: 11px;
+  --t-sm: 12px;
+  --t-base: 13px;
+  --t-md: 15px;
+  --t-lg: 18px;
+  --t-xl: 22px;
+  --t-2xl: 28px;
+
+  --ctl-h: 34px;
+  --ctl-h-sm: 28px;
+
+  --sans: "IBM Plex Sans", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, monospace;
+  --serif: "Fraunces", Georgia, serif;
+
+  --shadow-1: 0 1px 2px rgba(24, 27, 29, 0.04);
+  --shadow-2: 0 8px 24px -8px rgba(24, 27, 29, 0.18);
+  --shadow-3: 0 20px 48px -16px rgba(24, 27, 29, 0.28);
+
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+
+  --content-max: 1440px;
+}
+
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+  border-radius: var(--r-sm);
 }
 
 * {
@@ -22,6 +78,21 @@ body {
   font-family: "IBM Plex Sans", sans-serif;
   color: var(--slate);
   background: var(--paper-dim);
+  /**
+   * Interface chrome is not selectable, the way a native app behaves. Dragging
+   * across the console no longer smears highlight over headings and labels.
+   * Anything a person can type into stays selectable, so editing and copying a
+   * value still work normally.
+   */
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+input,
+textarea,
+[contenteditable="true"] {
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 h1,
@@ -68,7 +139,22 @@ h4 {
 .sidebar .nav-links {
   display: flex;
   flex-direction: column;
+  gap: var(--s5);
+}
+
+.nav-group {
+  display: flex;
+  flex-direction: column;
   gap: 2px;
+}
+
+.nav-group-label {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #6f7679;
+  padding: 0 10px var(--s2);
 }
 
 .sidebar a {
@@ -234,28 +320,281 @@ h4 {
 }
 
 .btn-small {
-  background: transparent;
-  border: 1px solid var(--line, #d9d5cb);
-  color: var(--ink, #181b1d);
-  border-radius: 7px;
-  padding: 6px 10px;
-  font-size: 12px;
+  background: var(--white);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  border-radius: var(--r-sm);
+  height: var(--ctl-h-sm);
+  padding: 0 var(--s3);
+  font-family: var(--sans);
+  font-size: var(--t-sm);
   cursor: pointer;
   flex-shrink: 0;
-  margin-left: 8px;
-  transition: border-color 150ms ease, color 150ms ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s1);
+  white-space: nowrap;
+  transition: border-color 150ms ease, color 150ms ease, background 150ms ease,
+    transform 160ms var(--ease-out);
 }
 
-.btn-small:hover {
-  border-color: var(--ink, #181b1d);
+.btn-small:hover:not(:disabled) {
+  border-color: var(--ink);
+  background: var(--paper);
+}
+
+.btn-small:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.btn-small:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .btn-small.danger {
-  color: #a3402f;
+  color: var(--red);
 }
 
-.btn-small.danger:hover {
-  border-color: #a3402f;
+.btn-small.danger:hover:not(:disabled) {
+  border-color: var(--red);
+  background: rgba(179, 69, 47, 0.08);
+}
+
+.select {
+  position: relative;
+  display: inline-block;
+  min-width: 0;
+}
+
+.select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s2);
+  width: 100%;
+  height: var(--ctl-h);
+  padding: 0 var(--s3);
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  font-family: var(--sans);
+  font-size: var(--t-base);
+  color: var(--slate);
+  cursor: pointer;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.select-trigger:hover:not(:disabled) {
+  border-color: var(--ink);
+}
+
+.select-trigger:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/** Open state reads from the list being on screen and the chevron flipping, not from a coloured ring. */
+.select-trigger[aria-expanded="true"] {
+  border-color: var(--ink);
+}
+
+.select-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.select-chevron {
+  flex-shrink: 0;
+  color: var(--slate-soft);
+  transition: transform 150ms var(--ease-out);
+}
+
+.select-trigger[aria-expanded="true"] .select-chevron {
+  transform: rotate(180deg);
+}
+
+/** Scales from the trigger it belongs to, never from nothing, and never from the middle of the screen. */
+.select-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 100%;
+  z-index: 40;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-2);
+  padding: var(--s1);
+  max-height: 260px;
+  overflow-y: auto;
+  transform-origin: top left;
+  animation: select-in 150ms var(--ease-out) both;
+}
+
+@keyframes select-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(-2px);
+  }
+}
+
+.select-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+  padding: var(--s2) var(--s3);
+  border-radius: var(--r-sm);
+  font-size: var(--t-base);
+  color: var(--slate);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.select-option[data-active="true"] {
+  background: var(--paper-dim);
+  color: var(--ink);
+}
+
+.select-option[aria-selected="true"] {
+  color: var(--ink);
+}
+
+.select-option svg {
+  color: var(--teal);
+  flex-shrink: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .select-list {
+    animation-duration: 1ms;
+  }
+}
+
+.dropzone {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  border: 1px dashed var(--line);
+  border-radius: var(--r-md);
+  background: var(--paper);
+  padding: var(--s4);
+  cursor: pointer;
+  transition: border-color 150ms ease, background 150ms ease;
+}
+
+.dropzone:hover:not(.busy) {
+  border-color: var(--teal);
+  background: rgba(47, 111, 94, 0.05);
+}
+
+.dropzone.dragging {
+  border-color: var(--teal);
+  border-style: solid;
+  background: rgba(47, 111, 94, 0.09);
+}
+
+.dropzone.busy {
+  cursor: default;
+  opacity: 0.65;
+}
+
+/**
+ * Visually hidden rather than display:none, so it keeps focus and
+ * screen-reader semantics. Selector includes the attribute because the shared
+ * `input[type="file"]` sizing rule would otherwise outrank a bare class and
+ * give this a control-sized box again.
+ */
+input[type="file"].dropzone-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+  min-height: 0;
+}
+
+.dropzone-input:focus-visible + .dropzone-icon {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+}
+
+.dropzone-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--r-sm);
+  background: var(--white);
+  border: 1px solid var(--line);
+  color: var(--teal-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.dropzone-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.dropzone-text strong {
+  font-size: var(--t-base);
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.dropzone-hint {
+  font-size: var(--t-sm);
+  color: var(--slate-soft);
+}
+
+/** Segmented control, shared by the attention owner filter and the conversation filters. */
+.segmented {
+  display: inline-flex;
+  background: var(--paper-dim);
+  border-radius: var(--r-sm);
+  padding: 2px;
+  gap: 2px;
+}
+
+.segmented button {
+  border: none;
+  background: transparent;
+  font-family: var(--sans);
+  font-size: var(--t-sm);
+  color: var(--slate-soft);
+  height: var(--ctl-h-sm);
+  padding: 0 var(--s3);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 150ms ease, color 150ms ease;
+}
+
+.segmented button:hover {
+  color: var(--ink);
+}
+
+.segmented button.on {
+  background: var(--white);
+  color: var(--ink);
+  box-shadow: var(--shadow-1);
+}
+
+.segmented .seg-count {
+  font-family: var(--mono);
+  font-size: var(--t-xs);
+  opacity: 0.65;
+  margin-left: var(--s1);
 }
 
 .sidebar-email {
@@ -283,51 +622,91 @@ h4 {
   color: var(--paper);
 }
 
+/**
+ * The column is capped for readable line lengths, then centred in whatever
+ * space is left. Without the centring the cap simply dumped every spare pixel
+ * on the right-hand edge, which read as a broken layout on a wide display
+ * rather than as deliberate breathing room.
+ */
 .content {
   flex: 1;
-  padding: 32px 40px;
-  max-width: 1180px;
+  min-width: 0;
+  width: 100%;
+  padding: var(--s7) var(--s8) var(--s9);
+  max-width: var(--content-max);
+  margin-inline: auto;
 }
 
 .page-top {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 28px;
+  gap: var(--s4);
+  flex-wrap: wrap;
+  margin-bottom: var(--s6);
 }
 
 .page-top h1 {
-  font-size: 24px;
+  font-size: var(--t-xl);
 }
 
 .page-top .sub {
-  font-size: 13px;
+  font-size: var(--t-base);
   color: var(--slate-soft);
-  margin-top: 4px;
+  margin-top: var(--s1);
+  max-width: 62ch;
+}
+
+.page-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
 }
 
 .card {
   background: var(--white);
   border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 22px;
-  margin-bottom: 16px;
+  border-radius: var(--r-lg);
+  padding: var(--s6);
+  margin-bottom: var(--s4);
+  box-shadow: var(--shadow-1);
 }
 
 .card h3 {
-  font-size: 14.5px;
+  font-size: var(--t-md);
   margin-bottom: 2px;
 }
 
 .card .card-sub {
-  font-size: 12px;
+  font-size: var(--t-sm);
   color: var(--slate-soft);
-  margin-bottom: 18px;
+  margin-bottom: var(--s5);
+}
+
+/** A header that carries its own controls, used by every card that has actions. */
+.card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s4);
+  margin-bottom: var(--s5);
+}
+
+.card-head .card-sub {
+  margin-bottom: 0;
+}
+
+.card-head-right {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  flex-shrink: 0;
 }
 
 .row {
   display: flex;
-  gap: 16px;
+  gap: var(--s4);
+  align-items: flex-start;
 }
 
 .row > .card {
@@ -337,36 +716,38 @@ h4 {
 
 .kpis {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  margin-bottom: 28px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--s3);
+  margin-bottom: var(--s4);
 }
 
 .kpi {
   background: var(--white);
   border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 20px;
+  border-radius: var(--r-lg);
+  padding: var(--s4) var(--s5);
+  box-shadow: var(--shadow-1);
 }
 
 .kpi .kl {
-  font-size: 11.5px;
+  font-size: var(--t-xs);
   color: var(--slate-soft);
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--mono);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  margin-bottom: 10px;
+  margin-bottom: var(--s2);
 }
 
 .kpi .kv {
-  font-family: "Fraunces", serif;
-  font-size: 28px;
+  font-family: var(--serif);
+  font-size: var(--t-2xl);
+  line-height: 1.1;
   color: var(--ink);
 }
 
 .kpi .kd {
-  font-size: 12px;
-  margin-top: 6px;
+  font-size: var(--t-sm);
+  margin-top: var(--s1);
   color: var(--slate-soft);
 }
 
@@ -495,24 +876,124 @@ tbody tr[data-clickable]:hover {
 input[type="text"],
 input[type="email"],
 input[type="password"],
+input[type="url"],
+input[type="number"],
 input[type="file"],
-select {
-  padding: 9px 12px;
+select,
+textarea {
+  min-height: var(--ctl-h);
+  padding: 0 var(--s3);
   border: 1px solid var(--line);
-  border-radius: 7px;
-  font-size: 13px;
-  font-family: "IBM Plex Sans", sans-serif;
+  border-radius: var(--r-sm);
+  font-size: var(--t-base);
+  font-family: var(--sans);
   outline: none;
   background: var(--white);
   color: var(--slate);
-  transition: border-color 150ms ease;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
 }
 
-input[type="text"]:focus,
-input[type="email"]:focus,
-input[type="password"]:focus,
-select:focus {
-  border-color: var(--teal);
+textarea {
+  padding: var(--s2) var(--s3);
+  line-height: 1.55;
+  resize: vertical;
+}
+
+/**
+ * Clicking into a field darkens its border and nothing more. The coloured glow
+ * that used to sit here read as an error state and cluttered every form. A
+ * visible ring is still drawn for keyboard users through :focus-visible.
+ */
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--ink);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #9aa0a3;
+}
+
+/**
+ * One field layout for the whole console. Settings previously set label and
+ * control widths per section, which is why inputs there ended up at three
+ * different sizes and labels collided with their own controls.
+ */
+.field-row {
+  display: grid;
+  grid-template-columns: minmax(150px, 220px) minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--s3) var(--s5);
+  padding: var(--s4) 0;
+  border-top: 1px solid var(--paper-dim);
+}
+
+.field-row:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+
+.field-row > label,
+.field-label {
+  font-size: var(--t-base);
+  color: var(--ink);
+  padding-top: var(--s2);
+}
+
+.field-help {
+  font-size: var(--t-sm);
+  color: var(--slate-soft);
+  margin-top: var(--s1);
+  line-height: 1.5;
+}
+
+.field-control {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  min-width: 0;
+}
+
+.field-control input,
+.field-control select,
+.field-control textarea {
+  width: 100%;
+}
+
+.field-inline {
+  display: flex;
+  gap: var(--s2);
+  align-items: center;
+}
+
+.field-inline input {
+  flex: 1;
+  min-width: 0;
+}
+
+/** The 100% width above is for a control that owns its row; a companion select sizes to its content instead. */
+.field-inline select,
+.field-inline .btn,
+.field-inline .btn-small {
+  width: auto;
+  flex: 0 0 auto;
+}
+
+.field-row .field-action {
+  padding-top: 0;
+}
+
+@media (max-width: 760px) {
+  .field-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s2);
+  }
+
+  .field-row > label,
+  .field-label {
+    padding-top: 0;
+  }
 }
 
 .login-screen {
@@ -589,15 +1070,21 @@ select:focus {
 }
 
 .btn {
-  font-family: "IBM Plex Sans", sans-serif;
-  font-size: 13.5px;
+  font-family: var(--sans);
+  font-size: var(--t-base);
   font-weight: 500;
-  padding: 9px 18px;
-  border-radius: 7px;
+  height: var(--ctl-h);
+  padding: 0 var(--s4);
+  border-radius: var(--r-sm);
   cursor: pointer;
   border: 1px solid transparent;
-  display: inline-block;
-  transition: background 150ms ease, border-color 150ms ease, transform 160ms ease-out;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s2);
+  white-space: nowrap;
+  transition: background 150ms ease, border-color 150ms ease, color 150ms ease,
+    transform 160ms var(--ease-out);
 }
 
 .btn:active:not(:disabled) {
@@ -609,23 +1096,40 @@ select:focus {
   color: var(--paper);
 }
 
-.btn-primary:hover {
+.btn-primary:hover:not(:disabled) {
   background: var(--teal-dark);
 }
 
-.btn-primary:disabled {
-  opacity: 0.5;
-  cursor: default;
+/**
+ * A disabled control should read as "not yet", not as a different component.
+ * Settings previously showed three visually different Save buttons purely
+ * because two of them were disabled and one was not.
+ */
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .btn-ghost {
   color: var(--ink);
   border-color: var(--line);
+  background: var(--white);
+}
+
+.btn-ghost:hover:not(:disabled) {
+  border-color: var(--ink);
   background: var(--paper);
 }
 
-.btn-ghost:hover {
-  border-color: var(--ink);
+.btn-danger {
+  color: var(--red);
+  border-color: rgba(179, 69, 47, 0.4);
+  background: var(--white);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: rgba(179, 69, 47, 0.08);
+  border-color: var(--red);
 }
 
 .error-text {
@@ -755,13 +1259,14 @@ select:focus {
 }
 
 /* ---- transcript ---- */
+/** Capped in ch as well as %: a wide reading pane would otherwise stretch a line past comfortable reading length. */
 .msg {
-  max-width: 88%;
-  font-size: 13px;
-  line-height: 1.5;
-  padding: 10px 13px;
-  border-radius: 12px;
-  margin-bottom: 10px;
+  max-width: min(88%, 70ch);
+  font-size: var(--t-base);
+  line-height: 1.55;
+  padding: var(--s3) var(--s4);
+  border-radius: var(--r-md);
+  margin-bottom: var(--s3);
 }
 
 .msg.bot {
@@ -810,10 +1315,241 @@ select:focus {
   word-break: break-word;
 }
 
+/**
+ * Conversations is the operator's working surface, so it gets the full height
+ * of the viewport as a two-pane layout: the queue stays put on the left while
+ * the transcript scrolls on the right, and neither pushes the other around.
+ */
+.conv-split {
+  display: grid;
+  grid-template-columns: minmax(320px, 400px) minmax(0, 1fr);
+  gap: var(--s4);
+  align-items: stretch;
+  height: calc(100vh - 190px);
+  min-height: 460px;
+}
+
+.conv-list-card,
+.conv-detail-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  margin-bottom: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.conv-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  padding: var(--s4);
+  border-bottom: 1px solid var(--paper-dim);
+  flex-shrink: 0;
+}
+
+.conv-toolbar .segmented {
+  width: 100%;
+}
+
+.conv-toolbar .segmented button {
+  flex: 1;
+  padding: 0 var(--s2);
+}
+
+.conv-search {
+  width: 100%;
+}
+
+.conv-list {
+  overflow-y: auto;
+  padding: var(--s2);
+  flex: 1;
+  min-height: 0;
+}
+
+.conv-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s3);
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  border-radius: var(--r-md);
+  padding: var(--s3);
+  cursor: pointer;
+  font-family: var(--sans);
+  transition: background 150ms ease;
+}
+
+.conv-row:hover {
+  background: var(--paper);
+}
+
+.conv-row.selected {
+  background: var(--paper-dim);
+}
+
+.conv-row-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.conv-row-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s2);
+}
+
+.conv-subject {
+  font-size: var(--t-base);
+  color: var(--ink);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.conv-when {
+  font-family: var(--mono);
+  font-size: var(--t-xs);
+  color: var(--slate-soft);
+  flex-shrink: 0;
+}
+
+.conv-preview {
+  font-size: var(--t-sm);
+  color: var(--slate-soft);
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.conv-row-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s1);
+  margin-top: var(--s2);
+}
+
+.conv-owner {
+  font-size: var(--t-xs);
+  color: var(--slate-soft);
+}
+
+.badge.waiting {
+  background: var(--sand);
+  color: var(--sand-ink);
+}
+
+.conv-detail-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s4);
+  padding: var(--s5) var(--s6);
+  border-bottom: 1px solid var(--paper-dim);
+  flex-shrink: 0;
+}
+
+.conv-detail-title {
+  min-width: 0;
+}
+
+.conv-detail-title h3 {
+  font-size: var(--t-md);
+  line-height: 1.35;
+}
+
+.conv-detail-title .card-sub {
+  margin-bottom: 0;
+  margin-top: var(--s1);
+}
+
+.conv-detail-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  flex-shrink: 0;
+}
+
+.conv-transcript {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--s6);
+  display: flex;
+  flex-direction: column;
+}
+
+.conv-empty {
+  align-items: center;
+  justify-content: center;
+}
+
+.conv-empty-inner {
+  text-align: center;
+  color: var(--slate-soft);
+  padding: var(--s6);
+}
+
+.conv-empty-inner p {
+  font-size: var(--t-base);
+  margin-top: var(--s2);
+}
+
+.conv-resolved-note {
+  padding: var(--s5) var(--s6);
+  border-top: 1px solid var(--paper-dim);
+  margin: 0;
+}
+
+.msg-cites {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s1);
+}
+
+.msg-confidence {
+  font-size: var(--t-xs);
+  color: var(--slate-soft);
+  margin-top: var(--s1);
+}
+
+.msg.user .msg-confidence {
+  color: rgba(246, 244, 238, 0.7);
+}
+
+.reply-hint {
+  font-family: var(--mono);
+  font-size: var(--t-xs);
+  color: var(--slate-soft);
+}
+
+@media (max-width: 1000px) {
+  .conv-split {
+    grid-template-columns: minmax(0, 1fr);
+    height: auto;
+  }
+
+  .conv-list {
+    max-height: 380px;
+  }
+
+  .conv-transcript {
+    max-height: 60vh;
+  }
+}
+
 .reply-box {
-  margin-top: 16px;
-  border-top: 1px solid var(--line);
-  padding-top: 14px;
+  margin-top: 0;
+  border-top: 1px solid var(--paper-dim);
+  padding: var(--s4) var(--s6) var(--s5);
+  flex-shrink: 0;
 }
 
 .reply-input {
@@ -835,9 +1571,10 @@ select:focus {
 
 .reply-actions {
   display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 10px;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s2);
+  margin-top: var(--s3);
 }
 
 .cite {
@@ -1136,9 +1873,11 @@ select:focus {
   transition: border-color 150ms ease, transform 150ms ease;
 }
 
+/** A ring outside the swatch, since an inset border vanishes against the darker colours. */
 .onboard-swatch.selected {
-  border-color: var(--ink);
-  transform: scale(1.1);
+  border-color: var(--white);
+  box-shadow: 0 0 0 2px var(--ink);
+  transform: scale(1.08);
 }
 
 .onboard-widget-preview {
@@ -1265,14 +2004,20 @@ select:focus {
 
 .attention-head {
   display: flex;
-  align-items: baseline;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 14px;
+  gap: var(--s4);
+  margin-bottom: var(--s4);
+  flex-wrap: wrap;
+}
+
+.attention-head .card-sub {
+  margin-bottom: 0;
+  margin-top: 2px;
 }
 
 .attention-count {
-  font-size: 11.5px;
+  font-size: var(--t-sm);
   white-space: nowrap;
 }
 
@@ -1318,17 +2063,52 @@ select:focus {
   margin-top: 2px;
 }
 
+.attention-question {
+  font-size: var(--t-base);
+  font-weight: 500;
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .attention-meta {
-  font-size: 11px;
+  font-size: var(--t-xs);
   color: var(--slate-soft);
-  margin-top: 5px;
+  margin-top: var(--s1);
+  line-height: 1.5;
+}
+
+.attention-reason {
+  color: var(--slate);
 }
 
 .attention-action {
-  font-size: 12px;
+  font-size: var(--t-sm);
   color: var(--teal);
   white-space: nowrap;
   align-self: center;
+}
+
+.attention-more {
+  width: 100%;
+  margin-top: var(--s3);
+  background: transparent;
+  border: 1px dashed var(--line);
+  border-radius: var(--r-sm);
+  color: var(--slate);
+  font-family: var(--sans);
+  font-size: var(--t-sm);
+  height: var(--ctl-h);
+  cursor: pointer;
+  transition: border-color 150ms ease, background 150ms ease, color 150ms ease;
+}
+
+.attention-more:hover {
+  border-color: var(--ink);
+  color: var(--ink);
+  background: var(--paper);
 }
 
 @media (max-width: 720px) {
@@ -1430,12 +2210,7 @@ select:focus {
 
 .assign-select {
   font: inherit;
-  font-size: 12.5px;
-  padding: 5px 10px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--white);
-  color: var(--ink);
+  min-width: 150px;
 }
 
 .gap-row {

@@ -1,10 +1,20 @@
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { api, type Conversation, type OrgMember } from "../api";
+import { api, type Conversation, type Message, type OrgMember } from "../api";
 import { subscribeToUpdates } from "../realtime";
+import { Select } from "../components/Select";
 
 /** The realtime stream drives updates; this only covers a stream that never connected. */
 const FALLBACK_REFRESH_MS = 30000;
+
+type Filter = "all" | "needs_reply" | "escalated" | "resolved";
+
+const FILTERS: { id: Filter; label: string }[] = [
+  { id: "all", label: "All" },
+  { id: "needs_reply", label: "Needs reply" },
+  { id: "escalated", label: "Escalated" },
+  { id: "resolved", label: "Resolved" },
+];
 
 function initials(sessionId: string) {
   return sessionId.slice(0, 2).toUpperCase();
@@ -12,6 +22,52 @@ function initials(sessionId: string) {
 
 function recurrenceLabel(count: number) {
   return count === 1 ? "Reopened once" : `Reopened ${count} times`;
+}
+
+function timeAgo(iso: string) {
+  const minutes = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes}m`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `${hours}h`;
+  const days = Math.round(hours / 24);
+  if (days < 30) return `${days}d`;
+  return new Date(iso).toLocaleDateString();
+}
+
+/**
+ * The list used to be labelled with a truncated session id, which told an
+ * operator nothing about what the person wanted. The customer's opening
+ * question is the only label that lets someone triage a queue at a glance.
+ */
+function subjectOf(conversation: Conversation): string {
+  const firstFromCustomer = conversation.messages.find((m) => m.role === "user");
+  return firstFromCustomer?.content.trim() || "No message yet";
+}
+
+function lastMessage(conversation: Conversation): Message | null {
+  return conversation.messages[conversation.messages.length - 1] ?? null;
+}
+
+function previewOf(conversation: Conversation): string {
+  const last = lastMessage(conversation);
+  if (!last) return "";
+  const who = last.role === "user" ? "Customer" : last.role === "agent" ? "You" : "Nexo";
+  return `${who}: ${last.content.trim()}`;
+}
+
+/** Waiting on a person: the customer spoke last, or a handoff is still pending. */
+function needsReply(conversation: Conversation): boolean {
+  if (conversation.status === "resolved") return false;
+  if (conversation.escalations.some((e) => e.status === "pending")) return true;
+  return lastMessage(conversation)?.role === "user";
+}
+
+function matchesFilter(conversation: Conversation, filter: Filter): boolean {
+  if (filter === "all") return true;
+  if (filter === "resolved") return conversation.status === "resolved";
+  if (filter === "escalated") return conversation.status === "escalated";
+  return needsReply(conversation);
 }
 
 /**
@@ -33,6 +89,8 @@ export function ConversationsPage() {
   const [replyText, setReplyText] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [filter, setFilter] = useState<Filter>("all");
+  const [query, setQuery] = useState("");
 
   async function refresh() {
     setConversations(await api.listConversations());
@@ -63,6 +121,8 @@ export function ConversationsPage() {
 
   function selectConversation(id: string) {
     setSelectedId(id);
+    setReplyText("");
+    setError(null);
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
       next.set("id", id);
@@ -70,8 +130,40 @@ export function ConversationsPage() {
     });
   }
 
+  const counts = useMemo(
+    () => ({
+      all: conversations.length,
+      needs_reply: conversations.filter((c) => needsReply(c)).length,
+      escalated: conversations.filter((c) => c.status === "escalated").length,
+      resolved: conversations.filter((c) => c.status === "resolved").length,
+    }),
+    [conversations],
+  );
+
+  const visible = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    return conversations.filter((c) => {
+      if (!matchesFilter(c, filter)) return false;
+      if (!needle) return true;
+      return (
+        c.sessionId.toLowerCase().includes(needle) ||
+        c.messages.some((m) => m.content.toLowerCase().includes(needle))
+      );
+    });
+  }, [conversations, filter, query]);
+
   const selected = conversations.find((c) => c.id === selectedId) ?? null;
   const markerId = selected ? reopenMarkerId(selected) : null;
+
+  /**
+   * Landing on an empty reading pane wastes the operator's first move, so the
+   * top of the current filter opens by itself. A deep link still wins, since
+   * `selectedId` is already set by the time this runs.
+   */
+  useEffect(() => {
+    if (selected || visible.length === 0) return;
+    setSelectedId(visible[0].id);
+  }, [selected, visible]);
 
   async function handleSend() {
     const text = replyText.trim();
@@ -116,95 +208,133 @@ export function ConversationsPage() {
       <div className="page-top">
         <div>
           <h1>Conversations</h1>
+          <p className="sub">Every thread Nexo has handled, and the ones still waiting on a person.</p>
         </div>
       </div>
 
-      <div className="row" style={{ alignItems: "flex-start" }}>
-        <div className="card">
-          <h3>All conversations</h3>
-          <div className="card-sub">{conversations.length} total</div>
-          {conversations.map((c) => (
-            <div
-              className={`list-item${c.id === selectedId ? " selected" : ""}`}
-              key={c.id}
-              data-clickable
-              onClick={() => selectConversation(c.id)}
-            >
-              <div className="avatar mono">{initials(c.sessionId)}</div>
-              <div className="list-info">
-                <div className="li-title">
-                  {c.sessionId.slice(0, 8)}…
-                  {c.reopenCount > 0 && <span className="recurrence-tag">{recurrenceLabel(c.reopenCount)}</span>}
-                </div>
-                <div className="li-sub">{new Date(c.createdAt).toLocaleString()}</div>
-              </div>
-              <span className={`badge ${c.status}`}>{c.status}</span>
+      <div className="conv-split">
+        <div className="card conv-list-card">
+          <div className="conv-toolbar">
+            <div className="segmented" role="group" aria-label="Filter conversations">
+              {FILTERS.map((f) => (
+                <button
+                  key={f.id}
+                  className={filter === f.id ? "on" : ""}
+                  onClick={() => setFilter(f.id)}
+                  aria-pressed={filter === f.id}
+                >
+                  {f.label}
+                  <span className="seg-count">{counts[f.id]}</span>
+                </button>
+              ))}
             </div>
-          ))}
-          {conversations.length === 0 && (
-            <p className="empty-note">No conversations yet. Try the widget demo.</p>
-          )}
+            <input
+              type="text"
+              className="conv-search"
+              placeholder="Search messages…"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              aria-label="Search conversations"
+            />
+          </div>
+
+          <div className="conv-list">
+            {visible.map((c) => (
+              <button
+                key={c.id}
+                className={`conv-row${c.id === selectedId ? " selected" : ""}`}
+                onClick={() => selectConversation(c.id)}
+              >
+                <div className="avatar mono">{initials(c.sessionId)}</div>
+                <div className="conv-row-body">
+                  <div className="conv-row-top">
+                    <span className="conv-subject">{subjectOf(c)}</span>
+                    <span className="conv-when">{timeAgo(c.createdAt)}</span>
+                  </div>
+                  <div className="conv-preview">{previewOf(c)}</div>
+                  <div className="conv-row-meta">
+                    <span className={`badge ${c.status}`}>{c.status}</span>
+                    {needsReply(c) && <span className="badge waiting">needs reply</span>}
+                    {c.reopenCount > 0 && (
+                      <span className="recurrence-tag">{recurrenceLabel(c.reopenCount)}</span>
+                    )}
+                    {c.assignedUser && <span className="conv-owner">{c.assignedUser.name}</span>}
+                  </div>
+                </div>
+              </button>
+            ))}
+            {visible.length === 0 && (
+              <p className="empty-note">
+                {conversations.length === 0
+                  ? "No conversations yet. Try the widget demo."
+                  : "Nothing matches this filter."}
+              </p>
+            )}
+          </div>
         </div>
 
-        {selected && (
-          <div className="card">
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <h3>Transcript</h3>
-              <span className={`badge ${selected.status}`}>{selected.status}</span>
-            </div>
-            <div className="card-sub">
-              {selected.sessionId.slice(0, 8)}… · {selected.channel}
-              {selected.reopenCount > 0 && ` · ${recurrenceLabel(selected.reopenCount).toLowerCase()}`}
+        {selected ? (
+          <div className="card conv-detail-card">
+            <div className="conv-detail-head">
+              <div className="conv-detail-title">
+                <h3>{subjectOf(selected)}</h3>
+                <div className="card-sub">
+                  {selected.sessionId.slice(0, 8)}… · {selected.channel} · started{" "}
+                  {new Date(selected.createdAt).toLocaleString()}
+                  {selected.reopenCount > 0 &&
+                    ` · ${recurrenceLabel(selected.reopenCount).toLowerCase()}`}
+                </div>
+              </div>
+              <div className="conv-detail-controls">
+                <span className={`badge ${selected.status}`}>{selected.status}</span>
+                <Select
+                  className="assign-select"
+                  ariaLabel="Owner"
+                  value={selected.assignedUserId ?? ""}
+                  onChange={handleAssign}
+                  options={[
+                    { value: "", label: "Unassigned" },
+                    ...members.map((m) => ({ value: m.id, label: m.name })),
+                  ]}
+                />
+              </div>
             </div>
 
-            <div className="assign-row">
-              <label htmlFor="assignee">Owner</label>
-              <select
-                id="assignee"
-                className="assign-select"
-                value={selected.assignedUserId ?? ""}
-                onChange={(e) => handleAssign(e.target.value)}
-              >
-                <option value="">Unassigned</option>
-                {members.map((m) => (
-                  <option value={m.id} key={m.id}>
-                    {m.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            {selected.messages.map((m) => (
-              <Fragment key={m.id}>
-                {m.id === markerId && (
-                  <div className="reopen-marker">
-                    <span>
-                      Reopened {new Date(selected.lastReopenedAt!).toLocaleString()}, after this was resolved
-                    </span>
+            <div className="conv-transcript">
+              {selected.messages.map((m) => (
+                <Fragment key={m.id}>
+                  {m.id === markerId && (
+                    <div className="reopen-marker">
+                      <span>
+                        Reopened {new Date(selected.lastReopenedAt!).toLocaleString()}, after this was
+                        resolved
+                      </span>
+                    </div>
+                  )}
+                  <div
+                    className={`msg ${m.role === "user" ? "user" : m.role === "agent" ? "agent" : "bot"}`}
+                  >
+                    {m.role === "agent" && <div className="msg-author">You</div>}
+                    {m.content}
+                    {m.citations && m.citations.length > 0 && (
+                      <div className="msg-cites">
+                        {m.citations.map((c) => (
+                          <span className="cite" key={c.id}>
+                            {c.sourceName}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {m.confidence != null && (
+                      <div className="msg-confidence">confidence {m.confidence.toFixed(2)}</div>
+                    )}
                   </div>
-                )}
-                <div className={`msg ${m.role === "user" ? "user" : m.role === "agent" ? "agent" : "bot"}`}>
-                  {m.role === "agent" && <div className="msg-author">You</div>}
-                  {m.content}
-                  {m.citations && m.citations.length > 0 && (
-                    <div>
-                      {m.citations.map((c) => (
-                        <span className="cite" key={c.id}>
-                          {c.sourceName}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  {m.confidence != null && (
-                    <div style={{ fontSize: 11, color: "var(--slate-soft)", marginTop: 6 }}>
-                      confidence {m.confidence.toFixed(2)}
-                    </div>
-                  )}
-                </div>
-              </Fragment>
-            ))}
+                </Fragment>
+              ))}
+            </div>
 
             {selected.status === "resolved" ? (
-              <p className="empty-note" style={{ marginTop: 14 }}>This conversation is resolved.</p>
+              <p className="empty-note conv-resolved-note">This conversation is resolved.</p>
             ) : (
               <div className="reply-box">
                 <textarea
@@ -219,15 +349,29 @@ export function ConversationsPage() {
                 />
                 {error && <p className="error-text">{error}</p>}
                 <div className="reply-actions">
-                  <button className="btn-small" onClick={handleResolve}>
-                    Resolve
-                  </button>
-                  <button className="btn btn-primary" onClick={handleSend} disabled={sending || !replyText.trim()}>
-                    {sending ? "Sending…" : "Send reply"}
-                  </button>
+                  <span className="reply-hint">Ctrl + Enter to send</span>
+                  <div className="page-actions">
+                    <button className="btn-small" onClick={handleResolve}>
+                      Resolve
+                    </button>
+                    <button
+                      className="btn btn-primary"
+                      onClick={handleSend}
+                      disabled={sending || !replyText.trim()}
+                    >
+                      {sending ? "Sending…" : "Send reply"}
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
+          </div>
+        ) : (
+          <div className="card conv-detail-card conv-empty">
+            <div className="conv-empty-inner">
+              <h3>Select a conversation</h3>
+              <p>Pick a thread on the left to read the transcript and reply.</p>
+            </div>
           </div>
         )}
       </div>

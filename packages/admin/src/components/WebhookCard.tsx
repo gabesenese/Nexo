@@ -85,44 +85,47 @@ export function WebhookCard() {
         automation step in front of it.
       </div>
 
-      <form onSubmit={save} className="settings-row">
-        <div className="field" style={{ flex: 1, margin: 0 }}>
+      <form onSubmit={save}>
+        <div className="field-row">
           <label htmlFor="wh-url">Endpoint URL</label>
-          <input
-            id="wh-url"
-            type="url"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            placeholder="https://hooks.example.com/nexo"
-            required
-          />
+          <div className="field-control">
+            <input
+              id="wh-url"
+              type="url"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder="https://hooks.example.com/nexo"
+              required
+            />
+            {error && <p className="error-text">{error}</p>}
+          </div>
+          <button type="submit" className="btn btn-primary field-action" disabled={busy || !url.trim()}>
+            {busy ? "Saving…" : config.configured ? "Update" : "Save"}
+          </button>
         </div>
-        <button type="submit" className="btn btn-primary" disabled={busy || !url.trim()}>
-          {busy ? "Saving…" : config.configured ? "Update" : "Save"}
-        </button>
       </form>
-
-      {error && <p className="error-text">{error}</p>}
 
       {config.configured && (
         <>
-          <div className="field" style={{ marginTop: 16 }}>
-            <label>Signing secret</label>
-            <div className="card-sub" style={{ marginBottom: 8 }}>
-              Every request carries <code>X-Nexo-Signature</code>, an HMAC-SHA256 of{" "}
-              <code>timestamp.body</code> using this secret. Verify it before trusting a request.
-            </div>
-            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-              <input
-                className="mono"
-                style={{ flex: 1 }}
-                readOnly
-                type={secretShown ? "text" : "password"}
-                value={config.secret}
-              />
-              <button type="button" className="btn-small" onClick={() => setSecretShown((v) => !v)}>
-                {secretShown ? "Hide" : "Show"}
-              </button>
+          <div className="field-row">
+            <span className="field-label">Signing secret</span>
+            <div className="field-control">
+              <div className="field-inline">
+                <input
+                  className="mono"
+                  readOnly
+                  aria-label="Signing secret"
+                  type={secretShown ? "text" : "password"}
+                  value={config.secret}
+                />
+                <button type="button" className="btn-small" onClick={() => setSecretShown((v) => !v)}>
+                  {secretShown ? "Hide" : "Show"}
+                </button>
+              </div>
+              <p className="field-help">
+                Every request carries <code>X-Nexo-Signature</code>, an HMAC-SHA256 of{" "}
+                <code>timestamp.body</code> using this secret. Verify it before trusting a request.
+              </p>
             </div>
           </div>
 

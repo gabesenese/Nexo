@@ -31,6 +31,7 @@ export function SourcesPage() {
   const [loaded, setLoaded] = useState(false);
   const [url, setUrl] = useState("");
   const [busy, setBusy] = useState(false);
+  const [dragging, setDragging] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [reindexingId, setReindexingId] = useState<string | null>(null);
@@ -77,9 +78,15 @@ export function SourcesPage() {
     }
   }
 
-  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  function isPdf(file: File) {
+    return file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+  }
+
+  async function uploadFile(file: File) {
+    if (!isPdf(file)) {
+      setNotice({ tone: "error", text: `“${file.name}” is not a PDF. Nexo can only read PDFs here.` });
+      return;
+    }
     setBusy(true);
     try {
       const queued = await api.uploadPdf(file);
@@ -90,8 +97,22 @@ export function SourcesPage() {
       setNotice({ tone: "error", text: (err as Error).message });
     } finally {
       setBusy(false);
-      e.target.value = "";
     }
+  }
+
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault();
+    setDragging(false);
+    if (busy) return;
+    const file = e.dataTransfer.files?.[0];
+    if (file) uploadFile(file);
+  }
+
+  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    /** Cleared so picking the same file twice in a row still fires a change event. */
+    e.target.value = "";
+    if (file) await uploadFile(file);
   }
 
   async function handleReindex(source: SourceSummary) {
@@ -135,7 +156,7 @@ export function SourcesPage() {
     <div>
       <div className="page-top">
         <div>
-          <h1>Knowledge</h1>
+          <h1>Sources</h1>
           <div className="sub">Teach Nexo by adding the sources it should answer from</div>
         </div>
       </div>
@@ -198,7 +219,50 @@ export function SourcesPage() {
         <div className="card">
           <h3>Upload a PDF</h3>
           <div className="card-sub">Return policies, warranty terms, and the like.</div>
-          <input type="file" accept="application/pdf" onChange={handleUpload} disabled={busy} />
+          {/**
+           * The native file input renders as a browser-chrome button that
+           * matches nothing else here and cannot accept a drag. This is a
+           * label wrapping a visually-hidden input, so it stays a real file
+           * control for the keyboard and for screen readers.
+           */}
+          <label
+            className={`dropzone${dragging ? " dragging" : ""}${busy ? " busy" : ""}`}
+            onDragOver={(e) => {
+              e.preventDefault();
+              if (!busy) setDragging(true);
+            }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={handleDrop}
+          >
+            <input
+              type="file"
+              accept="application/pdf"
+              onChange={handleUpload}
+              disabled={busy}
+              className="dropzone-input"
+            />
+            <span className="dropzone-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path
+                  d="M10 13.5V4m0 0L6.5 7.5M10 4l3.5 3.5"
+                  stroke="currentColor"
+                  strokeWidth="1.4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M3.5 12.5v2a1.5 1.5 0 0 0 1.5 1.5h10a1.5 1.5 0 0 0 1.5-1.5v-2"
+                  stroke="currentColor"
+                  strokeWidth="1.4"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </span>
+            <span className="dropzone-text">
+              <strong>{busy ? "Uploading…" : dragging ? "Drop to upload" : "Choose a PDF"}</strong>
+              <span className="dropzone-hint">or drag one here</span>
+            </span>
+          </label>
         </div>
       </div>
 

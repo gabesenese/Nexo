@@ -2,6 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { prisma } from "../db/client.js";
 import { requireAuth } from "./auth.js";
+import { notifyOrg, notifySession } from "../realtime/bus.js";
 
 const assigneeSelect = { select: { id: true, name: true, email: true } };
 
@@ -52,11 +53,15 @@ export async function conversationsRoutes(app: FastifyInstance) {
         return reply.status(404).send({ error: "conversation not found" });
       }
 
-      return prisma.conversation.update({
+      const updated = await prisma.conversation.update({
         where: { id: conversation.id },
         data: { assignedUserId: userId, assignedAt: userId ? new Date() : null },
         include: { assignedUser: assigneeSelect },
       });
+
+      notifyOrg(organizationId, ["conversations", "attention"]);
+
+      return updated;
     },
   );
 
@@ -84,6 +89,9 @@ export async function conversationsRoutes(app: FastifyInstance) {
         data: { status: "handed_off" },
       });
 
+      notifyOrg(req.auth!.organizationId, ["conversations", "attention"]);
+      notifySession(req.auth!.organizationId, conversation.sessionId);
+
       return message;
     },
   );
@@ -92,13 +100,21 @@ export async function conversationsRoutes(app: FastifyInstance) {
     "/api/conversations/:id/resolve",
     { preHandler: requireAuth },
     async (req, reply) => {
-      const { count } = await prisma.conversation.updateMany({
+      const conversation = await prisma.conversation.findFirst({
         where: { id: req.params.id, organizationId: req.auth!.organizationId },
-        data: { status: "resolved", resolvedAt: new Date() },
       });
-      if (count === 0) {
+      if (!conversation) {
         return reply.status(404).send({ error: "conversation not found" });
       }
+
+      await prisma.conversation.update({
+        where: { id: conversation.id },
+        data: { status: "resolved", resolvedAt: new Date() },
+      });
+
+      notifyOrg(req.auth!.organizationId, ["conversations", "attention"]);
+      notifySession(req.auth!.organizationId, conversation.sessionId);
+
       return { ok: true };
     },
   );

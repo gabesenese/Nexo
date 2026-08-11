@@ -19,6 +19,7 @@ import { knowledgeGapsRoutes } from "./routes/knowledgeGaps.js";
 import { impactRoutes } from "./routes/impact.js";
 import { planRoutes } from "./routes/plan.js";
 import { webhookRoutes } from "./routes/webhooks.js";
+import { eventsRoutes } from "./routes/events.js";
 import { authRoutes } from "./routes/auth.js";
 import { orgRoutes } from "./routes/org.js";
 
@@ -82,6 +83,7 @@ export async function buildApp(options: { logger?: boolean } = {}): Promise<Fast
   await app.register(impactRoutes);
   await app.register(planRoutes);
   await app.register(webhookRoutes);
+  await app.register(eventsRoutes);
 
   await recoverInterruptedSources();
 

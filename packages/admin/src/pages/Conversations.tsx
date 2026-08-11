@@ -1,6 +1,10 @@
 import { Fragment, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { api, type Conversation, type OrgMember } from "../api";
+import { subscribeToUpdates } from "../realtime";
+
+/** The realtime stream drives updates; this only covers a stream that never connected. */
+const FALLBACK_REFRESH_MS = 30000;
 
 function initials(sessionId: string) {
   return sessionId.slice(0, 2).toUpperCase();
@@ -36,8 +40,12 @@ export function ConversationsPage() {
 
   useEffect(() => {
     refresh();
-    const id = setInterval(refresh, 4000);
-    return () => clearInterval(id);
+    const id = setInterval(refresh, FALLBACK_REFRESH_MS);
+    const unsubscribe = subscribeToUpdates(["conversations"], refresh);
+    return () => {
+      clearInterval(id);
+      unsubscribe();
+    };
   }, []);
 
   useEffect(() => {

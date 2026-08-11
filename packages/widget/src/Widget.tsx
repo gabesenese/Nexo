@@ -40,7 +40,6 @@ export function Widget({ apiUrl, orgKey }: { apiUrl: string; orgKey: string }) {
   const sessionId = useRef(getSessionId());
   const scrollRef = useRef<HTMLDivElement>(null);
   const seen = useRef<Set<string>>(new Set());
-  const cursor = useRef<string | null>(null);
 
   const accent = config.accentColor;
   const escalated = status === "escalated";
@@ -64,9 +63,18 @@ export function Widget({ apiUrl, orgKey }: { apiUrl: string; orgKey: string }) {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, pending, loading, open]);
 
+  /**
+   * Fetches the whole thread and lets `seen` decide what is new, rather than
+   * asking for messages after the newest timestamp already held. A timestamp
+   * cursor loses messages outright: the database stamps a row when the insert
+   * runs but the row only becomes visible when it commits, so an operator's
+   * reply written alongside an AI answer can commit second while carrying the
+   * earlier timestamp. The cursor moves past it and that reply is never
+   * requested again. A support thread is small enough that refetching it is
+   * cheaper than a customer never seeing an answer.
+   */
   async function reconcile() {
     const qs = new URLSearchParams({ orgKey, sessionId: sessionId.current });
-    if (cursor.current) qs.set("after", cursor.current);
     try {
       const res = await fetch(`${apiUrl}/api/chat/messages?${qs.toString()}`);
       if (!res.ok) return;
@@ -75,7 +83,6 @@ export function Widget({ apiUrl, orgKey }: { apiUrl: string; orgKey: string }) {
       const fresh = data.messages.filter((m) => !seen.current.has(m.id));
       if (fresh.length === 0) return;
       fresh.forEach((m) => seen.current.add(m.id));
-      cursor.current = fresh[fresh.length - 1].createdAt;
       setMessages((prev) => [...prev, ...fresh]);
     } catch {
       /* transient; next poll retries */

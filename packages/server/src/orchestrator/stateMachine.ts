@@ -10,6 +10,7 @@ import { webhookHandoffAdapter } from "../handoff/webhookAdapter.js";
 import type { HandoffAdapter } from "../handoff/adapter.js";
 import { computeCombinedConfidence, shouldEscalate } from "./confidence.js";
 import { storeEscalationQuestion } from "../knowledge/gaps.js";
+import { notifyOrg, notifySession } from "../realtime/bus.js";
 
 export interface ChatTurnResult {
   conversationId: string;
@@ -95,6 +96,14 @@ export async function handleUserMessage(params: {
   });
 
   /**
+   * Published before the answer is generated, so an operator watching the
+   * dashboard sees the customer's question while the model is still working
+   * instead of after it finishes.
+   */
+  notifyOrg(organizationId, ["conversations", "attention"]);
+  notifySession(organizationId, sessionId);
+
+  /**
    * Once a human has taken over (conversation escalated), the AI stops
    * auto-answering: the customer's message is recorded and surfaced to the
    * operator, who replies. This keeps the AI from talking over the human.
@@ -107,6 +116,7 @@ export async function handleUserMessage(params: {
     return escalate({
       conversationId: conversation.id,
       organizationId,
+      sessionId,
       reason: "user_requested",
       confidence: null,
       answer: "Connecting you with a human agent now.",
@@ -140,6 +150,7 @@ export async function handleUserMessage(params: {
     return escalate({
       conversationId: conversation.id,
       organizationId,
+      sessionId,
       reason: "low_confidence",
       confidence: combinedConfidence,
       answer: result.answer,
@@ -158,6 +169,9 @@ export async function handleUserMessage(params: {
     },
   });
 
+  notifyOrg(organizationId, ["conversations"]);
+  notifySession(organizationId, sessionId);
+
   return {
     conversationId: conversation.id,
     answer: result.answer,
@@ -170,13 +184,14 @@ export async function handleUserMessage(params: {
 async function escalate(params: {
   conversationId: string;
   organizationId: string;
+  sessionId: string;
   reason: string;
   confidence: number | null;
   answer: string;
   citations: { id: string; sourceName: string; headingPath: string[] }[];
   question: string;
 }): Promise<ChatTurnResult> {
-  const { conversationId, organizationId, reason, confidence, answer, citations, question } = params;
+  const { conversationId, organizationId, sessionId, reason, confidence, answer, citations, question } = params;
 
   await prisma.message.create({
     data: {
@@ -222,6 +237,9 @@ async function escalate(params: {
       data: { organizationId, conversationId, type: "escalation", message: summary },
     }),
   ]);
+
+  notifyOrg(organizationId, ["conversations", "attention", "notifications"]);
+  notifySession(organizationId, sessionId);
 
   /**
    * Embedding happens outside the transaction so a slow model never holds

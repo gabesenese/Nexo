@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api, type Notification } from "../api";
+import { subscribeToUpdates } from "../realtime";
+
+/** The realtime stream drives updates; this only covers a stream that never connected. */
+const FALLBACK_REFRESH_MS = 60000;
 
 function timeAgo(iso: string) {
   const minutes = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
@@ -23,8 +27,12 @@ export function NotificationBell() {
 
   useEffect(() => {
     refresh();
-    const id = setInterval(refresh, 5000);
-    return () => clearInterval(id);
+    const id = setInterval(refresh, FALLBACK_REFRESH_MS);
+    const unsubscribe = subscribeToUpdates(["notifications"], refresh);
+    return () => {
+      clearInterval(id);
+      unsubscribe();
+    };
   }, []);
 
   useEffect(() => {

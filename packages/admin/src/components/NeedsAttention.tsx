@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api, type AttentionItem, type AuthUser } from "../api";
+import { subscribeToUpdates } from "../realtime";
 
-const REFRESH_MS = 10000;
+/** The realtime stream drives updates; this only covers a stream that never connected. */
+const FALLBACK_REFRESH_MS = 60000;
 
 function waitedFor(iso: string) {
   const minutes = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
@@ -66,10 +68,12 @@ export function NeedsAttention() {
       if (!cancelled && next) setItems(next);
     }
     refresh();
-    const id = setInterval(refresh, REFRESH_MS);
+    const id = setInterval(refresh, FALLBACK_REFRESH_MS);
+    const unsubscribe = subscribeToUpdates(["attention"], refresh);
     return () => {
       cancelled = true;
       clearInterval(id);
+      unsubscribe();
     };
   }, []);
 

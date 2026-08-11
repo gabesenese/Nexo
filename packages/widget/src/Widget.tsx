@@ -16,6 +16,13 @@ interface ChatMessage {
 
 const GREETING = "Hi! Ask me anything. I'll cite my sources, and you can talk to a human any time.";
 
+/**
+ * An agent's reply arrives over the event stream. This only covers a stream
+ * that never connected, so it is slow on purpose: a visitor waiting on a human
+ * should not be paying for a request every few seconds.
+ */
+const FALLBACK_POLL_MS = 20000;
+
 function getSessionId(): string {
   const key = "nexo_session_id";
   let id = localStorage.getItem(key);
@@ -92,8 +99,18 @@ export function Widget({ apiUrl, orgKey }: { apiUrl: string; orgKey: string }) {
   useEffect(() => {
     if (!open) return;
     reconcile();
-    const id = setInterval(reconcile, 4000);
-    return () => clearInterval(id);
+    const id = setInterval(reconcile, FALLBACK_POLL_MS);
+
+    const qs = new URLSearchParams({ orgKey, sessionId: sessionId.current });
+    const stream = new EventSource(`${apiUrl}/api/chat/events?${qs.toString()}`);
+    stream.onmessage = () => {
+      reconcile();
+    };
+
+    return () => {
+      clearInterval(id);
+      stream.close();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 

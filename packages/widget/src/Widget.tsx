@@ -33,6 +33,13 @@ function getSessionId(): string {
   return id;
 }
 
+/** Stands in for a logo until organisations can upload one. */
+function initialsOf(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  const letters = (parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "");
+  return letters.toUpperCase() || "S";
+}
+
 export function Widget({ apiUrl, orgKey }: { apiUrl: string; orgKey: string }) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -40,13 +47,27 @@ export function Widget({ apiUrl, orgKey }: { apiUrl: string; orgKey: string }) {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
-  const [config, setConfig] = useState<{ accentColor: string; welcomeMessage: string }>({
+  /**
+   * The widget sits on the customer's own website talking to their customers,
+   * so it wears their name, not ours. `/api/widget/config` has always returned
+   * `organizationName` and the widget ignored it in favour of a hardcoded
+   * "Nexo Support", which showed our brand to businesses paying to put theirs
+   * in front of their visitors. Nexo is credited once, quietly, in the footer.
+   */
+  const [config, setConfig] = useState<{
+    organizationName: string;
+    accentColor: string;
+    welcomeMessage: string;
+  }>({
+    organizationName: "Support",
     accentColor: "#204c40",
     welcomeMessage: GREETING,
   });
   const sessionId = useRef(getSessionId());
   const scrollRef = useRef<HTMLDivElement>(null);
   const seen = useRef<Set<string>>(new Set());
+  const panelRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const accent = config.accentColor;
   const escalated = status === "escalated";
@@ -56,15 +77,37 @@ export function Widget({ apiUrl, orgKey }: { apiUrl: string; orgKey: string }) {
     fetch(`${apiUrl}/api/widget/config?orgKey=${encodeURIComponent(orgKey)}`)
       .then((r) => (r.ok ? r.json() : null))
       .then((c) => {
-        if (c) setConfig({ accentColor: c.accentColor, welcomeMessage: c.welcomeMessage });
+        if (c) {
+          setConfig({
+            organizationName: c.organizationName || "Support",
+            accentColor: c.accentColor,
+            welcomeMessage: c.welcomeMessage,
+          });
+        }
       })
       .catch(() => {});
   }, [apiUrl, orgKey]);
+
   const headerSub = escalated
-    ? "A human will follow up shortly"
+    ? "A person is joining you"
     : resolved
       ? "Conversation resolved"
       : "Usually replies instantly";
+
+  /** Opening a chat should put the caret where the person is about to type. */
+  useEffect(() => {
+    if (open) inputRef.current?.focus();
+  }, [open]);
+
+  /** Escape closes the panel, which is what every other overlay on the web does. */
+  useEffect(() => {
+    if (!open) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [open]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -172,29 +215,60 @@ export function Widget({ apiUrl, orgKey }: { apiUrl: string; orgKey: string }) {
 
       <div
         className="nexo-panel"
+        ref={panelRef}
+        role="dialog"
+        aria-modal="false"
+        aria-label={`${config.organizationName} support chat`}
         style={{
           ...styles.panel,
           opacity: open ? 1 : 0,
-          transform: open ? "scale(1) translateY(0)" : "scale(0.95) translateY(10px)",
+          transform: open ? "scale(1) translateY(0)" : "scale(0.96) translateY(8px)",
           pointerEvents: open ? "auto" : "none",
         }}
         aria-hidden={!open}
       >
         <div style={{ ...styles.header, background: accent }}>
-          <div style={{ ...styles.mark, background: "rgba(255,255,255,0.22)" }}>N</div>
-          <div style={{ flex: 1 }}>
-            <div style={styles.headTitle}>Nexo Support</div>
-            <div style={styles.headSub}>{headerSub}</div>
+          <div style={{ ...styles.mark, background: "rgba(255,255,255,0.22)" }}>
+            {initialsOf(config.organizationName)}
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={styles.headTitle}>{config.organizationName} Support</div>
+            <div style={styles.headSub}>
+              <span
+                style={{
+                  ...styles.statusDot,
+                  background: escalated ? "#f0c274" : resolved ? "rgba(255,255,255,0.4)" : "#7fd4a8",
+                }}
+                aria-hidden="true"
+              />
+              {headerSub}
+            </div>
           </div>
           <button
             className="nexo-icon-btn"
             style={styles.iconButton}
             onClick={() => setOpen(false)}
-            aria-label="Close"
+            aria-label="Close chat"
             tabIndex={open ? 0 : -1}
           >
-            ×
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <path
+                d="M3.5 3.5l7 7m0-7l-7 7"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+            </svg>
           </button>
+        </div>
+
+        {/** Status changes are announced without stealing focus from the input. */}
+        <div style={styles.srOnly} role="status" aria-live="polite">
+          {escalated
+            ? "A support specialist is joining the conversation."
+            : resolved
+              ? "This conversation has been resolved."
+              : ""}
         </div>
 
         <div style={styles.messages} ref={scrollRef}>
@@ -259,49 +333,78 @@ export function Widget({ apiUrl, orgKey }: { apiUrl: string; orgKey: string }) {
           )}
         </div>
 
-        <div style={styles.inputRow}>
-          <input
-            className="nexo-input"
-            style={styles.input}
-            value={input}
-            placeholder="Type your question…"
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") send(input);
-            }}
-            tabIndex={open ? 0 : -1}
-          />
-          <button
-            className="nexo-send-btn"
-            style={{ ...styles.sendButton, background: accent }}
-            onClick={() => send(input)}
-            disabled={loading}
-            tabIndex={open ? 0 : -1}
-          >
-            →
-          </button>
+        <div style={styles.footer}>
+          {!escalated && !resolved && (
+            <button
+              className="nexo-human-chip"
+              style={styles.humanChip}
+              onClick={() => send("", true)}
+              disabled={loading}
+              tabIndex={open ? 0 : -1}
+            >
+              Talk to a person instead
+            </button>
+          )}
+          <div style={styles.inputRow}>
+            <input
+              className="nexo-input"
+              ref={inputRef}
+              style={styles.input}
+              value={input}
+              placeholder="Ask a question…"
+              aria-label="Type your message"
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") send(input);
+              }}
+              tabIndex={open ? 0 : -1}
+            />
+            <button
+              className="nexo-send-btn"
+              style={{ ...styles.sendButton, background: accent }}
+              onClick={() => send(input)}
+              disabled={loading || !input.trim()}
+              aria-label="Send message"
+              tabIndex={open ? 0 : -1}
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                <path
+                  d="M7 11.5v-9m0 0L3.5 6M7 2.5 10.5 6"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+          </div>
+          {/** Nexo's only appearance. The header belongs to the business the visitor came to. */}
+          <div style={styles.poweredBy}>Powered by Nexo</div>
         </div>
-
-        {!escalated && (
-          <button
-            className="nexo-human-chip"
-            style={styles.humanChip}
-            onClick={() => send("", true)}
-            disabled={loading}
-            tabIndex={open ? 0 : -1}
-          >
-            ↳ talk to a person instead
-          </button>
-        )}
       </div>
 
       <button
         className="nexo-launcher"
         style={{ ...styles.launcher, background: accent }}
         onClick={() => setOpen((o) => !o)}
-        aria-label="Open support chat"
+        aria-label={open ? "Close support chat" : "Open support chat"}
+        aria-expanded={open}
       >
-        {open ? "×" : "Chat"}
+        <span className={`nexo-launcher-icon${open ? " is-open" : ""}`}>
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+            <path
+              d="M4 9.5C4 6.46 6.9 4 11 4s7 2.46 7 5.5S15.1 15 11 15c-.63 0-1.24-.06-1.81-.17L6 16.5l.86-2.35C5.13 13.14 4 11.44 4 9.5Z"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </span>
+        <span className={`nexo-launcher-close${open ? " is-open" : ""}`}>
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+            <path d="M5 5l8 8m0-8l-8 8" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+          </svg>
+        </span>
       </button>
     </div>
   );
@@ -328,17 +431,34 @@ const easeOut = "cubic-bezier(0.23, 1, 0.32, 1)";
 const css = `
   .nexo-panel { transition: opacity 220ms ${easeOut}, transform 220ms ${easeOut}; transform-origin: bottom right; }
   .nexo-launcher { transition: transform 160ms ${easeOut}, box-shadow 160ms ease; }
-  .nexo-launcher:hover { box-shadow: 0 10px 26px rgba(0,0,0,0.32); }
-  .nexo-launcher:active { transform: scale(0.93); }
+  .nexo-launcher:hover { box-shadow: 0 10px 26px rgba(0,0,0,0.3); }
+  .nexo-launcher:active { transform: scale(0.94); }
+  /* Both glyphs are stacked and crossfaded, so the launcher never collapses to nothing between states. */
+  .nexo-launcher-icon, .nexo-launcher-close {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 160ms ${easeOut}, transform 160ms ${easeOut};
+  }
+  .nexo-launcher-icon { opacity: 1; transform: scale(1) rotate(0deg); }
+  .nexo-launcher-icon.is-open { opacity: 0; transform: scale(0.8) rotate(-25deg); }
+  .nexo-launcher-close { opacity: 0; transform: scale(0.8) rotate(25deg); }
+  .nexo-launcher-close.is-open { opacity: 1; transform: scale(1) rotate(0deg); }
+  .nexo-launcher:focus-visible, .nexo-icon-btn:focus-visible, .nexo-send-btn:focus-visible, .nexo-human-chip:focus-visible {
+    outline: 2px solid ${colors.white};
+    outline-offset: 2px;
+  }
+  .nexo-input:focus-visible { outline: none; }
+  .nexo-send-btn:disabled { opacity: 0.4; cursor: default; }
   .nexo-icon-btn { transition: opacity 150ms ease, transform 150ms ease-out; }
   .nexo-icon-btn:hover { opacity: 0.7; }
   .nexo-icon-btn:active { transform: scale(0.88); }
   .nexo-send-btn { transition: background 150ms ease, transform 150ms ease-out; }
   .nexo-send-btn:hover:not(:disabled) { background: ${colors.tealDark}; }
   .nexo-send-btn:active:not(:disabled) { transform: scale(0.92); }
-  .nexo-human-chip { transition: background 150ms ease, border-color 150ms ease, transform 150ms ease-out; }
-  .nexo-human-chip:hover:not(:disabled) { background: rgba(201,135,58,0.08); border-color: ${colors.amber}; }
-  .nexo-human-chip:active:not(:disabled) { transform: scale(0.96); }
+  .nexo-human-chip { transition: background 150ms ease, border-color 150ms ease, color 150ms ease; }
+  .nexo-human-chip:hover:not(:disabled) { border-color: ${colors.slateSoft}; color: ${colors.ink}; }
   .nexo-input { transition: border-color 150ms ease; }
   .nexo-input:focus { border-color: ${colors.teal}; }
   .nexo-msg-enter { animation: nexoMsgIn 240ms ${easeOut} both; }
@@ -349,7 +469,8 @@ const css = `
   .nexo-typing span:nth-child(3) { animation-delay: 0.3s; }
   @keyframes nexoTyping { 0%, 60%, 100% { transform: translateY(0); opacity: 0.5; } 30% { transform: translateY(-3px); opacity: 1; } }
   @media (prefers-reduced-motion: reduce) {
-    .nexo-panel, .nexo-launcher, .nexo-icon-btn, .nexo-send-btn, .nexo-human-chip, .nexo-input { transition-duration: 1ms !important; }
+    .nexo-panel, .nexo-launcher, .nexo-icon-btn, .nexo-send-btn, .nexo-human-chip, .nexo-input,
+    .nexo-launcher-icon, .nexo-launcher-close { transition-duration: 1ms !important; }
     .nexo-msg-enter { animation-duration: 1ms !important; }
     .nexo-typing span { animation-duration: 1ms !important; }
   }
@@ -367,17 +488,19 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: "flex-end",
   },
   launcher: {
+    position: "relative",
     borderRadius: 999,
-    width: 56,
-    height: 56,
+    width: 54,
+    height: 54,
     background: colors.ink,
     color: colors.paper,
     border: "none",
     fontFamily: sans,
-    fontSize: 14,
-    fontWeight: 500,
     cursor: "pointer",
-    boxShadow: "0 8px 20px rgba(0,0,0,0.25)",
+    boxShadow: "0 6px 18px rgba(0,0,0,0.22)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
   },
   panel: {
     position: "absolute",
@@ -414,7 +537,35 @@ const styles: Record<string, React.CSSProperties> = {
     flexShrink: 0,
   },
   headTitle: { fontSize: 13.5, fontWeight: 500 },
-  headSub: { fontSize: 11, color: "#9aa0a3" },
+  headSub: {
+    fontSize: 11,
+    color: "rgba(246,244,238,0.72)",
+    display: "flex",
+    alignItems: "center",
+    gap: 5,
+    marginTop: 1,
+  },
+  statusDot: { width: 5, height: 5, borderRadius: "50%", flexShrink: 0 },
+  srOnly: {
+    position: "absolute",
+    width: 1,
+    height: 1,
+    padding: 0,
+    margin: -1,
+    overflow: "hidden",
+    clip: "rect(0,0,0,0)",
+    whiteSpace: "nowrap",
+    border: 0,
+  },
+  footer: { background: colors.white, borderTop: `1px solid ${colors.line}` },
+  poweredBy: {
+    fontFamily: mono,
+    fontSize: 9,
+    color: "#9aa0a3",
+    textAlign: "center",
+    padding: "0 0 10px",
+    letterSpacing: "0.04em",
+  },
   iconButton: {
     background: "transparent",
     border: "none",
@@ -510,15 +661,17 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: 6,
     display: "block",
   },
-  inputRow: { display: "flex", gap: 8, padding: "12px 14px", borderTop: `1px solid ${colors.line}`, background: colors.white },
+  inputRow: { display: "flex", gap: 8, padding: "10px 14px 8px", background: colors.white },
   input: {
     flex: 1,
+    minWidth: 0,
     border: `1px solid ${colors.line}`,
     borderRadius: 20,
     padding: "9px 14px",
     fontSize: 12.5,
     fontFamily: sans,
     outline: "none",
+    color: colors.slate,
   },
   sendButton: {
     width: 34,
@@ -529,18 +682,21 @@ const styles: Record<string, React.CSSProperties> = {
     color: colors.paper,
     cursor: "pointer",
     flexShrink: 0,
-    fontSize: 14,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
   },
   humanChip: {
-    alignSelf: "flex-start",
-    margin: "0 14px 14px",
-    fontFamily: mono,
-    fontSize: 10.5,
-    color: colors.amber,
-    background: "transparent",
-    border: `1px dashed ${colors.amber}`,
-    padding: "6px 12px",
-    borderRadius: 12,
+    display: "block",
+    width: "calc(100% - 28px)",
+    margin: "10px 14px 0",
+    fontFamily: sans,
+    fontSize: 11.5,
+    color: colors.slateSoft,
+    background: colors.paper,
+    border: `1px solid ${colors.line}`,
+    padding: "7px 12px",
+    borderRadius: 8,
     cursor: "pointer",
   },
 };

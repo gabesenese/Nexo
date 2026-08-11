@@ -33,10 +33,19 @@ export async function chatRoutes(app: FastifyInstance) {
     };
   });
 
-  app.get<{ Querystring: { orgKey?: string; sessionId?: string; after?: string } }>(
+  /**
+   * Returns the whole thread rather than a slice after a timestamp. The
+   * `after` cursor this used to accept dropped messages: a row is stamped when
+   * its insert runs but only becomes visible when it commits, so an operator
+   * reply written alongside an AI answer can commit second while carrying the
+   * earlier timestamp, landing behind a cursor that has already moved past it.
+   * Ignoring the parameter also repairs widget bundles still cached on
+   * customer sites, which keep sending it until their cache expires.
+   */
+  app.get<{ Querystring: { orgKey?: string; sessionId?: string } }>(
     "/api/chat/messages",
     async (req, reply) => {
-      const { orgKey, sessionId, after } = req.query ?? {};
+      const { orgKey, sessionId } = req.query ?? {};
       if (!orgKey || !sessionId) {
         return reply.status(400).send({ error: "orgKey and sessionId are required" });
       }
@@ -52,7 +61,7 @@ export async function chatRoutes(app: FastifyInstance) {
         return { conversationId: null, status: null, messages: [] };
       }
       const messages = await prisma.message.findMany({
-        where: { conversationId: conversation.id, ...(after ? { createdAt: { gt: new Date(after) } } : {}) },
+        where: { conversationId: conversation.id },
         orderBy: { createdAt: "asc" },
       });
       return { conversationId: conversation.id, status: conversation.status, messages };

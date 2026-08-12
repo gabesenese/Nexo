@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { NavLink, Navigate, Route, Routes, useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { NavLink, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { SourcesPage } from "./pages/Sources";
 import { ConversationsPage } from "./pages/Conversations";
 import { AnalyticsPage } from "./pages/Analytics";
@@ -40,6 +40,13 @@ function Dashboard() {
   const [authState, setAuthState] = useState<"loading" | "anon" | "authed">("loading");
   const [user, setUser] = useState<AuthUser | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
+  const contentRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    contentRef.current?.scrollTo({ top: 0 });
+    window.scrollTo({ top: 0 });
+  }, [location.pathname]);
 
   useEffect(() => {
     api.me().then((result) => {
@@ -97,10 +104,6 @@ function Dashboard() {
               <span className="dot" />
               Inbox
             </NavLink>
-            <NavLink to="/leads">
-              <span className="dot" />
-              Leads
-            </NavLink>
           </div>
 
           <div className="nav-group">
@@ -121,6 +124,11 @@ function Dashboard() {
               <span className="dot" />
               Impact
             </NavLink>
+            {/** Leads is not part of the support loop yet, so it sits here rather than beside the Inbox. */}
+            <NavLink to="/leads">
+              <span className="dot" />
+              Leads
+            </NavLink>
             <NavLink to="/settings">
               <span className="dot" />
               Settings
@@ -133,7 +141,13 @@ function Dashboard() {
           Log out
         </button>
       </nav>
-      <main className="content">
+      {/**
+       * Keyed on the path so each page fades in rather than snapping into
+       * place, and scrolled back to the top on arrival. Without the reset a
+       * click from halfway down one page dropped you halfway down the next,
+       * which is most of what read as the screen flicking.
+       */}
+      <main className="content" key={location.pathname} ref={contentRef}>
         <TrialBanner />
         <Routes>
           <Route path="/" element={<AnalyticsPage />} />

@@ -181,6 +181,22 @@ export interface ImpactSummary {
   estimated: { hoursAvoided: number; costAvoidedCad: number } | null;
 }
 
+export interface ActivityEntry {
+  id: string;
+  type: "escalated" | "resolved" | "source_indexed";
+  summary: string;
+  conversationId: string | null;
+  at: string;
+}
+
+export interface OverviewSummary {
+  counts: { open: number; waitingOnHuman: number; resolvedToday: number; total: number };
+  /** Null when there is nothing to divide, so the page says so rather than showing 0%. */
+  rates: { resolution: number | null; escalation: number | null };
+  knowledgeHealth: { total: number; uncovered: number; top: KnowledgeGap[] };
+  activity: ActivityEntry[];
+}
+
 export interface GapCoverage {
   source: string | null;
   sourceId: string | null;
@@ -301,6 +317,7 @@ export const api = {
   chat: (input: { orgKey: string; sessionId: string; message: string }) =>
     request<ChatReply>("/api/chat", { method: "POST", body: JSON.stringify(input) }),
   getAnalytics: () => request<AnalyticsSummary>("/api/analytics"),
+  getOverview: () => request<OverviewSummary>("/api/overview"),
   getWebhook: () => request<WebhookConfig>("/api/webhook"),
   saveWebhook: (url: string, enabled: boolean) =>
     request<{ url: string; enabled: boolean; secret: string }>("/api/webhook", {

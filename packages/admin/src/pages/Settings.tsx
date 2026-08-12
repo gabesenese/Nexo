@@ -4,6 +4,9 @@ import { PlanUsageCard } from "../components/PlanUsageCard";
 import { WebhookCard } from "../components/WebhookCard";
 import { Select } from "../components/Select";
 
+const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
+const WIDGET_SRC = import.meta.env.VITE_WIDGET_URL ?? `${API_URL}/widget.js`;
+
 function initials(name: string) {
   const parts = name.trim().split(/\s+/);
   return ((parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "")).toUpperCase() || "?";
@@ -33,6 +36,19 @@ export function SettingsPage({ onWorkspaceRenamed }: { onWorkspaceRenamed?: (nam
   const [widgetError, setWidgetError] = useState<string | null>(null);
   const [rotating, setRotating] = useState(false);
   const [keyCopied, setKeyCopied] = useState(false);
+  const [snippetCopied, setSnippetCopied] = useState(false);
+
+  /** Matches the snippet the onboarding wizard hands out, from the same env vars. */
+  const snippet = org
+    ? `<script src="${WIDGET_SRC}" data-api-url="${API_URL}" data-org-key="${org.widgetKey}"></script>`
+    : "";
+
+  async function copySnippet() {
+    if (!snippet) return;
+    await navigator.clipboard.writeText(snippet);
+    setSnippetCopied(true);
+    setTimeout(() => setSnippetCopied(false), 1800);
+  }
 
   async function load() {
     const [data, wc] = await Promise.all([api.getOrg(), api.getWidgetConfig()]);
@@ -213,6 +229,29 @@ export function SettingsPage({ onWorkspaceRenamed }: { onWorkspaceRenamed?: (nam
             </div>
             <p className="field-help">
               The public key in your embed snippet. Rotating it disables existing embeds until you update them.
+            </p>
+          </div>
+        </div>
+
+        {/**
+         * The snippet used to exist only inside the onboarding wizard, which
+         * cannot be revisited once finished. Settings referred to "your embed
+         * snippet" while never showing one, so anyone who closed onboarding had
+         * no way back to the one thing they need to install Nexo.
+         */}
+        <div className="field-row">
+          <span className="field-label">Install snippet</span>
+          <div className="field-control">
+            <div className="install-snippet">
+              <code>{snippet || "Loading…"}</code>
+              <button type="button" className="btn-small" onClick={copySnippet} disabled={!org}>
+                {snippetCopied ? "Copied" : "Copy"}
+              </button>
+            </div>
+            <p className="field-help">
+              Paste this before the closing <code>&lt;/body&gt;</code> tag on your site. The{" "}
+              <code>data-org-key</code> ties the widget to this workspace, so it only ever answers from
+              your sources.
             </p>
           </div>
         </div>

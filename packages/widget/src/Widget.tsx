@@ -23,14 +23,29 @@ const GREETING = "Hi! Ask me anything. I'll cite my sources, and you can talk to
  */
 const FALLBACK_POLL_MS = 20000;
 
+/**
+ * Reading localStorage throws outright on pages where storage is blocked:
+ * private browsing in some browsers, sandboxed iframes, and strict
+ * cookie settings all do it. Unguarded, that exception escaped during the
+ * widget's first render and took the whole thing down, so a visitor on such a
+ * page saw no launcher at all rather than a working chat.
+ *
+ * Falling back to an id that lives only in memory keeps the conversation
+ * working for this page load. It will not survive a refresh, which is a far
+ * better failure than no support widget.
+ */
 function getSessionId(): string {
   const key = "nexo_session_id";
-  let id = localStorage.getItem(key);
-  if (!id) {
-    id = crypto.randomUUID();
-    localStorage.setItem(key, id);
+  try {
+    let id = localStorage.getItem(key);
+    if (!id) {
+      id = crypto.randomUUID();
+      localStorage.setItem(key, id);
+    }
+    return id;
+  } catch {
+    return crypto.randomUUID();
   }
-  return id;
 }
 
 /** Stands in for a logo until organisations can upload one. */

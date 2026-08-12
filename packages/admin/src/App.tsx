@@ -81,36 +81,52 @@ function Dashboard() {
           <div className="workspace-name">{user?.organization.name}</div>
           <NotificationBell />
         </div>
-        <div className="nav-links">
-          <NavLink to="/" end>
-            <span className="dot" />
-            Overview
-          </NavLink>
-          <NavLink to="/sources">
-            <span className="dot" />
-            Knowledge
-          </NavLink>
-          <NavLink to="/knowledge-gaps">
-            <span className="dot" />
-            Knowledge gaps
-          </NavLink>
-          <NavLink to="/impact">
-            <span className="dot" />
-            Impact
-          </NavLink>
-          <NavLink to="/conversations">
-            <span className="dot" />
-            Conversations
-          </NavLink>
-          <NavLink to="/leads">
-            <span className="dot" />
-            Leads
-          </NavLink>
-          <NavLink to="/settings">
-            <span className="dot" />
-            Settings
-          </NavLink>
-        </div>
+        {/**
+         * Grouped by what the operator is doing, and the Inbox sits second
+         * rather than fifth: it is the surface they work in all day, and a flat
+         * list of seven identical rows gave it no more weight than Leads.
+         */}
+        <nav className="nav-links" aria-label="Main">
+          <div className="nav-group">
+            <span className="nav-group-label">Today</span>
+            <NavLink to="/" end>
+              <span className="dot" />
+              Overview
+            </NavLink>
+            <NavLink to="/conversations">
+              <span className="dot" />
+              Inbox
+            </NavLink>
+            <NavLink to="/leads">
+              <span className="dot" />
+              Leads
+            </NavLink>
+          </div>
+
+          <div className="nav-group">
+            <span className="nav-group-label">Knowledge</span>
+            <NavLink to="/sources">
+              <span className="dot" />
+              Sources
+            </NavLink>
+            <NavLink to="/knowledge-gaps">
+              <span className="dot" />
+              Knowledge gaps
+            </NavLink>
+          </div>
+
+          <div className="nav-group">
+            <span className="nav-group-label">Workspace</span>
+            <NavLink to="/impact">
+              <span className="dot" />
+              Impact
+            </NavLink>
+            <NavLink to="/settings">
+              <span className="dot" />
+              Settings
+            </NavLink>
+          </div>
+        </nav>
         <div className="sidebar-spacer" />
         <div className="sidebar-email">{user?.email}</div>
         <button className="sidebar-logout" onClick={handleLogout}>

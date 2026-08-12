@@ -6,9 +6,16 @@ function initials(sessionId: string) {
   return sessionId.slice(0, 2).toUpperCase();
 }
 
-function lastUserMessage(c: Conversation) {
-  const last = [...c.messages].reverse().find((m) => m.role === "user");
-  return last?.content ?? "(no message yet)";
+/** What the customer opened with, which is what identifies a thread to an operator. */
+function subjectOf(c: Conversation) {
+  return c.messages.find((m) => m.role === "user")?.content.trim() || "No message yet";
+}
+
+function latestReply(c: Conversation) {
+  const last = c.messages[c.messages.length - 1];
+  if (!last) return "";
+  const who = last.role === "user" ? "Customer" : last.role === "agent" ? "You" : "Nexo";
+  return `${who}: ${last.content.trim()}`;
 }
 
 export function AnalyticsPage() {
@@ -43,6 +50,7 @@ export function AnalyticsPage() {
       <div className="page-top">
         <div>
           <h1>Overview</h1>
+          <p className="sub">What needs a person right now, and how Nexo is doing on the rest.</p>
         </div>
       </div>
 
@@ -77,6 +85,13 @@ export function AnalyticsPage() {
         </div>
       )}
 
+      {/**
+       * The queue leads the page. These figures are how the operation is
+       * trending, which matters, but never before the list of people currently
+       * waiting on a reply.
+       */}
+      {hasConversations && <NeedsAttention />}
+
       <div className="kpis">
         <div className="kpi">
           <div className="kl">Total conversations</div>
@@ -101,8 +116,6 @@ export function AnalyticsPage() {
         </div>
       </div>
 
-      {hasConversations && <NeedsAttention />}
-
       <div className="row">
         <div className="card">
           <h3>Recent conversations</h3>
@@ -111,8 +124,8 @@ export function AnalyticsPage() {
             <div className="list-item" key={c.id}>
               <div className="avatar mono">{initials(c.sessionId)}</div>
               <div className="list-info">
-                <div className="li-title">{c.sessionId.slice(0, 8)}…</div>
-                <div className="li-sub">{lastUserMessage(c)}</div>
+                <div className="li-title">{subjectOf(c)}</div>
+                <div className="li-sub">{latestReply(c)}</div>
               </div>
               <span className={`badge ${c.status}`}>{c.status}</span>
             </div>
@@ -123,11 +136,12 @@ export function AnalyticsPage() {
         <div className="card">
           <h3>Recent escalations</h3>
           <div className="card-sub">Handed off to a human</div>
+          {/** The reason was its own line above a summary that restated it, so the summary carries the row. */}
           {data.recentEscalations.slice(0, 6).map((e) => (
             <div className="list-item" key={e.id}>
               <div className="list-info">
-                <div className="li-title">{e.reason.replace(/_/g, " ")}</div>
-                <div className="li-sub">{e.summary}</div>
+                <div className="li-title escalation-summary">{e.summary}</div>
+                <div className="li-sub">{new Date(e.createdAt).toLocaleString()}</div>
               </div>
             </div>
           ))}

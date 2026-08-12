@@ -6,6 +6,9 @@ import { subscribeToUpdates } from "../realtime";
 /** The realtime stream drives updates; this only covers a stream that never connected. */
 const FALLBACK_REFRESH_MS = 60000;
 
+/** A queue this long stops reading as a queue, so the rest is one click away. */
+const COLLAPSED_COUNT = 6;
+
 function waitedFor(iso: string) {
   const minutes = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
   if (minutes < 1) return "just now";
@@ -20,14 +23,6 @@ function headline(item: AttentionItem) {
   if (item.type === "reopened") return "Came back after being resolved";
   if (item.type === "customer_replied") return "Customer replied after handoff";
   return item.reason === "user_requested" ? "Customer asked for a person" : "Nexo could not answer";
-}
-
-function detail(item: AttentionItem) {
-  if (item.type === "reopened") return "The customer raised this again on a resolved conversation";
-  if (item.type === "customer_replied") return "Waiting on your follow-up";
-  return item.reason === "user_requested"
-    ? "Escalated on request"
-    : "Escalated on low confidence, possible knowledge gap";
 }
 
 function actionLabel(item: AttentionItem) {
@@ -55,6 +50,7 @@ export function NeedsAttention() {
   const [items, setItems] = useState<AttentionItem[] | null>(null);
   const [me, setMe] = useState<AuthUser | null>(null);
   const [mineOnly, setMineOnly] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -81,18 +77,23 @@ export function NeedsAttention() {
 
   const mineCount = items.filter((i) => i.assignee?.id === me?.id).length;
   const visible = mineOnly ? items.filter((i) => i.assignee?.id === me?.id) : items;
+  const shown = expanded ? visible : visible.slice(0, COLLAPSED_COUNT);
+  const hidden = visible.length - shown.length;
 
   return (
     <div className="card attention-card">
       <div className="attention-head">
-        <h3>Needs attention</h3>
+        <div>
+          <h3>Needs attention</h3>
+          <div className="card-sub">Conversations where someone is waiting on a person</div>
+        </div>
         <div className="attention-head-right">
-          <div className="attention-filter" role="group" aria-label="Filter by owner">
+          <div className="segmented" role="group" aria-label="Filter by owner">
             <button className={mineOnly ? "" : "on"} onClick={() => setMineOnly(false)}>
               Everyone
             </button>
             <button className={mineOnly ? "on" : ""} onClick={() => setMineOnly(true)}>
-              Mine {mineCount > 0 && <span className="filter-count">{mineCount}</span>}
+              Mine {mineCount > 0 && <span className="seg-count">{mineCount}</span>}
             </button>
           </div>
           <span className={`attention-count ${severity(visible)}`}>
@@ -111,7 +112,7 @@ export function NeedsAttention() {
         </p>
       )}
 
-      {visible.map((item) => (
+      {shown.map((item) => (
         <div
           className="list-item attention-item"
           key={item.conversationId}
@@ -120,21 +121,37 @@ export function NeedsAttention() {
         >
           <span className={`attention-dot ${item.type}`} aria-hidden="true" />
           <div className="list-info">
-            <div className="li-title">
-              {headline(item)}
+            {/**
+             * The customer's own words lead. The reason it landed here is
+             * useful context, but it repeats across most rows, so as a title it
+             * made eighteen different problems look like one.
+             */}
+            <div className="li-title attention-question">
+              {item.preview}
               {item.reopenCount > 0 && (
                 <span className="recurrence-tag">{recurrenceLabel(item.reopenCount)}</span>
               )}
             </div>
-            <div className="li-sub attention-preview">{item.preview}</div>
+            {/** The reason used to appear twice per row in two phrasings, which read as noise once stacked. */}
             <div className="attention-meta">
-              {detail(item)} · waiting {waitedFor(item.since)} ·{" "}
+              <span className="attention-reason">{headline(item)}</span> · waiting {waitedFor(item.since)} ·{" "}
               <span className={item.assignee ? "owner-set" : "owner-none"}>{ownerLabel(item, me?.id)}</span>
             </div>
           </div>
           <span className="attention-action">{actionLabel(item)} →</span>
         </div>
       ))}
+
+      {hidden > 0 && (
+        <button className="attention-more" onClick={() => setExpanded(true)}>
+          Show {hidden} more
+        </button>
+      )}
+      {expanded && visible.length > COLLAPSED_COUNT && (
+        <button className="attention-more" onClick={() => setExpanded(false)}>
+          Show less
+        </button>
+      )}
     </div>
   );
 }

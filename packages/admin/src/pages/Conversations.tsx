@@ -1,10 +1,26 @@
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { api, type Conversation, type OrgMember } from "../api";
+import { api, type AuthUser, type Conversation, type Escalation, type Message, type OrgMember } from "../api";
 import { subscribeToUpdates } from "../realtime";
+import { Select } from "../components/Select";
 
 /** The realtime stream drives updates; this only covers a stream that never connected. */
 const FALLBACK_REFRESH_MS = 30000;
+
+/**
+ * The queue an operator actually works: what is open, what is on them, what
+ * nobody has picked up. "Resolved" is last because it is the archive, not work.
+ */
+type Filter = "open" | "mine" | "unassigned" | "escalated" | "resolved" | "all";
+
+const FILTERS: { id: Filter; label: string }[] = [
+  { id: "open", label: "Open" },
+  { id: "mine", label: "Mine" },
+  { id: "unassigned", label: "Unassigned" },
+  { id: "escalated", label: "Escalated" },
+  { id: "resolved", label: "Resolved" },
+  { id: "all", label: "All" },
+];
 
 function initials(sessionId: string) {
   return sessionId.slice(0, 2).toUpperCase();
@@ -12,6 +28,96 @@ function initials(sessionId: string) {
 
 function recurrenceLabel(count: number) {
   return count === 1 ? "Reopened once" : `Reopened ${count} times`;
+}
+
+function timeAgo(iso: string) {
+  const minutes = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes}m`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `${hours}h`;
+  const days = Math.round(hours / 24);
+  if (days < 30) return `${days}d`;
+  return new Date(iso).toLocaleDateString();
+}
+
+/**
+ * The list used to be labelled with a truncated session id, which told an
+ * operator nothing about what the person wanted. The customer's opening
+ * question is the only label that lets someone triage a queue at a glance.
+ */
+function subjectOf(conversation: Conversation): string {
+  const firstFromCustomer = conversation.messages.find((m) => m.role === "user");
+  return firstFromCustomer?.content.trim() || "No message yet";
+}
+
+function lastMessage(conversation: Conversation): Message | null {
+  return conversation.messages[conversation.messages.length - 1] ?? null;
+}
+
+function previewOf(conversation: Conversation): string {
+  const last = lastMessage(conversation);
+  if (!last) return "";
+  const who = last.role === "user" ? "Customer" : last.role === "agent" ? "You" : "Nexo";
+  return `${who}: ${last.content.trim()}`;
+}
+
+const REASON_LABELS: Record<string, string> = {
+  low_confidence: "Nexo was not confident enough to answer",
+  user_requested: "The customer asked for a person",
+  agent_requested: "An operator flagged this for a human",
+};
+
+function reasonLabel(reason: string): string {
+  return REASON_LABELS[reason] ?? reason.replace(/_/g, " ");
+}
+
+/** The handoff that is still open, falling back to the most recent one for resolved threads. */
+function activeEscalation(conversation: Conversation) {
+  return (
+    conversation.escalations.find((e) => e.status === "pending") ??
+    conversation.escalations[conversation.escalations.length - 1] ??
+    null
+  );
+}
+
+/**
+ * What the customer asked when the handoff happened. Escalations recorded
+ * before the question was captured have none, so it falls back to their last
+ * message before that moment rather than showing nothing or inventing a label.
+ */
+function triggeringQuestion(conversation: Conversation, escalation: Escalation): string | null {
+  if (escalation.question) return escalation.question;
+  const at = new Date(escalation.createdAt).getTime();
+  const before = conversation.messages.filter(
+    (m) => m.role === "user" && new Date(m.createdAt).getTime() <= at,
+  );
+  return before[before.length - 1]?.content.trim() ?? null;
+}
+
+/** Every source Nexo cited in this thread, deduplicated, so the operator sees what it read. */
+function knowledgeUsed(conversation: Conversation): string[] {
+  const names = new Set<string>();
+  for (const message of conversation.messages) {
+    for (const citation of message.citations ?? []) names.add(citation.sourceName);
+  }
+  return [...names];
+}
+
+/** Waiting on a person: the customer spoke last, or a handoff is still pending. */
+function needsReply(conversation: Conversation): boolean {
+  if (conversation.status === "resolved") return false;
+  if (conversation.escalations.some((e) => e.status === "pending")) return true;
+  return lastMessage(conversation)?.role === "user";
+}
+
+function matchesFilter(conversation: Conversation, filter: Filter, meId?: string): boolean {
+  if (filter === "all") return true;
+  if (filter === "resolved") return conversation.status === "resolved";
+  if (filter === "escalated") return conversation.status === "escalated";
+  if (filter === "open") return conversation.status !== "resolved";
+  if (filter === "mine") return conversation.assignedUserId === meId && conversation.status !== "resolved";
+  return conversation.status !== "resolved" && !conversation.assignedUserId;
 }
 
 /**
@@ -33,6 +139,11 @@ export function ConversationsPage() {
   const [replyText, setReplyText] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [filter, setFilter] = useState<Filter>("open");
+  const [query, setQuery] = useState("");
+  const [me, setMe] = useState<AuthUser | null>(null);
+  const [noteText, setNoteText] = useState("");
+  const [savingNote, setSavingNote] = useState(false);
 
   async function refresh() {
     setConversations(await api.listConversations());
@@ -50,6 +161,7 @@ export function ConversationsPage() {
 
   useEffect(() => {
     api.getOrg().then((org) => setMembers(org.members)).catch(() => {});
+    api.me().then(setMe).catch(() => {});
   }, []);
 
   /** Deep-link support: a notification click sets ?id=, which may arrive after this page has already mounted. */
@@ -63,6 +175,8 @@ export function ConversationsPage() {
 
   function selectConversation(id: string) {
     setSelectedId(id);
+    setReplyText("");
+    setError(null);
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
       next.set("id", id);
@@ -70,8 +184,42 @@ export function ConversationsPage() {
     });
   }
 
+  const counts = useMemo(() => {
+    const of = (f: Filter) => conversations.filter((c) => matchesFilter(c, f, me?.id)).length;
+    return {
+      open: of("open"),
+      mine: of("mine"),
+      unassigned: of("unassigned"),
+      escalated: of("escalated"),
+      resolved: of("resolved"),
+      all: conversations.length,
+    };
+  }, [conversations, me]);
+
+  const visible = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    return conversations.filter((c) => {
+      if (!matchesFilter(c, filter, me?.id)) return false;
+      if (!needle) return true;
+      return (
+        c.sessionId.toLowerCase().includes(needle) ||
+        c.messages.some((m) => m.content.toLowerCase().includes(needle))
+      );
+    });
+  }, [conversations, filter, query, me]);
+
   const selected = conversations.find((c) => c.id === selectedId) ?? null;
   const markerId = selected ? reopenMarkerId(selected) : null;
+
+  /**
+   * Landing on an empty reading pane wastes the operator's first move, so the
+   * top of the current filter opens by itself. A deep link still wins, since
+   * `selectedId` is already set by the time this runs.
+   */
+  useEffect(() => {
+    if (selected || visible.length === 0) return;
+    setSelectedId(visible[0].id);
+  }, [selected, visible]);
 
   async function handleSend() {
     const text = replyText.trim();
@@ -111,100 +259,303 @@ export function ConversationsPage() {
     }
   }
 
+  /** One click to take ownership, rather than hunting for your own name in a picker. */
+  async function handleClaim() {
+    if (!selected || !me) return;
+    await handleAssign(me.id);
+  }
+
+  async function handleReopen() {
+    if (!selected) return;
+    setError(null);
+    try {
+      await api.reopenConversation(selected.id);
+      await refresh();
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  }
+
+  async function handleAddNote() {
+    const text = noteText.trim();
+    if (!text || !selected || savingNote) return;
+    setSavingNote(true);
+    setError(null);
+    try {
+      await api.addNote(selected.id, text);
+      setNoteText("");
+      await refresh();
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setSavingNote(false);
+    }
+  }
+
+  async function handleEscalate() {
+    if (!selected) return;
+    setError(null);
+    try {
+      await api.escalateConversation(selected.id);
+      await refresh();
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  }
+
   return (
     <div>
       <div className="page-top">
         <div>
-          <h1>Conversations</h1>
+          <h1>Inbox</h1>
+          <p className="sub">Everything Nexo is handling, and everything still waiting on a person.</p>
         </div>
       </div>
 
-      <div className="row" style={{ alignItems: "flex-start" }}>
-        <div className="card">
-          <h3>All conversations</h3>
-          <div className="card-sub">{conversations.length} total</div>
-          {conversations.map((c) => (
-            <div
-              className={`list-item${c.id === selectedId ? " selected" : ""}`}
-              key={c.id}
-              data-clickable
-              onClick={() => selectConversation(c.id)}
-            >
-              <div className="avatar mono">{initials(c.sessionId)}</div>
-              <div className="list-info">
-                <div className="li-title">
-                  {c.sessionId.slice(0, 8)}…
-                  {c.reopenCount > 0 && <span className="recurrence-tag">{recurrenceLabel(c.reopenCount)}</span>}
-                </div>
-                <div className="li-sub">{new Date(c.createdAt).toLocaleString()}</div>
-              </div>
-              <span className={`badge ${c.status}`}>{c.status}</span>
+      {/**
+       * A workspace with no conversations at all gets guidance rather than the
+       * two-pane skeleton, which otherwise shows an empty queue next to an
+       * empty reading pane at exactly the moment someone needs telling what to
+       * do next. Filters and search only appear once there is something to filter.
+       */}
+      {conversations.length === 0 ? (
+        <div className="card conv-onboarding">
+          <h3>No conversations yet</h3>
+          <p>
+            Conversations land here the moment a visitor asks the widget something. Nexo answers from
+            your knowledge sources, and anything it cannot answer arrives here for a person.
+          </p>
+          <div className="page-actions">
+            <a className="btn btn-primary" href="/settings">
+              Get the widget snippet
+            </a>
+            <a className="btn btn-ghost" href="/sources">
+              Add a knowledge source
+            </a>
+          </div>
+        </div>
+      ) : (
+      <div className="conv-split">
+        <div className="card conv-list-card">
+          <div className="conv-toolbar">
+            <div className="segmented" role="group" aria-label="Filter conversations">
+              {FILTERS.map((f) => (
+                <button
+                  key={f.id}
+                  className={filter === f.id ? "on" : ""}
+                  onClick={() => setFilter(f.id)}
+                  aria-pressed={filter === f.id}
+                >
+                  {f.label}
+                  <span className="seg-count">{counts[f.id]}</span>
+                </button>
+              ))}
             </div>
-          ))}
-          {conversations.length === 0 && (
-            <p className="empty-note">No conversations yet. Try the widget demo.</p>
-          )}
+            <input
+              type="text"
+              className="conv-search"
+              placeholder="Search messages…"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              aria-label="Search conversations"
+            />
+          </div>
+
+          <div className="conv-list">
+            {visible.map((c) => (
+              <button
+                key={c.id}
+                className={`conv-row${c.id === selectedId ? " selected" : ""}`}
+                onClick={() => selectConversation(c.id)}
+              >
+                <div className="avatar mono">{initials(c.sessionId)}</div>
+                <div className="conv-row-body">
+                  <div className="conv-row-top">
+                    <span className="conv-subject">{subjectOf(c)}</span>
+                    <span className="conv-when">{timeAgo(c.createdAt)}</span>
+                  </div>
+                  <div className="conv-preview">{previewOf(c)}</div>
+                  <div className="conv-row-meta">
+                    <span className={`badge ${c.status}`}>{c.status}</span>
+                    {needsReply(c) && <span className="badge waiting">needs reply</span>}
+                    {c.reopenCount > 0 && (
+                      <span className="recurrence-tag">{recurrenceLabel(c.reopenCount)}</span>
+                    )}
+                    {c.assignedUser && <span className="conv-owner">{c.assignedUser.name}</span>}
+                  </div>
+                </div>
+              </button>
+            ))}
+            {visible.length === 0 && (
+              <p className="empty-note">
+                {conversations.length === 0
+                  ? "No conversations yet. Try the widget demo."
+                  : "Nothing matches this filter."}
+              </p>
+            )}
+          </div>
         </div>
 
-        {selected && (
-          <div className="card">
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <h3>Transcript</h3>
-              <span className={`badge ${selected.status}`}>{selected.status}</span>
-            </div>
-            <div className="card-sub">
-              {selected.sessionId.slice(0, 8)}… · {selected.channel}
-              {selected.reopenCount > 0 && ` · ${recurrenceLabel(selected.reopenCount).toLowerCase()}`}
+        {selected ? (
+          <div className="card conv-detail-card">
+            <div className="conv-detail-head">
+              <div className="conv-detail-title">
+                <h3>{subjectOf(selected)}</h3>
+                <div className="card-sub">
+                  {selected.sessionId.slice(0, 8)}… · {selected.channel} · started{" "}
+                  {new Date(selected.createdAt).toLocaleString()}
+                  {selected.reopenCount > 0 &&
+                    ` · ${recurrenceLabel(selected.reopenCount).toLowerCase()}`}
+                </div>
+              </div>
+              <div className="conv-detail-controls">
+                <span className={`badge ${selected.status}`}>{selected.status}</span>
+                {selected.assignedUserId !== me?.id && selected.status !== "resolved" && (
+                  <button className="btn-small" onClick={handleClaim}>
+                    Claim
+                  </button>
+                )}
+                <Select
+                  className="assign-select"
+                  ariaLabel="Owner"
+                  value={selected.assignedUserId ?? ""}
+                  onChange={handleAssign}
+                  options={[
+                    { value: "", label: "Unassigned" },
+                    ...members.map((m) => ({ value: m.id, label: m.name })),
+                  ]}
+                />
+              </div>
             </div>
 
-            <div className="assign-row">
-              <label htmlFor="assignee">Owner</label>
-              <select
-                id="assignee"
-                className="assign-select"
-                value={selected.assignedUserId ?? ""}
-                onChange={(e) => handleAssign(e.target.value)}
-              >
-                <option value="">Unassigned</option>
-                {members.map((m) => (
-                  <option value={m.id} key={m.id}>
-                    {m.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            {selected.messages.map((m) => (
-              <Fragment key={m.id}>
-                {m.id === markerId && (
-                  <div className="reopen-marker">
-                    <span>
-                      Reopened {new Date(selected.lastReopenedAt!).toLocaleString()}, after this was resolved
-                    </span>
-                  </div>
-                )}
-                <div className={`msg ${m.role === "user" ? "user" : m.role === "agent" ? "agent" : "bot"}`}>
-                  {m.role === "agent" && <div className="msg-author">You</div>}
-                  {m.content}
-                  {m.citations && m.citations.length > 0 && (
-                    <div>
-                      {m.citations.map((c) => (
-                        <span className="cite" key={c.id}>
-                          {c.sourceName}
+            {/**
+             * Everything the person taking over needs before they read a word
+             * of the transcript: why Nexo stopped, what was asked, and which
+             * sources it had. Fields with no data are omitted rather than
+             * shown empty, so the panel never pads itself out.
+             */}
+            {(() => {
+              const escalation = activeEscalation(selected);
+              if (!escalation) return null;
+              const asked = triggeringQuestion(selected, escalation);
+              const sources = knowledgeUsed(selected);
+              return (
+                <div className="conv-context">
+                  <div className="conv-context-head">Context for your team</div>
+                  <dl className="conv-context-grid">
+                    <dt>Reason</dt>
+                    <dd>{reasonLabel(escalation.reason)}</dd>
+
+                    {asked && (
+                      <>
+                        <dt>They asked</dt>
+                        <dd className="conv-context-quote">“{asked}”</dd>
+                      </>
+                    )}
+
+                    <dt>Knowledge used</dt>
+                    <dd>
+                      {sources.length > 0 ? (
+                        <span className="conv-context-sources">
+                          {sources.map((s) => (
+                            <span className="cite" key={s}>
+                              {s}
+                            </span>
+                          ))}
                         </span>
-                      ))}
-                    </div>
-                  )}
-                  {m.confidence != null && (
-                    <div style={{ fontSize: 11, color: "var(--slate-soft)", marginTop: 6 }}>
-                      confidence {m.confidence.toFixed(2)}
-                    </div>
-                  )}
+                      ) : (
+                        <span className="conv-context-none">
+                          Nothing matched, which is usually the gap itself
+                        </span>
+                      )}
+                    </dd>
+
+                    <dt>Handed off</dt>
+                    <dd>
+                      {new Date(escalation.createdAt).toLocaleString()} ·{" "}
+                      {escalation.status === "pending" ? "still waiting" : "picked up"}
+                    </dd>
+                  </dl>
+                  <p className="conv-context-summary">{escalation.summary}</p>
                 </div>
-              </Fragment>
-            ))}
+              );
+            })()}
+
+            {/** Team-only. Kept visually distinct so nobody mistakes it for something the customer can read. */}
+            <div className="conv-notes">
+              <div className="conv-notes-head">
+                Internal notes
+                <span className="conv-notes-hint">Only your team sees these</span>
+              </div>
+              {selected.notes.length > 0 && (
+                <ul className="conv-note-list">
+                  {selected.notes.map((n) => (
+                    <li key={n.id}>
+                      <span className="conv-note-body">{n.body}</span>
+                      <span className="conv-note-meta">
+                        {n.author?.name ?? "Someone"} · {new Date(n.createdAt).toLocaleString()}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <div className="field-inline">
+                <input
+                  type="text"
+                  value={noteText}
+                  placeholder="Leave a note for your team…"
+                  aria-label="Add an internal note"
+                  onChange={(e) => setNoteText(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleAddNote();
+                  }}
+                />
+                <button className="btn-small" onClick={handleAddNote} disabled={savingNote || !noteText.trim()}>
+                  {savingNote ? "Saving…" : "Add note"}
+                </button>
+              </div>
+            </div>
+
+            <div className="conv-transcript">
+              {selected.messages.map((m) => (
+                <Fragment key={m.id}>
+                  {m.id === markerId && (
+                    <div className="reopen-marker">
+                      <span>
+                        Reopened {new Date(selected.lastReopenedAt!).toLocaleString()}, after this was
+                        resolved
+                      </span>
+                    </div>
+                  )}
+                  <div
+                    className={`msg ${m.role === "user" ? "user" : m.role === "agent" ? "agent" : "bot"}`}
+                  >
+                    {m.role === "agent" && <div className="msg-author">You</div>}
+                    {m.content}
+                    {m.citations && m.citations.length > 0 && (
+                      <div className="msg-cites">
+                        {m.citations.map((c) => (
+                          <span className="cite" key={c.id}>
+                            {c.sourceName}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {m.confidence != null && (
+                      <div className="msg-confidence">confidence {m.confidence.toFixed(2)}</div>
+                    )}
+                  </div>
+                </Fragment>
+              ))}
+            </div>
 
             {selected.status === "resolved" ? (
-              <p className="empty-note" style={{ marginTop: 14 }}>This conversation is resolved.</p>
+              <div className="conv-resolved-note">
+                <span className="empty-note">This conversation is resolved.</span>
+                <button className="btn-small" onClick={handleReopen}>
+                  Reopen
+                </button>
+              </div>
             ) : (
               <div className="reply-box">
                 <textarea
@@ -219,18 +570,38 @@ export function ConversationsPage() {
                 />
                 {error && <p className="error-text">{error}</p>}
                 <div className="reply-actions">
-                  <button className="btn-small" onClick={handleResolve}>
-                    Resolve
-                  </button>
-                  <button className="btn btn-primary" onClick={handleSend} disabled={sending || !replyText.trim()}>
-                    {sending ? "Sending…" : "Send reply"}
-                  </button>
+                  <span className="reply-hint">Ctrl + Enter to send</span>
+                  <div className="page-actions">
+                    {selected.status !== "escalated" && (
+                      <button className="btn-small" onClick={handleEscalate}>
+                        Escalate
+                      </button>
+                    )}
+                    <button className="btn-small" onClick={handleResolve}>
+                      Resolve
+                    </button>
+                    <button
+                      className="btn btn-primary"
+                      onClick={handleSend}
+                      disabled={sending || !replyText.trim()}
+                    >
+                      {sending ? "Sending…" : "Send reply"}
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
           </div>
+        ) : (
+          <div className="card conv-detail-card conv-empty">
+            <div className="conv-empty-inner">
+              <h3>Select a conversation</h3>
+              <p>Pick a thread on the left to read the transcript and reply.</p>
+            </div>
+          </div>
         )}
       </div>
+      )}
     </div>
   );
 }

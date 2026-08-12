@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { WizardShell } from "../WizardShell";
+import { Select } from "../../components/Select";
 
 const INDUSTRIES = ["SaaS", "E-commerce", "Property management", "Healthcare", "Financial services", "Other"];
 
@@ -41,13 +42,13 @@ export function CreateWorkspaceStep({
         </div>
         <div className="field">
           <label htmlFor="ob-industry">Industry</label>
-          <select id="ob-industry" value={industry} onChange={(e) => setIndustry(e.target.value)}>
-            {INDUSTRIES.map((i) => (
-              <option key={i} value={i}>
-                {i}
-              </option>
-            ))}
-          </select>
+          <Select
+            id="ob-industry"
+            ariaLabel="Industry"
+            value={industry}
+            onChange={setIndustry}
+            options={INDUSTRIES.map((i) => ({ value: i, label: i }))}
+          />
         </div>
         <div className="field">
           <label htmlFor="ob-website">Website</label>

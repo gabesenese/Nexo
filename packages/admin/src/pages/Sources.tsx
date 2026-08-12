@@ -296,6 +296,18 @@ export function SourcesPage() {
                       }`
                     : progressLabel(s)}
                 </div>
+                {/**
+                 * Whether a source is actually earning its place. A source
+                 * that has never been cited is either redundant or not
+                 * reaching the questions people ask.
+                 */}
+                {s.status === "ready" && (
+                  <div className="source-usage">
+                    {s.answersCited > 0
+                      ? `Cited in ${s.answersCited} answer${s.answersCited === 1 ? "" : "s"}`
+                      : "Not cited in any answer yet"}
+                  </div>
+                )}
               </div>
               <span className={`badge ${statusBadgeClass(s.status)}`}>{sourceStatusLabel(s.status)}</span>
             </div>

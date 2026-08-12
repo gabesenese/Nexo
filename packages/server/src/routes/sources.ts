@@ -44,12 +44,32 @@ function serializeSource(s: {
 
 export async function sourcesRoutes(app: FastifyInstance) {
   app.get("/api/sources", { preHandler: requireAuth }, async (req) => {
+    const organizationId = req.auth!.organizationId;
     const sources = await prisma.source.findMany({
-      where: { organizationId: req.auth!.organizationId },
+      where: { organizationId },
       orderBy: { createdAt: "desc" },
       include: { _count: { select: { chunks: true } } },
     });
-    return sources.map(serializeSource);
+
+    /**
+     * How often each source actually carried an answer. Citations record the
+     * chunk they came from, so this attributes by chunk id rather than by
+     * source name, which would silently break the moment a source is renamed.
+     */
+    const cited = await prisma.$queryRaw<{ sourceId: string; answers: number }[]>`
+      SELECT s.id AS "sourceId", COUNT(DISTINCT m.id)::int AS answers
+      FROM "Source" s
+      LEFT JOIN "Chunk" c ON c."sourceId" = s.id
+      LEFT JOIN "Message" m ON m.citations @> jsonb_build_array(jsonb_build_object('id', c.id))
+      WHERE s."organizationId" = ${organizationId}
+      GROUP BY s.id
+    `;
+    const answersBySource = new Map(cited.map((row) => [row.sourceId, row.answers]));
+
+    return sources.map((source) => ({
+      ...serializeSource(source),
+      answersCited: answersBySource.get(source.id) ?? 0,
+    }));
   });
 
   app.post<{ Body: { url: string } }>("/api/sources/help-center", { preHandler: requireAuth }, async (req, reply) => {

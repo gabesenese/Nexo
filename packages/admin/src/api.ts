@@ -88,6 +88,8 @@ export interface SourceSummary {
   lastSyncedAt: string | null;
   createdAt: string;
   chunkCount: number;
+  /** Distinct answers that cited this source. */
+  answersCited: number;
 }
 
 export interface QueuedSource {
@@ -179,6 +181,13 @@ export interface ImpactSummary {
   estimated: { hoursAvoided: number; costAvoidedCad: number } | null;
 }
 
+export interface GapCoverage {
+  source: string | null;
+  sourceId: string | null;
+  similarity: number | null;
+  covered: boolean;
+}
+
 export interface KnowledgeGapVariant {
   question: string;
   conversationId: string;
@@ -193,6 +202,7 @@ export interface KnowledgeGap {
   lastSeen: string;
   averageConfidence: number | null;
   unanswered: number;
+  coverage: GapCoverage;
   variants: KnowledgeGapVariant[];
 }
 

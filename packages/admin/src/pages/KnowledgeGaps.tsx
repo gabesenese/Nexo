@@ -101,8 +101,45 @@ export function KnowledgeGapsPage() {
                           <span className="gap-waiting"> · {gap.unanswered} still waiting</span>
                         )}
                       </div>
+                      {/**
+                       * The whole point of the page: nothing on the subject
+                       * means the content must be written, whereas something
+                       * close means it exists and did not carry the answer.
+                       * Those are different jobs, so they read differently.
+                       */}
+                      <div className="gap-coverage">
+                        {gap.coverage.covered ? (
+                          <>
+                            <span className="gap-coverage-label">Closest source</span>
+                            <span className="gap-coverage-source">{gap.coverage.source}</span>
+                            <span className="gap-coverage-note">
+                              covered, but the answer was not confident enough
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="gap-coverage-label none">No source covers this</span>
+                            <span className="gap-coverage-note">
+                              {gap.coverage.source
+                                ? `nearest is ${gap.coverage.source}, and it is not on the subject`
+                                : "nothing is indexed yet"}
+                            </span>
+                          </>
+                        )}
+                      </div>
                     </div>
-                    <span className="badge neutral">{open ? "Hide" : "Show asks"}</span>
+                    <div className="gap-actions">
+                      <button
+                        className="btn-small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate("/sources");
+                        }}
+                      >
+                        {gap.coverage.covered ? "Improve source" : "Add knowledge"}
+                      </button>
+                      <span className="badge neutral">{open ? "Hide" : "Show asks"}</span>
+                    </div>
                   </div>
 
                   {open && (

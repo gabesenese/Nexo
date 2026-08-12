@@ -2402,6 +2402,53 @@ textarea::placeholder {
   flex-shrink: 0;
 }
 
+.source-usage {
+  font-size: var(--t-xs);
+  color: var(--slate-soft);
+  margin-top: 2px;
+}
+
+.gap-coverage {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--s2);
+  margin-top: var(--s2);
+}
+
+.gap-coverage-label {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--teal-dark);
+  background: var(--mist);
+  padding: 2px 7px;
+  border-radius: var(--r-pill);
+}
+
+.gap-coverage-label.none {
+  color: var(--sand-ink);
+  background: var(--sand);
+}
+
+.gap-coverage-source {
+  font-size: var(--t-sm);
+  color: var(--ink);
+}
+
+.gap-coverage-note {
+  font-size: var(--t-xs);
+  color: var(--slate-soft);
+}
+
+.gap-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  flex-shrink: 0;
+}
+
 .gap-meta {
   margin-top: 2px;
 }

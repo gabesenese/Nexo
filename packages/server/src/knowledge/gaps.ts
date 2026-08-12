@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "../db/client.js";
 import { embeddingProvider } from "../ingestion/embeddings.js";
 
@@ -17,6 +18,35 @@ const SIMILARITY_THRESHOLD = 0.57;
  */
 const GAP_REASON = "low_confidence";
 
+/**
+ * Below this cosine similarity, nothing in the library is on the subject at
+ * all. Measured the same way as SIMILARITY_THRESHOLD rather than guessed:
+ * against a workspace whose only source is Stripe's refund documentation,
+ * questions that source genuinely answers scored 0.669 to 0.800, while
+ * questions on subjects it never mentions (SSO, data residency, rate limits,
+ * seats, uptime) scored 0.423 to 0.473. The bands do not overlap and this sits
+ * between them.
+ *
+ * The measurement used one source on one topic, so it is a starting point
+ * rather than a settled number. Re-measure both bands against a broader
+ * library before moving it, exactly as the clustering threshold requires.
+ */
+const COVERAGE_THRESHOLD = 0.57;
+
+/**
+ * Whether the library has anything on this subject, which decides what the
+ * operator should actually do. Nothing close means the content does not exist
+ * and has to be written. Something close means it exists but did not carry the
+ * answer, so the fix is to improve that source. Those are different jobs and
+ * the page should not blur them.
+ */
+export interface GapCoverage {
+  source: string | null;
+  sourceId: string | null;
+  similarity: number | null;
+  covered: boolean;
+}
+
 export interface KnowledgeGap {
   id: string;
   question: string;
@@ -25,6 +55,7 @@ export interface KnowledgeGap {
   lastSeen: string;
   averageConfidence: number | null;
   unanswered: number;
+  coverage: GapCoverage;
   variants: { question: string; conversationId: string; createdAt: string }[];
 }
 
@@ -144,6 +175,11 @@ export async function findKnowledgeGaps(organizationId: string): Promise<Knowled
   }));
 
   const groups = groupBySimilarity(parsed);
+  const representatives = groups.map((members) => mostRepresentative(members));
+  const coverage = await coverageFor(
+    organizationId,
+    representatives.map((r) => r.id),
+  );
 
   return groups
     .map((members) => {
@@ -166,6 +202,12 @@ export async function findKnowledgeGaps(organizationId: string): Promise<Knowled
           ? scored.reduce((sum, m) => sum + (m.confidence ?? 0), 0) / scored.length
           : null,
         unanswered: members.filter((m) => m.status === "pending").length,
+        coverage: coverage.get(representative.id) ?? {
+          source: null,
+          sourceId: null,
+          similarity: null,
+          covered: false,
+        },
         variants: sorted.slice(0, 8).map((m) => ({
           question: m.question,
           conversationId: m.conversationId,
@@ -174,6 +216,51 @@ export async function findKnowledgeGaps(organizationId: string): Promise<Knowled
       };
     })
     .sort((a, b) => b.occurrences - a.occurrences || +new Date(b.lastSeen) - +new Date(a.lastSeen));
+}
+
+/**
+ * Nearest indexed chunk to each gap's representative question, reusing the
+ * embedding already stored at escalation time so nothing is re-embedded.
+ *
+ * This deliberately measures raw cosine similarity rather than reusing
+ * `hybridSearch`, whose scores are min-max normalised within their own result
+ * set: its top hit always scores near 1 regardless of how poor the match is,
+ * which makes it useless as an absolute measure of whether anything relevant
+ * exists at all.
+ */
+async function coverageFor(
+  organizationId: string,
+  escalationIds: string[],
+): Promise<Map<string, GapCoverage>> {
+  const coverage = new Map<string, GapCoverage>();
+  if (escalationIds.length === 0) return coverage;
+
+  const rows = await prisma.$queryRaw<
+    { escalationId: string; name: string | null; sourceId: string | null; similarity: number | null }[]
+  >`
+    SELECT e.id AS "escalationId", n.name, n."sourceId", n.similarity
+    FROM "Escalation" e
+    LEFT JOIN LATERAL (
+      SELECT s.name, s.id AS "sourceId",
+             (1 - (c.embedding <=> e."questionEmbedding"))::float AS similarity
+      FROM "Chunk" c
+      JOIN "Source" s ON s.id = c."sourceId"
+      WHERE c.embedding IS NOT NULL AND s."organizationId" = ${organizationId}
+      ORDER BY c.embedding <=> e."questionEmbedding"
+      LIMIT 1
+    ) n ON true
+    WHERE e.id IN (${Prisma.join(escalationIds)})
+  `;
+
+  for (const row of rows) {
+    coverage.set(row.escalationId, {
+      source: row.name,
+      sourceId: row.sourceId,
+      similarity: row.similarity,
+      covered: row.similarity !== null && row.similarity >= COVERAGE_THRESHOLD,
+    });
+  }
+  return coverage;
 }
 
 function mostRepresentative(members: GapRow[]): GapRow {

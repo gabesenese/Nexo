@@ -97,10 +97,6 @@ function Dashboard() {
               <span className="dot" />
               Inbox
             </NavLink>
-            <NavLink to="/leads">
-              <span className="dot" />
-              Leads
-            </NavLink>
           </div>
 
           <div className="nav-group">
@@ -120,6 +116,11 @@ function Dashboard() {
             <NavLink to="/impact">
               <span className="dot" />
               Impact
+            </NavLink>
+            {/** Leads is not part of the support loop yet, so it sits here rather than beside the Inbox. */}
+            <NavLink to="/leads">
+              <span className="dot" />
+              Leads
             </NavLink>
             <NavLink to="/settings">
               <span className="dot" />

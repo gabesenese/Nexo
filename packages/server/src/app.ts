@@ -20,6 +20,7 @@ import { impactRoutes } from "./routes/impact.js";
 import { planRoutes } from "./routes/plan.js";
 import { webhookRoutes } from "./routes/webhooks.js";
 import { eventsRoutes } from "./routes/events.js";
+import { overviewRoutes } from "./routes/overview.js";
 import { authRoutes } from "./routes/auth.js";
 import { orgRoutes } from "./routes/org.js";
 
@@ -84,6 +85,7 @@ export async function buildApp(options: { logger?: boolean } = {}): Promise<Fast
   await app.register(planRoutes);
   await app.register(webhookRoutes);
   await app.register(eventsRoutes);
+  await app.register(overviewRoutes);
 
   await recoverInterruptedSources();
 

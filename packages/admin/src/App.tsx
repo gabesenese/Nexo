@@ -82,7 +82,7 @@ function Dashboard() {
           <NotificationBell />
         </div>
         {/**
-         * Grouped by what the operator is doing, and Conversations sits second
+         * Grouped by what the operator is doing, and the Inbox sits second
          * rather than fifth: it is the surface they work in all day, and a flat
          * list of seven identical rows gave it no more weight than Leads.
          */}
@@ -95,7 +95,7 @@ function Dashboard() {
             </NavLink>
             <NavLink to="/conversations">
               <span className="dot" />
-              Conversations
+              Inbox
             </NavLink>
             <NavLink to="/leads">
               <span className="dot" />

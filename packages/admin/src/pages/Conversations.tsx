@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { api, type AuthUser, type Conversation, type Escalation, type Message, type OrgMember } from "../api";
 import { subscribeToUpdates } from "../realtime";
 import { Select } from "../components/Select";
@@ -325,13 +325,14 @@ export function ConversationsPage() {
             Conversations land here the moment a visitor asks the widget something. Nexo answers from
             your knowledge sources, and anything it cannot answer arrives here for a person.
           </p>
+          {/** Router links, not bare anchors: an anchor reloads the whole SPA and drops the session fetch. */}
           <div className="page-actions">
-            <a className="btn btn-primary" href="/settings">
+            <Link className="btn btn-primary" to="/settings">
               Get the widget snippet
-            </a>
-            <a className="btn btn-ghost" href="/sources">
+            </Link>
+            <Link className="btn btn-ghost" to="/sources">
               Add a knowledge source
-            </a>
+            </Link>
           </div>
         </div>
       ) : (

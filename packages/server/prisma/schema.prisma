@@ -143,6 +143,7 @@ model User {
   createdAt             DateTime       @default(now())
   memberships           Membership[]
   assignedConversations Conversation[] @relation("ConversationAssignee")
+  notes                 Note[]         @relation("NoteAuthor")
 }
 
 model Membership {
@@ -207,6 +208,7 @@ model Conversation {
   messages       Message[]
   escalations    Escalation[]
   notifications  Notification[]
+  notes          Note[]
 
   @@index([sessionId])
   @@index([organizationId])
@@ -222,6 +224,18 @@ model Message {
   citations      Json         @default("[]")
   confidence     Float?
   authorUserId   String?
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId])
+}
+
+model Note {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  authorUserId   String?
+  author         User?        @relation("NoteAuthor", fields: [authorUserId], references: [id], onDelete: SetNull)
+  body           String
   createdAt      DateTime     @default(now())
 
   @@index([conversationId])

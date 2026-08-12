@@ -1,19 +1,25 @@
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { api, type Conversation, type Message, type OrgMember } from "../api";
+import { api, type AuthUser, type Conversation, type Escalation, type Message, type OrgMember } from "../api";
 import { subscribeToUpdates } from "../realtime";
 import { Select } from "../components/Select";
 
 /** The realtime stream drives updates; this only covers a stream that never connected. */
 const FALLBACK_REFRESH_MS = 30000;
 
-type Filter = "all" | "needs_reply" | "escalated" | "resolved";
+/**
+ * The queue an operator actually works: what is open, what is on them, what
+ * nobody has picked up. "Resolved" is last because it is the archive, not work.
+ */
+type Filter = "open" | "mine" | "unassigned" | "escalated" | "resolved" | "all";
 
 const FILTERS: { id: Filter; label: string }[] = [
-  { id: "all", label: "All" },
-  { id: "needs_reply", label: "Needs reply" },
+  { id: "open", label: "Open" },
+  { id: "mine", label: "Mine" },
+  { id: "unassigned", label: "Unassigned" },
   { id: "escalated", label: "Escalated" },
   { id: "resolved", label: "Resolved" },
+  { id: "all", label: "All" },
 ];
 
 function initials(sessionId: string) {
@@ -56,6 +62,48 @@ function previewOf(conversation: Conversation): string {
   return `${who}: ${last.content.trim()}`;
 }
 
+const REASON_LABELS: Record<string, string> = {
+  low_confidence: "Nexo was not confident enough to answer",
+  user_requested: "The customer asked for a person",
+  agent_requested: "An operator flagged this for a human",
+};
+
+function reasonLabel(reason: string): string {
+  return REASON_LABELS[reason] ?? reason.replace(/_/g, " ");
+}
+
+/** The handoff that is still open, falling back to the most recent one for resolved threads. */
+function activeEscalation(conversation: Conversation) {
+  return (
+    conversation.escalations.find((e) => e.status === "pending") ??
+    conversation.escalations[conversation.escalations.length - 1] ??
+    null
+  );
+}
+
+/**
+ * What the customer asked when the handoff happened. Escalations recorded
+ * before the question was captured have none, so it falls back to their last
+ * message before that moment rather than showing nothing or inventing a label.
+ */
+function triggeringQuestion(conversation: Conversation, escalation: Escalation): string | null {
+  if (escalation.question) return escalation.question;
+  const at = new Date(escalation.createdAt).getTime();
+  const before = conversation.messages.filter(
+    (m) => m.role === "user" && new Date(m.createdAt).getTime() <= at,
+  );
+  return before[before.length - 1]?.content.trim() ?? null;
+}
+
+/** Every source Nexo cited in this thread, deduplicated, so the operator sees what it read. */
+function knowledgeUsed(conversation: Conversation): string[] {
+  const names = new Set<string>();
+  for (const message of conversation.messages) {
+    for (const citation of message.citations ?? []) names.add(citation.sourceName);
+  }
+  return [...names];
+}
+
 /** Waiting on a person: the customer spoke last, or a handoff is still pending. */
 function needsReply(conversation: Conversation): boolean {
   if (conversation.status === "resolved") return false;
@@ -63,11 +111,13 @@ function needsReply(conversation: Conversation): boolean {
   return lastMessage(conversation)?.role === "user";
 }
 
-function matchesFilter(conversation: Conversation, filter: Filter): boolean {
+function matchesFilter(conversation: Conversation, filter: Filter, meId?: string): boolean {
   if (filter === "all") return true;
   if (filter === "resolved") return conversation.status === "resolved";
   if (filter === "escalated") return conversation.status === "escalated";
-  return needsReply(conversation);
+  if (filter === "open") return conversation.status !== "resolved";
+  if (filter === "mine") return conversation.assignedUserId === meId && conversation.status !== "resolved";
+  return conversation.status !== "resolved" && !conversation.assignedUserId;
 }
 
 /**
@@ -89,8 +139,11 @@ export function ConversationsPage() {
   const [replyText, setReplyText] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState<Filter>("all");
+  const [filter, setFilter] = useState<Filter>("open");
   const [query, setQuery] = useState("");
+  const [me, setMe] = useState<AuthUser | null>(null);
+  const [noteText, setNoteText] = useState("");
+  const [savingNote, setSavingNote] = useState(false);
 
   async function refresh() {
     setConversations(await api.listConversations());
@@ -108,6 +161,7 @@ export function ConversationsPage() {
 
   useEffect(() => {
     api.getOrg().then((org) => setMembers(org.members)).catch(() => {});
+    api.me().then(setMe).catch(() => {});
   }, []);
 
   /** Deep-link support: a notification click sets ?id=, which may arrive after this page has already mounted. */
@@ -130,27 +184,29 @@ export function ConversationsPage() {
     });
   }
 
-  const counts = useMemo(
-    () => ({
+  const counts = useMemo(() => {
+    const of = (f: Filter) => conversations.filter((c) => matchesFilter(c, f, me?.id)).length;
+    return {
+      open: of("open"),
+      mine: of("mine"),
+      unassigned: of("unassigned"),
+      escalated: of("escalated"),
+      resolved: of("resolved"),
       all: conversations.length,
-      needs_reply: conversations.filter((c) => needsReply(c)).length,
-      escalated: conversations.filter((c) => c.status === "escalated").length,
-      resolved: conversations.filter((c) => c.status === "resolved").length,
-    }),
-    [conversations],
-  );
+    };
+  }, [conversations, me]);
 
   const visible = useMemo(() => {
     const needle = query.trim().toLowerCase();
     return conversations.filter((c) => {
-      if (!matchesFilter(c, filter)) return false;
+      if (!matchesFilter(c, filter, me?.id)) return false;
       if (!needle) return true;
       return (
         c.sessionId.toLowerCase().includes(needle) ||
         c.messages.some((m) => m.content.toLowerCase().includes(needle))
       );
     });
-  }, [conversations, filter, query]);
+  }, [conversations, filter, query, me]);
 
   const selected = conversations.find((c) => c.id === selectedId) ?? null;
   const markerId = selected ? reopenMarkerId(selected) : null;
@@ -203,15 +259,82 @@ export function ConversationsPage() {
     }
   }
 
+  /** One click to take ownership, rather than hunting for your own name in a picker. */
+  async function handleClaim() {
+    if (!selected || !me) return;
+    await handleAssign(me.id);
+  }
+
+  async function handleReopen() {
+    if (!selected) return;
+    setError(null);
+    try {
+      await api.reopenConversation(selected.id);
+      await refresh();
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  }
+
+  async function handleAddNote() {
+    const text = noteText.trim();
+    if (!text || !selected || savingNote) return;
+    setSavingNote(true);
+    setError(null);
+    try {
+      await api.addNote(selected.id, text);
+      setNoteText("");
+      await refresh();
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setSavingNote(false);
+    }
+  }
+
+  async function handleEscalate() {
+    if (!selected) return;
+    setError(null);
+    try {
+      await api.escalateConversation(selected.id);
+      await refresh();
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  }
+
   return (
     <div>
       <div className="page-top">
         <div>
-          <h1>Conversations</h1>
-          <p className="sub">Every thread Nexo has handled, and the ones still waiting on a person.</p>
+          <h1>Inbox</h1>
+          <p className="sub">Everything Nexo is handling, and everything still waiting on a person.</p>
         </div>
       </div>
 
+      {/**
+       * A workspace with no conversations at all gets guidance rather than the
+       * two-pane skeleton, which otherwise shows an empty queue next to an
+       * empty reading pane at exactly the moment someone needs telling what to
+       * do next. Filters and search only appear once there is something to filter.
+       */}
+      {conversations.length === 0 ? (
+        <div className="card conv-onboarding">
+          <h3>No conversations yet</h3>
+          <p>
+            Conversations land here the moment a visitor asks the widget something. Nexo answers from
+            your knowledge sources, and anything it cannot answer arrives here for a person.
+          </p>
+          <div className="page-actions">
+            <a className="btn btn-primary" href="/settings">
+              Get the widget snippet
+            </a>
+            <a className="btn btn-ghost" href="/sources">
+              Add a knowledge source
+            </a>
+          </div>
+        </div>
+      ) : (
       <div className="conv-split">
         <div className="card conv-list-card">
           <div className="conv-toolbar">
@@ -287,6 +410,11 @@ export function ConversationsPage() {
               </div>
               <div className="conv-detail-controls">
                 <span className={`badge ${selected.status}`}>{selected.status}</span>
+                {selected.assignedUserId !== me?.id && selected.status !== "resolved" && (
+                  <button className="btn-small" onClick={handleClaim}>
+                    Claim
+                  </button>
+                )}
                 <Select
                   className="assign-select"
                   ariaLabel="Owner"
@@ -297,6 +425,94 @@ export function ConversationsPage() {
                     ...members.map((m) => ({ value: m.id, label: m.name })),
                   ]}
                 />
+              </div>
+            </div>
+
+            {/**
+             * Everything the person taking over needs before they read a word
+             * of the transcript: why Nexo stopped, what was asked, and which
+             * sources it had. Fields with no data are omitted rather than
+             * shown empty, so the panel never pads itself out.
+             */}
+            {(() => {
+              const escalation = activeEscalation(selected);
+              if (!escalation) return null;
+              const asked = triggeringQuestion(selected, escalation);
+              const sources = knowledgeUsed(selected);
+              return (
+                <div className="conv-context">
+                  <div className="conv-context-head">Context for your team</div>
+                  <dl className="conv-context-grid">
+                    <dt>Reason</dt>
+                    <dd>{reasonLabel(escalation.reason)}</dd>
+
+                    {asked && (
+                      <>
+                        <dt>They asked</dt>
+                        <dd className="conv-context-quote">“{asked}”</dd>
+                      </>
+                    )}
+
+                    <dt>Knowledge used</dt>
+                    <dd>
+                      {sources.length > 0 ? (
+                        <span className="conv-context-sources">
+                          {sources.map((s) => (
+                            <span className="cite" key={s}>
+                              {s}
+                            </span>
+                          ))}
+                        </span>
+                      ) : (
+                        <span className="conv-context-none">
+                          Nothing matched, which is usually the gap itself
+                        </span>
+                      )}
+                    </dd>
+
+                    <dt>Handed off</dt>
+                    <dd>
+                      {new Date(escalation.createdAt).toLocaleString()} ·{" "}
+                      {escalation.status === "pending" ? "still waiting" : "picked up"}
+                    </dd>
+                  </dl>
+                  <p className="conv-context-summary">{escalation.summary}</p>
+                </div>
+              );
+            })()}
+
+            {/** Team-only. Kept visually distinct so nobody mistakes it for something the customer can read. */}
+            <div className="conv-notes">
+              <div className="conv-notes-head">
+                Internal notes
+                <span className="conv-notes-hint">Only your team sees these</span>
+              </div>
+              {selected.notes.length > 0 && (
+                <ul className="conv-note-list">
+                  {selected.notes.map((n) => (
+                    <li key={n.id}>
+                      <span className="conv-note-body">{n.body}</span>
+                      <span className="conv-note-meta">
+                        {n.author?.name ?? "Someone"} · {new Date(n.createdAt).toLocaleString()}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <div className="field-inline">
+                <input
+                  type="text"
+                  value={noteText}
+                  placeholder="Leave a note for your team…"
+                  aria-label="Add an internal note"
+                  onChange={(e) => setNoteText(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleAddNote();
+                  }}
+                />
+                <button className="btn-small" onClick={handleAddNote} disabled={savingNote || !noteText.trim()}>
+                  {savingNote ? "Saving…" : "Add note"}
+                </button>
               </div>
             </div>
 
@@ -334,7 +550,12 @@ export function ConversationsPage() {
             </div>
 
             {selected.status === "resolved" ? (
-              <p className="empty-note conv-resolved-note">This conversation is resolved.</p>
+              <div className="conv-resolved-note">
+                <span className="empty-note">This conversation is resolved.</span>
+                <button className="btn-small" onClick={handleReopen}>
+                  Reopen
+                </button>
+              </div>
             ) : (
               <div className="reply-box">
                 <textarea
@@ -351,6 +572,11 @@ export function ConversationsPage() {
                 <div className="reply-actions">
                   <span className="reply-hint">Ctrl + Enter to send</span>
                   <div className="page-actions">
+                    {selected.status !== "escalated" && (
+                      <button className="btn-small" onClick={handleEscalate}>
+                        Escalate
+                      </button>
+                    )}
                     <button className="btn-small" onClick={handleResolve}>
                       Resolve
                     </button>
@@ -375,6 +601,7 @@ export function ConversationsPage() {
           </div>
         )}
       </div>
+      )}
     </div>
   );
 }

@@ -121,6 +121,8 @@ export interface Escalation {
   summary: string;
   status: string;
   createdAt: string;
+  /** The question that triggered the handoff. Null on escalations recorded before it was captured. */
+  question: string | null;
 }
 
 export interface AnalyticsSummary {
@@ -227,6 +229,15 @@ export interface Message {
   createdAt: string;
 }
 
+/** An operator's note to their team. Never shown to the customer. */
+export interface Note {
+  id: string;
+  conversationId: string;
+  body: string;
+  createdAt: string;
+  author: { id: string; name: string } | null;
+}
+
 export interface Conversation {
   id: string;
   sessionId: string;
@@ -239,6 +250,7 @@ export interface Conversation {
   assignedUserId: string | null;
   assignedUser: (Assignee & { email: string }) | null;
   messages: Message[];
+  notes: Note[];
   escalations: Escalation[];
 }
 
@@ -307,6 +319,12 @@ export const api = {
     request<Conversation>(`/api/conversations/${id}/assign`, { method: "POST", body: JSON.stringify({ userId }) }),
   resolveConversation: (id: string) =>
     request<{ ok: true }>(`/api/conversations/${id}/resolve`, { method: "POST" }),
+  escalateConversation: (id: string) =>
+    request<{ ok: true; alreadyEscalated: boolean }>(`/api/conversations/${id}/escalate`, { method: "POST" }),
+  reopenConversation: (id: string) =>
+    request<{ ok: true; alreadyOpen: boolean }>(`/api/conversations/${id}/reopen`, { method: "POST" }),
+  addNote: (id: string, body: string) =>
+    request<Note>(`/api/conversations/${id}/notes`, { method: "POST", body: JSON.stringify({ body }) }),
   listLeads: () => request<Lead[]>("/api/leads"),
   listNotifications: () => request<Notification[]>("/api/notifications"),
   markNotificationsRead: () => request<{ ok: true }>("/api/notifications/read-all", { method: "POST" }),

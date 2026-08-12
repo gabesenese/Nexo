@@ -1348,13 +1348,24 @@ textarea::placeholder {
   flex-shrink: 0;
 }
 
+/**
+ * Six filters never fit one line in this column. Left to wrap they broke
+ * raggedly and stranded the last one alone on a centred second row, which read
+ * as a layout fault. A fixed three-by-two grid is stable at every width.
+ */
 .conv-toolbar .segmented {
   width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2px;
 }
 
 .conv-toolbar .segmented button {
-  flex: 1;
   padding: 0 var(--s2);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .conv-search {
@@ -1477,6 +1488,76 @@ textarea::placeholder {
   flex-shrink: 0;
 }
 
+.conv-onboarding {
+  max-width: 620px;
+}
+
+.conv-onboarding p {
+  font-size: var(--t-base);
+  color: var(--slate-soft);
+  line-height: 1.6;
+  margin: var(--s2) 0 var(--s5);
+}
+
+.conv-onboarding .btn {
+  text-decoration: none;
+}
+
+.conv-notes {
+  flex-shrink: 0;
+  padding: var(--s3) var(--s6) var(--s4);
+  border-bottom: 1px solid var(--paper-dim);
+  background: #fbf9f3;
+}
+
+.conv-notes-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s2);
+  font-family: var(--mono);
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--amber);
+  margin-bottom: var(--s2);
+}
+
+.conv-notes-hint {
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--slate-soft);
+  font-family: var(--sans);
+  font-size: var(--t-xs);
+}
+
+.conv-note-list {
+  list-style: none;
+  margin: 0 0 var(--s2);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+
+.conv-note-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  border-left: 2px solid var(--amber);
+  padding-left: var(--s3);
+}
+
+.conv-note-body {
+  font-size: var(--t-base);
+  color: var(--ink);
+  line-height: 1.5;
+}
+
+.conv-note-meta {
+  font-size: var(--t-xs);
+  color: var(--slate-soft);
+}
+
 .conv-context {
   flex-shrink: 0;
   background: var(--paper);
@@ -1576,8 +1657,16 @@ textarea::placeholder {
 }
 
 .conv-resolved-note {
-  padding: var(--s5) var(--s6);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s4);
+  padding: var(--s4) var(--s6);
   border-top: 1px solid var(--paper-dim);
+  margin: 0;
+}
+
+.conv-resolved-note .empty-note {
   margin: 0;
 }
 

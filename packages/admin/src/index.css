@@ -719,6 +719,27 @@ input[type="file"].dropzone-input {
  * because these are a single reading of the floor right now, not five
  * independent metrics competing for attention.
  */
+/**
+ * Opacity only, and short. A transform would make the whole page slide on
+ * every click, which is exactly the movement that reads as a flick; this just
+ * takes the hard edge off the swap between routes.
+ */
+.content {
+  animation: page-in 140ms var(--ease-out) both;
+}
+
+@keyframes page-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .content {
+    animation-duration: 1ms;
+  }
+}
+
 .status-strip {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));

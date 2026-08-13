@@ -439,6 +439,13 @@ export const api = {
   renameOrg: (name: string) =>
     request<{ id: string; name: string }>("/api/org", { method: "PATCH", body: JSON.stringify({ name }) }),
   /** `delivered` is false when the invite exists but its email could not be sent, so the UI can say so. */
+  setMemberRole: (userId: string, role: MemberRole) =>
+    request<{ id: string; role: MemberRole }>(`/api/org/members/${userId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ role }),
+    }),
+  removeMember: (userId: string) =>
+    request<{ ok: true }>(`/api/org/members/${userId}`, { method: "DELETE" }),
   createInvite: (email: string, role: InvitableRole) =>
     request<OrgInvite & { delivered: boolean }>("/api/org/invites", {
       method: "POST",

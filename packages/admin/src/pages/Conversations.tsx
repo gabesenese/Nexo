@@ -144,6 +144,8 @@ export function ConversationsPage() {
   const [me, setMe] = useState<AuthUser | null>(null);
   const [noteText, setNoteText] = useState("");
   const [savingNote, setSavingNote] = useState(false);
+  const [drafting, setDrafting] = useState(false);
+  const [draftMeta, setDraftMeta] = useState<{ confidence: number | null; sources: number } | null>(null);
 
   async function refresh() {
     setConversations(await api.listConversations());
@@ -176,6 +178,7 @@ export function ConversationsPage() {
   function selectConversation(id: string) {
     setSelectedId(id);
     setReplyText("");
+    setDraftMeta(null);
     setError(null);
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
@@ -229,11 +232,34 @@ export function ConversationsPage() {
     try {
       await api.replyToConversation(selected.id, text);
       setReplyText("");
+      setDraftMeta(null);
       await refresh();
     } catch (err) {
       setError((err as Error).message);
     } finally {
       setSending(false);
+    }
+  }
+
+  /**
+   * Fills the composer with a Nexo-suggested reply for the operator to edit or
+   * send. It's only ever a starting point. Nothing reaches the customer until
+   * the operator presses Send, and anything already typed is confirmed before
+   * being replaced.
+   */
+  async function handleDraft() {
+    if (!selected || drafting || sending) return;
+    if (replyText.trim() && !window.confirm("Replace what you've written with a draft from Nexo?")) return;
+    setDrafting(true);
+    setError(null);
+    try {
+      const suggestion = await api.draftReply(selected.id);
+      setReplyText(suggestion.draft);
+      setDraftMeta({ confidence: suggestion.confidence, sources: suggestion.citations.length });
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setDrafting(false);
     }
   }
 
@@ -571,8 +597,23 @@ export function ConversationsPage() {
                 />
                 {error && <p className="error-text">{error}</p>}
                 <div className="reply-actions">
-                  <span className="reply-hint">Ctrl + Enter to send</span>
+                  <span className="reply-hint">
+                    {draftMeta ? (
+                      <>
+                        Drafted by Nexo
+                        {draftMeta.confidence != null && ` · ${Math.round(draftMeta.confidence * 100)}% confidence`}
+                        {draftMeta.sources > 0 &&
+                          ` · ${draftMeta.sources} ${draftMeta.sources === 1 ? "source" : "sources"}`}
+                        . Edit before sending.
+                      </>
+                    ) : (
+                      "Ctrl + Enter to send"
+                    )}
+                  </span>
                   <div className="page-actions">
+                    <button className="btn-small" onClick={handleDraft} disabled={drafting || sending}>
+                      {drafting ? "Drafting…" : "Draft with Nexo"}
+                    </button>
                     {selected.status !== "escalated" && (
                       <button className="btn-small" onClick={handleEscalate}>
                         Escalate

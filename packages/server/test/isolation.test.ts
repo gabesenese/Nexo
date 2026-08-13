@@ -224,6 +224,13 @@ suite("tenant isolation", () => {
     });
     expect(bResolve.statusCode).toBe(404);
 
+    const bDraft = await app.inject({
+      method: "POST",
+      url: `/api/conversations/${convo.id}/draft`,
+      headers: { cookie: b.cookie },
+    });
+    expect(bDraft.statusCode).toBe(404);
+
     const aReply = await app.inject({
       method: "POST",
       url: `/api/conversations/${convo.id}/reply`,

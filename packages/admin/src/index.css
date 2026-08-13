@@ -1823,6 +1823,8 @@ textarea::placeholder {
   font-family: var(--mono);
   font-size: var(--t-xs);
   color: var(--slate-soft);
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 @media (max-width: 1000px) {
@@ -1868,8 +1870,13 @@ textarea::placeholder {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: var(--s2);
   margin-top: var(--s3);
+}
+
+.reply-actions .page-actions {
+  flex: 0 0 auto;
 }
 
 .cite {

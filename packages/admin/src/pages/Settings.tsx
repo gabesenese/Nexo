@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api, can, ROLE_DESCRIPTIONS, ROLE_LABELS, type AuthUser, type InvitableRole, type OrgDetails, type OrgInvite } from "../api";
+import { api, can, ROLE_DESCRIPTIONS, ROLE_LABELS, type AuthUser, type InvitableRole, type MemberRole, type OrgDetails, type OrgInvite, type OrgMember } from "../api";
 import { PlanUsageCard } from "../components/PlanUsageCard";
 import { WebhookCard } from "../components/WebhookCard";
 import { Select } from "../components/Select";
@@ -21,6 +21,7 @@ const WIDGET_COLORS = ["#204c40", "#2f6f5e", "#c9873a", "#181b1d", "#2b3f8a"];
 export function SettingsPage({ onWorkspaceRenamed }: { onWorkspaceRenamed?: (name: string) => void }) {
   const [org, setOrg] = useState<OrgDetails | null>(null);
   const [me, setMe] = useState<AuthUser | null>(null);
+  const [memberError, setMemberError] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [savingName, setSavingName] = useState(false);
   const [nameSaved, setNameSaved] = useState(false);
@@ -140,6 +141,31 @@ export function SettingsPage({ onWorkspaceRenamed }: { onWorkspaceRenamed?: (nam
       setInviteError((err as Error).message);
     } finally {
       setInviting(false);
+    }
+  }
+
+  const owners = org?.members.filter((m) => m.role === "owner") ?? [];
+
+  async function changeRole(member: OrgMember, role: MemberRole) {
+    setMemberError(null);
+    try {
+      await api.setMemberRole(member.id, role);
+      await load();
+      /** Demoting yourself changes what you may do, so the console has to catch up. */
+      if (member.id === me?.id) api.me().then(setMe).catch(() => {});
+    } catch (err) {
+      setMemberError((err as Error).message);
+    }
+  }
+
+  async function removeMember(member: OrgMember) {
+    if (!window.confirm(`Remove ${member.name} from this workspace? They lose access immediately.`)) return;
+    setMemberError(null);
+    try {
+      await api.removeMember(member.id);
+      await load();
+    } catch (err) {
+      setMemberError((err as Error).message);
     }
   }
 
@@ -290,16 +316,52 @@ export function SettingsPage({ onWorkspaceRenamed }: { onWorkspaceRenamed?: (nam
       <div className="card">
         <h3>Members</h3>
         <div className="card-sub">{org ? `${org.members.length} member${org.members.length === 1 ? "" : "s"}` : "Loading…"}</div>
-        {org?.members.map((m) => (
-          <div className="list-item" key={m.email}>
-            <div className="avatar mono">{initials(m.name)}</div>
-            <div className="list-info">
-              <div className="li-title">{m.name}</div>
-              <div className="li-sub">{m.email}</div>
+        {memberError && <p className="error-text">{memberError}</p>}
+        {org?.members.map((m) => {
+          /**
+           * A workspace must keep an owner, and only an owner can move the role
+           * in or out of owner. Showing the control anyway would be offering a
+           * button whose only outcome is an error message.
+           */
+          const isLastOwner = m.role === "owner" && owners.length === 1;
+          /** Only an owner may act on another owner; promoting to owner is restricted by the options below. */
+          const canEditThis =
+            can(me, "team:manage") && !isLastOwner && (m.role !== "owner" || me?.role === "owner");
+
+          return (
+            <div className="list-item" key={m.email}>
+              <div className="avatar mono">{initials(m.name)}</div>
+              <div className="list-info">
+                <div className="li-title">
+                  {m.name}
+                  {m.id === me?.id && <span className="recurrence-tag">you</span>}
+                </div>
+                <div className="li-sub">{m.email}</div>
+              </div>
+              {canEditThis ? (
+                <Select
+                  className="assign-select"
+                  ariaLabel={`Role for ${m.name}`}
+                  value={m.role}
+                  onChange={(v) => changeRole(m, v as MemberRole)}
+                  options={(me?.role === "owner"
+                    ? (["owner", "admin", "agent", "viewer"] as MemberRole[])
+                    : (["admin", "agent", "viewer"] as MemberRole[])
+                  ).map((r) => ({ value: r, label: ROLE_LABELS[r] }))}
+                />
+              ) : (
+                <span className="badge neutral mono" title={isLastOwner ? "A workspace needs an owner" : undefined}>
+                  {ROLE_LABELS[m.role]}
+                </span>
+              )}
+              {canEditThis && m.id !== me?.id && (
+                <button className="btn-small danger" onClick={() => removeMember(m)}>
+                  Remove
+                </button>
+              )}
             </div>
-            <span className="badge neutral mono">{ROLE_LABELS[m.role]}</span>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {can(me, "team:manage") && (

@@ -3,10 +3,15 @@ import type { FastifyInstance } from "fastify";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "../db/client.js";
-import { newWidgetKey, requireAuth, requirePermission, setSession } from "./auth.js";
+import { newWidgetKey, requireAuth, requirePermission, roleOf, setSession } from "./auth.js";
 import { env } from "../config/env.js";
 import { sendQuietly } from "../email/provider.js";
 import { inviteEmail } from "../email/messages.js";
+
+/** True when removing or demoting this owner would leave the workspace with none. */
+async function lastOwner(organizationId: string): Promise<boolean> {
+  return (await prisma.membership.count({ where: { organizationId, role: "owner" } })) <= 1;
+}
 
 function newToken() {
   return (randomUUID() + randomUUID()).replace(/-/g, "");
@@ -95,6 +100,108 @@ export async function orgRoutes(app: FastifyInstance) {
     await prisma.invite.deleteMany({ where: { id: req.params.id, organizationId } });
     return { ok: true };
   });
+
+  /**
+   * Changing an existing teammate's role.
+   *
+   * Two rules beyond the team:manage permission that guards the route.
+   *
+   * Only an owner may grant or revoke owner. Otherwise an admin could promote
+   * themselves, and the distinction between the two roles would be a formality
+   * anyone could step over.
+   *
+   * A workspace must keep at least one owner. Without that, demoting the last
+   * one leaves nobody who can rotate the widget key or, once billing exists,
+   * manage the subscription, and no way back short of us editing the database.
+   */
+  app.patch<{ Params: { userId: string }; Body: { role: string } }>(
+    "/api/org/members/:userId",
+    { preHandler: [requireAuth, requirePermission("team:manage")] },
+    async (req, reply) => {
+      const { organizationId, userId: callerId } = req.auth!;
+      const parsed = z.object({ role: z.enum(["owner", "admin", "agent", "viewer"]) }).safeParse(req.body);
+      if (!parsed.success) {
+        return reply.status(400).send({ error: "Choose a role: owner, admin, agent or viewer." });
+      }
+      const nextRole = parsed.data.role;
+
+      const membership = await prisma.membership.findUnique({
+        where: { userId_organizationId: { userId: req.params.userId, organizationId } },
+      });
+      if (!membership) {
+        return reply.status(404).send({ error: "That person is not a member of this workspace." });
+      }
+      if (membership.role === nextRole) {
+        return { id: membership.userId, role: membership.role };
+      }
+
+      const callerRole = await roleOf(callerId, organizationId);
+      if ((nextRole === "owner" || membership.role === "owner") && callerRole !== "owner") {
+        return reply.status(403).send({ error: "Only an owner can grant or remove the owner role." });
+      }
+
+      if (membership.role === "owner" && (await lastOwner(organizationId))) {
+        return reply.status(400).send({
+          error: "This is the only owner. Make someone else an owner first.",
+        });
+      }
+
+      const updated = await prisma.membership.update({
+        where: { userId_organizationId: { userId: req.params.userId, organizationId } },
+        data: { role: nextRole },
+      });
+      return { id: updated.userId, role: updated.role };
+    },
+  );
+
+  /**
+   * Removing someone.
+   *
+   * Their notes and replies stay, because removing a teammate must not rewrite
+   * the workspace's record of who said what to a customer.
+   *
+   * Their open assignments do not. The `SET NULL` on the foreign key only fires
+   * when the *user* is deleted, and this deletes a membership, so without the
+   * explicit unassign below a departed teammate stays the owner of live
+   * conversations in a workspace they can no longer open, and the inbox's Mine
+   * and Unassigned filters both quietly lie.
+   */
+  app.delete<{ Params: { userId: string } }>(
+    "/api/org/members/:userId",
+    { preHandler: [requireAuth, requirePermission("team:manage")] },
+    async (req, reply) => {
+      const { organizationId, userId: callerId } = req.auth!;
+
+      const membership = await prisma.membership.findUnique({
+        where: { userId_organizationId: { userId: req.params.userId, organizationId } },
+      });
+      if (!membership) {
+        return reply.status(404).send({ error: "That person is not a member of this workspace." });
+      }
+
+      const callerRole = await roleOf(callerId, organizationId);
+      if (membership.role === "owner" && callerRole !== "owner") {
+        return reply.status(403).send({ error: "Only an owner can remove another owner." });
+      }
+      if (membership.role === "owner" && (await lastOwner(organizationId))) {
+        return reply.status(400).send({
+          error: "This is the only owner. Make someone else an owner before removing this one.",
+        });
+      }
+
+      await prisma.$transaction([
+        /** Scoped to this workspace: they may still hold assignments in another. */
+        prisma.conversation.updateMany({
+          where: { organizationId, assignedUserId: req.params.userId },
+          data: { assignedUserId: null, assignedAt: null },
+        }),
+        prisma.membership.delete({
+          where: { userId_organizationId: { userId: req.params.userId, organizationId } },
+        }),
+      ]);
+      return { ok: true };
+    },
+  );
 
   app.post("/api/widget-key/rotate", { preHandler: [requireAuth, requirePermission("security:manage")] }, async (req, reply) => {
     const { organizationId } = req.auth!;

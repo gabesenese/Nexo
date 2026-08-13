@@ -1,9 +1,10 @@
 /**
  * Plan definitions carry limits and nothing else. Prices are deliberately
- * absent: PHILOSOPHY.md holds pricing open until real customer interviews,
- * and the figures on the landing page are a hypothesis rather than a
- * decision. Keeping money out of this file means the interviews can change
- * every number without touching enforcement.
+ * absent, but no longer because pricing is undecided: PHILOSOPHY.md section 5
+ * sets it from competitive benchmarking (C$249 / C$899 / C$2,499) and retired
+ * the customer-interview gate. Money stays out of this file so that enforcement
+ * and the price list can move independently, and so a price change never risks
+ * touching what a customer is allowed to do.
  */
 
 export type PlanId = "essentials" | "professional" | "growth";

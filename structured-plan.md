@@ -143,23 +143,30 @@ No milestone previously owned this. M4 covered deploying the *widget* to a custo
 nothing covered deploying *Nexo*. Three tracks:
 
 ### Launch/Infra — Nexo exists on the internet
-1. **Cloud AI cutover.** The default provider is a local Ollama model, which cannot serve a real
-   customer. Moving to the cloud provider changes the embedding space, so it is not a config
-   flip. Pass `dimensions: 768` to the OpenAI embedding model to keep both pgvector columns as
-   they are, then re-embed. **Re-measure the tuned constants, never nudge them:** the coverage
-   and gap-similarity thresholds in `knowledge/gaps.ts` were measured against
-   `nomic-embed-text`, and `CONFIDENCE_THRESHOLD` is calibrated against `llama3.1:8b`'s
-   self-assessment rather than a frontier model's.
-2. **Production hardening.** The session cookie hardcodes `secure: false` and cannot be served
+1. **Production hardening.** The session cookie hardcodes `secure: false` and cannot be served
    safely over HTTPS as written. Also: a deliberate CORS split (public widget and chat routes
    reflect any origin, admin and auth routes take an allowlist), rate limiting on auth and chat,
    and security headers.
-3. **Deploy.** Server as a container on Fly.io in `yyz`, Postgres on Neon with pgvector, admin
+2. **Transactional email.** There is none today, so a customer who forgets their password is
+   locked out permanently and invites are a token you copy by hand.
+3. **Cloud AI cutover**, paired with the deploy below rather than done ahead of it. The default
+   provider is a local Ollama model, which cannot serve a real customer and cannot realistically
+   run inside the deploy target either. Moving to the cloud provider changes the embedding space,
+   so it is not a config flip: `dimensions: 768` on the OpenAI embedding call keeps both pgvector
+   columns as they are, and `npm run db:reembed` rewrites every vector. **Re-measure the tuned
+   constants with `npm run measure:thresholds`, never nudge them:** the coverage and
+   gap-similarity thresholds in `knowledge/gaps.ts` were measured against `nomic-embed-text`, and
+   `CONFIDENCE_THRESHOLD` is calibrated against `llama3.1:8b`'s self-assessment rather than a
+   frontier model's.
+
+   **Sequenced here on purpose (decided 2026-08-13).** It was originally step 1, on the reasoning
+   that it gates everything. It does not: development continues perfectly well on Ollama, and
+   paying for cloud inference before anything is deployed buys nothing. The tooling and the
+   Ollama baseline measurements are already in place, so the cutover is short when it arrives.
+4. **Deploy.** Server as a container on Fly.io in `yyz`, Postgres on Neon with pgvector, admin
    and landing as static builds. The server holds long-lived SSE connections and runs ingestion
    in process with crash recovery on boot, so it needs a long-running container rather than
    serverless functions.
-4. **Transactional email.** There is none today, so a customer who forgets their password is
-   locked out permanently and invites are a token you copy by hand.
 
 ### Launch/Money — a stranger can buy it
 5. **Unpark M7c.** Stripe Checkout, Stripe Tax, webhooks, and a plan that actually changes on

@@ -8,6 +8,12 @@ export interface FetchedSource {
   name: string;
   origin: string;
   documents: RawDocument[];
+  /**
+   * Pages that yielded content, for connectors that crawl. An operator judging
+   * whether a source really covers their help centre needs to see how much of
+   * it was reached, which a chunk count alone does not tell them.
+   */
+  pageCount?: number;
 }
 
 /**

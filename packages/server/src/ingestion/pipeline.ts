@@ -75,7 +75,7 @@ export async function reindexSource(sourceId: string, organizationId: string): P
   }
   await prisma.source.update({
     where: { id: sourceId },
-    data: { status: "queued", errorMessage: null, notice: null, totalChunks: null, processedChunks: 0 },
+    data: { status: "queued", errorMessage: null, notice: null, totalChunks: null, processedChunks: 0, truncated: false },
   });
   enqueue(sourceId, (signal) => helpCenterConnector.fetch(source.origin, signal));
 }
@@ -102,7 +102,7 @@ export async function recoverInterruptedSources(): Promise<void> {
   });
   await prisma.source.updateMany({
     where: { id: { in: resumable.map((s) => s.id) } },
-    data: { status: "queued", errorMessage: null, notice: null, totalChunks: null, processedChunks: 0 },
+    data: { status: "queued", errorMessage: null, notice: null, totalChunks: null, processedChunks: 0, truncated: false },
   });
 
   for (const source of resumable) {
@@ -173,7 +173,14 @@ async function ingest(sourceId: string, fetchFn: FetchFn, signal: AbortSignal): 
   const { chunks, notice } = applyChunkCap(chunkDocuments(fetched.documents));
   await prisma.source.update({
     where: { id: sourceId },
-    data: { name: fetched.name, status: "chunking", totalChunks: chunks.length, processedChunks: 0 },
+    data: {
+      name: fetched.name,
+      status: "chunking",
+      totalChunks: chunks.length,
+      processedChunks: 0,
+      pageCount: fetched.pageCount ?? null,
+      truncated: notice !== null,
+    },
   });
 
   if (chunks.length === 0) {

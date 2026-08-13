@@ -354,6 +354,17 @@ h4 {
   cursor: not-allowed;
 }
 
+/** Used when re-indexing is the fix for a problem the page is reporting. */
+.btn-small.suggested {
+  border-color: var(--teal);
+  color: var(--teal-dark);
+}
+
+.btn-small.suggested:hover:not(:disabled) {
+  border-color: var(--teal-dark);
+  background: var(--mist);
+}
+
 .btn-small.danger {
   color: var(--red);
 }
@@ -945,6 +956,16 @@ input[type="file"].dropzone-input {
 .badge.neutral {
   background: var(--paper-dim);
   color: var(--slate-soft);
+}
+
+/**
+ * Separated from .escalated so source health reads as a severity ladder rather
+ * than one undifferentiated warning colour: red is knowledge Nexo cannot answer
+ * from at all, amber is knowledge that is incomplete or ageing.
+ */
+.badge.alert {
+  background: rgba(179, 69, 47, 0.1);
+  color: var(--red);
 }
 
 table {
@@ -2384,6 +2405,27 @@ textarea::placeholder {
   background: var(--amber);
 }
 
+/**
+ * Source rows lead with the smaller .li-title rather than the two-line
+ * .attention-question, so the shared dot offset left it hanging between the
+ * name and the reason instead of beside the name.
+ */
+.source-attention .attention-dot {
+  align-self: flex-start;
+  margin-top: 6px;
+}
+
+/** Same severity ladder the source badges use: red cannot answer, amber is incomplete or ageing. */
+.attention-dot.failed,
+.attention-dot.empty {
+  background: var(--red);
+}
+
+.attention-dot.truncated,
+.attention-dot.stale {
+  background: var(--amber);
+}
+
 .list-info .li-sub.attention-preview {
   white-space: normal;
   overflow: hidden;
@@ -2574,6 +2616,14 @@ textarea::placeholder {
   font-size: var(--t-xs);
   color: var(--slate-soft);
   margin-top: 2px;
+}
+
+/** Sits under a source in the list so the badge is never the whole story. */
+.source-health-detail {
+  font-size: var(--t-xs);
+  color: var(--slate);
+  margin-top: var(--s1);
+  line-height: 1.5;
 }
 
 .gap-coverage {

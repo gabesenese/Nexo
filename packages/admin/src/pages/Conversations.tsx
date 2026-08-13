@@ -374,7 +374,7 @@ export function ConversationsPage() {
                   aria-pressed={filter === f.id}
                 >
                   {f.label}
-                  <span className="seg-count">{counts[f.id]}</span>
+                  {counts[f.id] > 0 && <span className="seg-count">{counts[f.id]}</span>}
                 </button>
               ))}
             </div>

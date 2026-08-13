@@ -21,6 +21,7 @@ function serializeSource(s: {
   origin: string;
   status: string;
   errorMessage: string | null;
+  notice: string | null;
   totalChunks: number | null;
   processedChunks: number;
   lastSyncedAt: Date | null;
@@ -34,6 +35,7 @@ function serializeSource(s: {
     origin: s.origin,
     status: s.status,
     errorMessage: s.errorMessage,
+    notice: s.notice,
     totalChunks: s.totalChunks,
     processedChunks: s.processedChunks,
     lastSyncedAt: s.lastSyncedAt,

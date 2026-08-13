@@ -83,6 +83,7 @@ export interface SourceSummary {
   origin: string;
   status: SourceStatus;
   errorMessage: string | null;
+  notice: string | null;
   totalChunks: number | null;
   processedChunks: number;
   lastSyncedAt: string | null;

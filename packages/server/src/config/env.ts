@@ -21,6 +21,10 @@ const envSchema = z.object({
 
   TRIAL_DAYS: z.coerce.number().int().positive().default(14),
 
+  INGESTION_CONCURRENCY: z.coerce.number().int().positive().default(1),
+  INGESTION_TIMEOUT_MS: z.coerce.number().int().positive().default(900_000),
+  MAX_CHUNKS_PER_SOURCE: z.coerce.number().int().positive().default(1500),
+
   PORT: z.coerce.number().default(4000),
   CORS_ORIGIN: z.string().default("http://localhost:5173"),
   WIDGET_BUNDLE_PATH: z.string().optional(),

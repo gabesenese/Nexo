@@ -48,7 +48,12 @@ export function SourcesPage() {
       if (watched && watched.status !== "queued" && watched.status !== "fetching" && watched.status !== "chunking" && watched.status !== "embedding") {
         setNotice(
           watched.status === "ready"
-            ? { tone: "success", text: `“${watched.name}” is ready. Nexo can now answer from it.` }
+            ? {
+                tone: "success",
+                text: watched.notice
+                  ? `“${watched.name}” is ready. ${watched.notice}`
+                  : `“${watched.name}” is ready. Nexo can now answer from it.`,
+              }
             : { tone: "error", text: watched.errorMessage ?? `“${watched.name}” failed to index.` },
         );
         noticeSourceId.current = null;
@@ -345,6 +350,8 @@ export function SourcesPage() {
             {selected.status === "failed" && selected.errorMessage && (
               <p className="error-text">{selected.errorMessage}</p>
             )}
+
+            {selected.notice && <p className="source-note">{selected.notice}</p>}
 
             <div className="reply-actions">
               {selected.type === "help_center" && (

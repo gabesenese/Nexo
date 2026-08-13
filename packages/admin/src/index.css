@@ -570,6 +570,11 @@ input[type="file"].dropzone-input {
 }
 
 /** Segmented control, shared by the attention owner filter and the conversation filters. */
+/** Sits between the page title and the sections it switches between. */
+.settings-tabs {
+  margin-bottom: var(--s5);
+}
+
 .segmented {
   display: inline-flex;
   background: var(--paper-dim);
@@ -1516,7 +1521,12 @@ textarea::placeholder {
  * widths, so a short last row reads as deliberate rather than broken, and the
  * selected one is filled rather than floating inside a slab.
  */
-.conv-toolbar .segmented {
+.conv-toolbar /** Sits between the page title and the sections it switches between. */
+.settings-tabs {
+  margin-bottom: var(--s5);
+}
+
+.segmented {
   width: 100%;
   display: flex;
   flex-wrap: wrap;

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { api, AUDIT_LABELS, can, ROLE_DESCRIPTIONS, ROLE_LABELS, type AuthUser, type InvitableRole, type MemberRole, type AuditEvent, type OrgDetails, type OrgInvite, type OrgMember } from "../api";
 import { PlanUsageCard } from "../components/PlanUsageCard";
 import { WebhookCard } from "../components/WebhookCard";
@@ -19,6 +20,7 @@ function inviteLink(token: string) {
 const WIDGET_COLORS = ["#204c40", "#2f6f5e", "#c9873a", "#181b1d", "#2b3f8a"];
 
 export function SettingsPage({ onWorkspaceRenamed }: { onWorkspaceRenamed?: (name: string) => void }) {
+  const [params, setParams] = useSearchParams();
   const [org, setOrg] = useState<OrgDetails | null>(null);
   const [me, setMe] = useState<AuthUser | null>(null);
   const [memberError, setMemberError] = useState<string | null>(null);
@@ -153,6 +155,23 @@ export function SettingsPage({ onWorkspaceRenamed }: { onWorkspaceRenamed?: (nam
 
   const owners = org?.members.filter((m) => m.role === "owner") ?? [];
 
+  /**
+   * Settings had grown to eight cards on one scroll, mixing billing, branding,
+   * an integration, people, privacy and an audit trail. Grouped by the job
+   * being done instead, and a section nobody may act in is not shown at all
+   * rather than shown empty.
+   */
+  const tabs = [
+    { id: "workspace", label: "Workspace", visible: true },
+    { id: "widget", label: "Widget", visible: can(me, "settings:write") },
+    { id: "team", label: "Team", visible: true },
+    { id: "privacy", label: "Privacy", visible: can(me, "settings:write") },
+  ].filter((t) => t.visible);
+
+  const requested = params.get("tab") ?? "";
+  /** An unknown or now-forbidden tab falls back rather than rendering nothing. */
+  const tab = tabs.some((t) => t.id === requested) ? requested : "workspace";
+
   async function changeRole(member: OrgMember, role: MemberRole) {
     setMemberError(null);
     try {
@@ -227,9 +246,31 @@ export function SettingsPage({ onWorkspaceRenamed }: { onWorkspaceRenamed?: (nam
         </div>
       </div>
 
-      <PlanUsageCard />
+      {/**
+       * A group of toggle buttons rather than a tablist. role="tab" commits to an
+       * associated tabpanel and arrow-key navigation, and claiming it without
+       * them tells a screen reader more than is true. This matches the segmented
+       * control the inbox already uses.
+       */}
+      {tabs.length > 1 && (
+        <div className="settings-tabs segmented" role="group" aria-label="Settings sections">
+          {tabs.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              aria-pressed={t.id === tab}
+              className={t.id === tab ? "on" : ""}
+              onClick={() => setParams({ tab: t.id }, { replace: true })}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      )}
 
-      {can(me, "settings:write") && (
+      {tab === "workspace" && <PlanUsageCard />}
+
+      {tab === "workspace" && can(me, "settings:write") && (
       <div className="card">
         <h3>Workspace</h3>
         <div className="card-sub">The name your team and customers see.</div>
@@ -251,7 +292,7 @@ export function SettingsPage({ onWorkspaceRenamed }: { onWorkspaceRenamed?: (nam
       </div>
       )}
 
-      {can(me, "settings:write") && (
+      {tab === "widget" && can(me, "settings:write") && (
       <>
       <div className="card">
         <h3>Widget</h3>
@@ -343,6 +384,7 @@ export function SettingsPage({ onWorkspaceRenamed }: { onWorkspaceRenamed?: (nam
       </>
       )}
 
+      {tab === "team" && (
       <div className="card">
         <h3>Members</h3>
         <div className="card-sub">{org ? `${org.members.length} member${org.members.length === 1 ? "" : "s"}` : "Loading…"}</div>
@@ -393,8 +435,9 @@ export function SettingsPage({ onWorkspaceRenamed }: { onWorkspaceRenamed?: (nam
           );
         })}
       </div>
+      )}
 
-      {can(me, "settings:write") && privacy && (
+      {tab === "privacy" && can(me, "settings:write") && privacy && (
         <div className="card">
           <h3>Data and retention</h3>
           <div className="card-sub">
@@ -443,7 +486,7 @@ export function SettingsPage({ onWorkspaceRenamed }: { onWorkspaceRenamed?: (nam
         </div>
       )}
 
-      {can(me, "settings:write") && audit && (
+      {tab === "privacy" && can(me, "settings:write") && audit && (
         <div className="card">
           <h3>Activity log</h3>
           <div className="card-sub">Who changed what in this workspace.</div>
@@ -465,7 +508,7 @@ export function SettingsPage({ onWorkspaceRenamed }: { onWorkspaceRenamed?: (nam
         </div>
       )}
 
-      {can(me, "team:manage") && (
+      {tab === "team" && can(me, "team:manage") && (
       <div className="card">
         <h3>Invite a teammate</h3>
         <div className="card-sub">

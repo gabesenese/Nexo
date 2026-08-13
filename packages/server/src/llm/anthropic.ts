@@ -42,28 +42,48 @@ Never fabricate information not present in the context. If the context is insuff
 contradictory, say so and give a low confidence score rather than guessing; a human agent will take over
 in that case. Always cite which context chunks you used via usedSourceIds. Keep answers concise and direct.`;
 
-export const anthropicChatProvider: ChatProvider = {
-  async generateResponse({ history, message, context }: GenerateParams): Promise<ChatResponse> {
-    const contextBlock = context.length
-      ? context.map((c) => `[${c.id}] (source: ${c.sourceName})\n${c.content}`).join("\n\n---\n\n")
-      : "(no relevant context found)";
+/**
+ * `max_tokens` is a ceiling on thinking *plus* visible output, not a reservation,
+ * so raising it costs nothing and only widens the margin before a truncated
+ * response. Thinking is turned off explicitly because current models run it by
+ * default when the field is omitted: on a forced single tool call it buys
+ * nothing (the answer is already in the retrieved context), it is billed at the
+ * output rate, and it puts seconds of latency in front of a customer waiting in
+ * a live chat widget. Left on under the old 1024 ceiling it could consume the
+ * budget before `respond` was emitted, and the tool-call lookup below would then
+ * throw on a perfectly healthy response.
+ */
+const MAX_TOKENS = 2048;
 
-    const messages: Anthropic.MessageParam[] = [
+export function buildRequest({
+  history,
+  message,
+  context,
+}: GenerateParams): Anthropic.MessageCreateParamsNonStreaming {
+  const contextBlock = context.length
+    ? context.map((c) => `[${c.id}] (source: ${c.sourceName})\n${c.content}`).join("\n\n---\n\n")
+    : "(no relevant context found)";
+
+  return {
+    model: env.ANTHROPIC_MODEL,
+    max_tokens: MAX_TOKENS,
+    thinking: { type: "disabled" },
+    system: SYSTEM_PROMPT,
+    tools: [RESPOND_TOOL],
+    tool_choice: { type: "tool", name: "respond" },
+    messages: [
       ...history.map((turn) => ({ role: turn.role, content: turn.content })),
       {
         role: "user" as const,
         content: `Context:\n${contextBlock}\n\nQuestion: ${message}`,
       },
-    ];
+    ],
+  };
+}
 
-    const res = await getClient().messages.create({
-      model: env.ANTHROPIC_MODEL,
-      max_tokens: 1024,
-      system: SYSTEM_PROMPT,
-      tools: [RESPOND_TOOL],
-      tool_choice: { type: "tool", name: "respond" },
-      messages,
-    });
+export const anthropicChatProvider: ChatProvider = {
+  async generateResponse(params: GenerateParams): Promise<ChatResponse> {
+    const res = await getClient().messages.create(buildRequest(params));
 
     const toolUse = res.content.find((block) => block.type === "tool_use");
     if (!toolUse || toolUse.type !== "tool_use") {

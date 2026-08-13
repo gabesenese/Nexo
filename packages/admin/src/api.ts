@@ -22,6 +22,31 @@ export interface AuthUser {
   organization: { id: string; name: string; slug: string; widgetKey: string };
 }
 
+export interface AuditEvent {
+  id: string;
+  action: string;
+  actor: { email: string; name: string | null } | null;
+  targetType: string | null;
+  targetLabel: string | null;
+  metadata: Record<string, unknown>;
+  at: string;
+}
+
+/** Mirrors src/audit/record.ts so the log reads without a key. */
+export const AUDIT_LABELS: Record<string, string> = {
+  "member.role_changed": "changed a teammate's role",
+  "member.removed": "removed a teammate",
+  "invite.created": "invited someone",
+  "invite.revoked": "revoked an invitation",
+  "workspace.renamed": "renamed the workspace",
+  "widget.config_changed": "changed the widget",
+  "widget.key_rotated": "rotated the widget key",
+  "webhook.configured": "set the handoff webhook",
+  "webhook.removed": "removed the handoff webhook",
+  "knowledge.source_removed": "removed a knowledge source",
+  "password.reset_completed": "completed a password reset",
+};
+
 export function can(user: AuthUser | null, permission: Permission): boolean {
   return user?.permissions?.includes(permission) ?? false;
 }
@@ -439,6 +464,7 @@ export const api = {
   renameOrg: (name: string) =>
     request<{ id: string; name: string }>("/api/org", { method: "PATCH", body: JSON.stringify({ name }) }),
   /** `delivered` is false when the invite exists but its email could not be sent, so the UI can say so. */
+  getAudit: () => request<{ events: AuditEvent[]; nextBefore: string | null }>("/api/audit"),
   setMemberRole: (userId: string, role: MemberRole) =>
     request<{ id: string; role: MemberRole }>(`/api/org/members/${userId}`, {
       method: "PATCH",

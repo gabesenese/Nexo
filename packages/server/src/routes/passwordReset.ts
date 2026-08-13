@@ -6,6 +6,7 @@ import { prisma } from "../db/client.js";
 import { env } from "../config/env.js";
 import { sendQuietly } from "../email/provider.js";
 import { passwordResetEmail } from "../email/messages.js";
+import { recordAudit } from "../audit/record.js";
 
 /**
  * How many reset emails one account can trigger before we stop sending. The
@@ -128,6 +129,27 @@ export async function passwordResetRoutes(app: FastifyInstance) {
         data: { usedAt: changedAt },
       }),
     ]);
+
+    /**
+     * Recorded against every workspace the account belongs to. Nobody is signed
+     * in during a reset, so the actor is null and the target names the account:
+     * the useful question later is "whose password changed and when", not who
+     * clicked the link.
+     */
+    const memberships = await prisma.membership.findMany({
+      where: { userId: record.userId },
+      select: { organizationId: true },
+    });
+    const account = await prisma.user.findUnique({ where: { id: record.userId }, select: { email: true } });
+    for (const { organizationId } of memberships) {
+      await recordAudit(req, {
+        organizationId,
+        action: "password.reset_completed",
+        targetType: "user",
+        targetId: record.userId,
+        targetLabel: account?.email,
+      });
+    }
 
     return { ok: true };
   });

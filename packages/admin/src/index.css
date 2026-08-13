@@ -1237,6 +1237,13 @@ textarea::placeholder {
   font-size: 13px;
 }
 
+/** A source that indexed successfully but has something the operator should know. */
+.source-note {
+  color: var(--slate-soft);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 .notice {
   display: flex;
   align-items: center;

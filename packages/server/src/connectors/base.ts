@@ -17,5 +17,9 @@ export interface FetchedSource {
  */
 export interface Connector {
   type: "help_center" | "pdf";
-  fetch(input: unknown): Promise<FetchedSource>;
+  /**
+   * The signal carries the pipeline's deadline. A connector that reaches over
+   * the network should stop when it aborts; one that doesn't may ignore it.
+   */
+  fetch(input: unknown, signal?: AbortSignal): Promise<FetchedSource>;
 }

@@ -168,6 +168,7 @@ model Source {
   origin          String
   status          SourceStatus  @default(queued)
   errorMessage    String?
+  notice          String?
   totalChunks     Int?
   processedChunks Int           @default(0)
   lastSyncedAt    DateTime?

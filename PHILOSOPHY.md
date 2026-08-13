@@ -341,3 +341,40 @@ If those three hold, this stops being an idea and starts being a company.
 Before adding another pile of features: design the ideal first Nexo customer, identify 3–5
 specific industries/ICP variants, map their current support workflow and economics, and determine
 exactly what Nexo needs to do on day one to make them say yes.
+
+---
+
+## 18. What "A Real Platform" Means (added 2026-08-13)
+
+A recurring confusion is worth settling in writing, because the answer is not obvious and the
+absence of one has read as drift more than once.
+
+**Nexo has been a working product and not a business.** It ran only on a development machine,
+against a local model, with no way for anyone to pay. Every milestone through M7b was genuinely
+verified end to end, and none of it was reachable by a person outside this project. "Turn Nexo
+into a real platform" means two different things, and blurring them is the confusion:
+
+1. **Commercial infrastructure** — a stranger can sign up, depend on it, and pay. Deployment,
+   HTTPS, email, password reset, sessions, checkout.
+2. **Product differentiation** — it does what this document claims and no competitor does.
+   Resolution memory, evaluation, trust tiers, evidence.
+
+**The sequence is 1 then 2, and that is a deliberate reading of this document, not a compromise
+of it.** §14 Phase A calls for 3–5 real companies and §16 makes the whole thesis contingent on
+someone outside our circle paying. Neither can start while the product only runs on one laptop.
+
+**Therefore: Resolution Memory (§8 item 5) and Evaluation (§8 item 6) do not exist yet, and that
+is on purpose.** There is no `Resolution` model; the core object in the schema is still
+`Conversation → Message → Escalation`, which contradicts §1 on paper. The reason to accept that
+contradiction for now is that resolution memory is a *learning* system. It has nothing to learn
+from until real humans resolve real customer problems inside Nexo. Building it against seeded
+demo fixtures would produce a system tuned on invented resolutions, which is the same failure
+the M5d decision avoided when it deferred analytics charts for lack of real data.
+
+**Trust tiers (§4) are likewise partially implemented.** There is a single confidence threshold,
+so the product has green and red but no yellow, and no way for a business to see why Nexo decided
+what it decided. That is a real gap against this document and it should be closed once the
+evidence trail from Launch/Trust exists to hang it on.
+
+If a future reader finds these missing and concludes we have drifted from the thesis: we have
+not. We sequenced them behind the ability to have a customer at all.

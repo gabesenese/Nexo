@@ -120,6 +120,12 @@ Required secrets beyond `.env.example`: `DATABASE_URL`, `JWT_SECRET`, `APP_URL`
 (https, or the server refuses to boot), `CORS_ORIGIN`, `SMTP_URL`, and the AI
 provider keys.
 
+The browser bundles need their own, at build time rather than at runtime, because
+Vite inlines them: the landing build needs `VITE_APP_URL` and `VITE_API_URL`, and
+the admin build needs `VITE_API_URL`. Both refuse to build for production without
+them, rather than shipping a bundle that points at localhost and fails silently.
+CI builds both and asserts no `localhost` survives into either.
+
 ## Explicitly out of scope in this pass
 
 These land in later milestones (see `structured-plan.md` §3) or are open decisions pending

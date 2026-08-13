@@ -1,12 +1,22 @@
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-import Fastify, { type FastifyInstance } from "fastify";
+import Fastify, { type FastifyInstance, type FastifyRequest } from "fastify";
 import cors from "@fastify/cors";
 import multipart from "@fastify/multipart";
 import jwt from "@fastify/jwt";
 import cookie from "@fastify/cookie";
+import rateLimit from "@fastify/rate-limit";
 import { env } from "./config/env.js";
+import {
+  applySecurityHeaders,
+  bucketFor,
+  corsFor,
+  isEventStream,
+  DEFAULT_RATE_LIMITS,
+  type CorsDecision,
+  type RateLimits,
+} from "./http/security.js";
 import { recoverInterruptedSources } from "./ingestion/pipeline.js";
 import { sourcesRoutes } from "./routes/sources.js";
 import { chatRoutes } from "./routes/chat.js";
@@ -24,27 +34,50 @@ import { overviewRoutes } from "./routes/overview.js";
 import { authRoutes } from "./routes/auth.js";
 import { orgRoutes } from "./routes/org.js";
 
-export async function buildApp(options: { logger?: boolean } = {}): Promise<FastifyInstance> {
+export interface BuildAppOptions {
+  logger?: boolean;
+  /**
+   * Overrides the per-minute budgets, or disables limiting entirely with
+   * `false`. Suites that create many workspaces are exercising tenancy rather
+   * than throttling, and would otherwise spend the signup budget and fail for
+   * a reason unrelated to what they assert.
+   */
+  rateLimits?: RateLimits | false;
+}
+
+export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyInstance> {
   const app = Fastify({
     logger: options.logger === false ? false : { transport: { target: "pino-pretty" } },
   });
 
   /**
-   * The widget is embedded on arbitrary customer domains and calls the public
-   * endpoints (chat, messages, widget config) from there, so CORS reflects any
-   * origin. Admin/auth endpoints stay safe because the session cookie is
-   * SameSite=lax (see setSession): cross-site requests never carry it, so they
-   * 401 regardless of the reflected origin.
+   * Per-request CORS, because the widget and the admin console need opposite
+   * rules from the same origin. See http/security.ts for which endpoints are
+   * public and why credentials are never offered alongside a reflected origin.
    */
-  await app.register(cors, {
-    origin: true,
-    credentials: true,
+  await app.register(cors, () => (req: FastifyRequest, done: (err: Error | null, options: CorsDecision) => void) => {
+    done(null, corsFor(req.method, req.url ?? "", req.headers["access-control-request-method"]));
   });
+
   await app.register(multipart, {
     limits: { fileSize: 20 * 1024 * 1024 },
   });
   await app.register(jwt, { secret: env.JWT_SECRET });
   await app.register(cookie);
+
+  app.addHook("onSend", applySecurityHeaders);
+
+  const limits = options.rateLimits ?? DEFAULT_RATE_LIMITS;
+  if (limits !== false) {
+    await app.register(rateLimit, {
+      global: true,
+      timeWindow: "1 minute",
+      max: (req) => limits[bucketFor(req.url ?? "")],
+      /** One counter per bucket per client, so the budgets cannot spend each other. */
+      keyGenerator: (req) => `${bucketFor(req.url ?? "")}:${req.ip}`,
+      allowList: (req) => isEventStream(req.url ?? ""),
+    });
+  }
 
   app.get("/health", async () => ({ status: "ok" }));
 

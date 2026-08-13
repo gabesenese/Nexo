@@ -1456,23 +1456,44 @@ textarea::placeholder {
 }
 
 /**
- * Six filters never fit one line in this column. Left to wrap they broke
- * raggedly and stranded the last one alone on a centred second row, which read
- * as a layout fault. A fixed three-by-two grid is stable at every width.
+ * Six filters never fit one line in this column, and a segmented control is a
+ * single-row switch by nature: forced into a grid it stopped reading as a
+ * control at all, with each label centred in an equal third so nothing lined
+ * up. These are chips instead. They pack from the left at their natural
+ * widths, so a short last row reads as deliberate rather than broken, and the
+ * selected one is filled rather than floating inside a slab.
  */
 .conv-toolbar .segmented {
   width: 100%;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 2px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s1);
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
 }
 
 .conv-toolbar .segmented button {
-  padding: 0 var(--s2);
+  padding: 0 var(--s3);
+  border-radius: var(--r-pill);
+  background: var(--paper-dim);
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.conv-toolbar .segmented button:hover {
+  background: var(--line);
+}
+
+.conv-toolbar .segmented button.on,
+.conv-toolbar .segmented button.on:hover {
+  background: var(--ink);
+  color: var(--paper);
+  box-shadow: none;
+}
+
+.conv-toolbar .segmented button.on .seg-count {
+  opacity: 0.75;
 }
 
 .conv-search {

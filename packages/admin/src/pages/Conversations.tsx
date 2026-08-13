@@ -243,11 +243,13 @@ export function ConversationsPage() {
 
   /**
    * Fills the composer with a Nexo-suggested reply for the operator to edit or
-   * send. It's only ever a starting point — nothing reaches the customer until
-   * the operator presses Send.
+   * send. It's only ever a starting point. Nothing reaches the customer until
+   * the operator presses Send, and anything already typed is confirmed before
+   * being replaced.
    */
   async function handleDraft() {
     if (!selected || drafting || sending) return;
+    if (replyText.trim() && !window.confirm("Replace what you've written with a draft from Nexo?")) return;
     setDrafting(true);
     setError(null);
     try {
@@ -601,8 +603,8 @@ export function ConversationsPage() {
                         Drafted by Nexo
                         {draftMeta.confidence != null && ` · ${Math.round(draftMeta.confidence * 100)}% confidence`}
                         {draftMeta.sources > 0 &&
-                          ` · ${draftMeta.sources} ${draftMeta.sources === 1 ? "source" : "sources"}`}{" "}
-                        — edit before sending
+                          ` · ${draftMeta.sources} ${draftMeta.sources === 1 ? "source" : "sources"}`}
+                        . Edit before sending.
                       </>
                     ) : (
                       "Ctrl + Enter to send"

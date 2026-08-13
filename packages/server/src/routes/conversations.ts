@@ -3,7 +3,7 @@ import { z } from "zod";
 import { prisma } from "../db/client.js";
 import { requireAuth } from "./auth.js";
 import { notifyOrg, notifySession } from "../realtime/bus.js";
-import { generateDraft } from "../orchestrator/stateMachine.js";
+import { DraftUnavailableError, generateDraft } from "../orchestrator/stateMachine.js";
 
 const assigneeSelect = { select: { id: true, name: true, email: true } };
 const noteInclude = {
@@ -104,9 +104,10 @@ export async function conversationsRoutes(app: FastifyInstance) {
 
   /**
    * A suggested reply for the operator to approve or edit. Reuses the same
-   * retrieval + generation as the customer path but writes nothing and changes
-   * no status — the draft only becomes a real message if the operator sends it
-   * through /reply. Behind requireAuth because generating one calls the LLM.
+   * retrieval and generation as the customer path but writes nothing and
+   * changes no status. The draft only becomes a real message if the operator
+   * sends it through /reply. Behind requireAuth because generating one calls
+   * the LLM.
    */
   app.post<{ Params: { id: string } }>(
     "/api/conversations/:id/draft",
@@ -123,7 +124,11 @@ export async function conversationsRoutes(app: FastifyInstance) {
       try {
         return await generateDraft({ conversationId: conversation.id, organizationId });
       } catch (err) {
-        return reply.status(400).send({ error: (err as Error).message });
+        if (err instanceof DraftUnavailableError) {
+          return reply.status(400).send({ error: err.message });
+        }
+        req.log.error(err, "draft generation failed");
+        return reply.status(500).send({ error: "Nexo could not draft a reply just now. Try again." });
       }
     },
   );

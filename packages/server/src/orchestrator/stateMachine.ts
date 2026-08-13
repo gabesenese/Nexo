@@ -187,14 +187,20 @@ export interface DraftReplyResult {
   citations: { id: string; sourceName: string; headingPath: string[] }[];
 }
 
+/** Thrown when the thread has nothing to draft against, as opposed to a failure to draft. */
+export class DraftUnavailableError extends Error {}
+
 /**
- * Produces a suggested reply for an operator to approve or edit — the same
- * retrieval + generation the widget runs, but it persists nothing, escalates
- * nothing, and changes no status. The operator sends (or not) through the
- * normal reply endpoint, so a human always has the last word. Drafts are
- * returned regardless of confidence (unlike the customer path, which escalates
- * a low-confidence answer) because the human is the guardrail here; the
- * confidence is handed back so the operator can judge how grounded it is.
+ * Produces a suggested reply for an operator to approve or edit, using the
+ * same retrieval and generation the widget runs, but it persists nothing,
+ * escalates nothing, and changes no status. The operator sends (or not)
+ * through the normal reply endpoint, so a human always has the last word.
+ * Drafts are returned regardless of confidence (unlike the customer path,
+ * which escalates a low-confidence answer) because the human is the guardrail
+ * here; the confidence is handed back so the operator can judge how grounded
+ * it is. Answers the most recent customer message, which may already have been
+ * answered: re-drafting a fresh take on the same question is useful, so it is
+ * allowed rather than blocked.
  */
 export async function generateDraft(params: {
   conversationId: string;
@@ -209,7 +215,7 @@ export async function generateDraft(params: {
 
   const lastUserIndex = messages.map((m: Message) => m.role).lastIndexOf("user");
   if (lastUserIndex === -1) {
-    throw new Error("There is no customer question to draft a reply to yet.");
+    throw new DraftUnavailableError("There is no customer question to draft a reply to yet.");
   }
 
   const question = messages[lastUserIndex].content;

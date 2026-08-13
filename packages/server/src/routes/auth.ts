@@ -162,12 +162,26 @@ export async function authRoutes(app: FastifyInstance) {
     if (!token) return reply.status(401).send({ error: "Not authenticated" });
 
     try {
-      const claims = app.jwt.verify<SessionClaims>(token);
+      const claims = app.jwt.verify<SessionClaims & { iat?: number }>(token);
       const membership = await prisma.membership.findUnique({
         where: { userId_organizationId: { userId: claims.sub, organizationId: claims.orgId } },
         include: { user: true, organization: true },
       });
       if (!membership) return reply.status(401).send({ error: "Not authenticated" });
+
+      /**
+       * The same revocation requireAuth applies, checked here too because this
+       * endpoint verifies the cookie itself. Without it a reset leaves the
+       * console half signed in: this call still returns a user, the dashboard
+       * renders, and then every request behind it 401s.
+       *
+       * Free, since the user row is already loaded for the response.
+       */
+      if (isRevokedByPasswordChange(membership.user.passwordChangedAt, claims.iat)) {
+        reply.clearCookie(COOKIE_NAME, { path: "/" });
+        return reply.status(401).send({ error: "Not authenticated" });
+      }
+
       return {
         id: membership.user.id,
         email: membership.user.email,
@@ -192,13 +206,47 @@ export async function roleOf(userId: string, organizationId: string) {
   return membership?.role ?? null;
 }
 
+/**
+ * Sessions are stateless JWTs, so a password reset cannot revoke them by
+ * deleting a row. Instead every request compares when its token was issued
+ * against when the account's password last changed, and anything older is
+ * refused. Without this, resetting a compromised password leaves the attacker
+ * signed in for the remaining life of their cookie, which makes the reset
+ * mostly theatre.
+ *
+ * The cost is one primary-key lookup on every authenticated request, not only
+ * on accounts that have reset: the lookup is what tells us whether a reset ever
+ * happened. That is the price of stateless sessions, and it is affordable at a
+ * support team's request rate. If it ever stops being affordable, the answer is
+ * a shared session store rather than dropping the check.
+ */
+export function isRevokedByPasswordChange(
+  passwordChangedAt: Date | null,
+  issuedAtSeconds: number | undefined,
+): boolean {
+  if (!passwordChangedAt) return false;
+  /** A token with no issued-at claim cannot be shown to predate the change, so it is not trusted. */
+  if (issuedAtSeconds === undefined) return true;
+  /** `iat` is whole seconds, so a change within the same second as the issue must not revoke it. */
+  return Math.floor(passwordChangedAt.getTime() / 1000) > issuedAtSeconds;
+}
+
+async function sessionOutlivesPasswordChange(userId: string, issuedAtSeconds: number | undefined): Promise<boolean> {
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { passwordChangedAt: true } });
+  return isRevokedByPasswordChange(user?.passwordChangedAt ?? null, issuedAtSeconds);
+}
+
 export async function requireAuth(req: FastifyRequest, reply: FastifyReply) {
   const token = req.cookies?.[COOKIE_NAME];
   if (!token) {
     return reply.status(401).send({ error: "Not authenticated" });
   }
   try {
-    const claims = req.server.jwt.verify<SessionClaims>(token);
+    const claims = req.server.jwt.verify<SessionClaims & { iat?: number }>(token);
+    if (await sessionOutlivesPasswordChange(claims.sub, claims.iat)) {
+      reply.clearCookie(COOKIE_NAME, { path: "/" });
+      return reply.status(401).send({ error: "Not authenticated" });
+    }
     req.auth = { userId: claims.sub, organizationId: claims.orgId };
   } catch {
     return reply.status(401).send({ error: "Not authenticated" });

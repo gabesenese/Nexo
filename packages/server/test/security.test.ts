@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { corsFor, effectiveMethod, isPublicEndpoint } from "../src/http/security.js";
+import { bucketFor, corsFor, effectiveMethod, isEventStream, isPublicEndpoint } from "../src/http/security.js";
 
 describe("effectiveMethod", () => {
   /**
@@ -47,6 +47,48 @@ describe("isPublicEndpoint", () => {
     expect(isPublicEndpoint("GET", "/api/chat/messages/../../api/conversations")).toBe(false);
     expect(isPublicEndpoint("POST", "/api/chatter")).toBe(false);
     expect(isPublicEndpoint("GET", "/widget.js.map")).toBe(false);
+  });
+});
+
+describe("bucketFor", () => {
+  it("puts credential endpoints on the tight budget", () => {
+    expect(bucketFor("/api/auth/login")).toBe("auth");
+    expect(bucketFor("/api/auth/signup")).toBe("auth");
+    expect(bucketFor("/api/auth/forgot-password")).toBe("auth");
+    expect(bucketFor("/api/auth/reset-password")).toBe("auth");
+    expect(bucketFor("/api/auth/reset-password/abc123")).toBe("auth");
+  });
+
+  /**
+   * The bug this exists to prevent: matching `/api/auth/` by prefix also caught
+   * `/api/auth/me`, which the console calls on nearly every page load. Ordinary
+   * navigation then spent the credential budget, and the operator was locked out
+   * of signing in after about a minute of browsing.
+   */
+  it("keeps session reads off the credential budget", () => {
+    expect(bucketFor("/api/auth/me")).toBe("general");
+    expect(bucketFor("/api/auth/logout")).toBe("general");
+  });
+
+  it("puts the endpoint that spends money on its own budget", () => {
+    expect(bucketFor("/api/chat")).toBe("chat");
+    expect(bucketFor("/api/chat/messages?orgKey=x")).toBe("general");
+  });
+
+  it("ignores the query string when choosing a budget", () => {
+    expect(bucketFor("/api/auth/login?next=/settings")).toBe("auth");
+  });
+});
+
+describe("isEventStream", () => {
+  it("exempts the streams an operator holds open all day", () => {
+    expect(isEventStream("/api/events")).toBe(true);
+    expect(isEventStream("/api/chat/events?orgKey=x&sessionId=y")).toBe(true);
+  });
+
+  it("does not exempt anything else", () => {
+    expect(isEventStream("/api/chat")).toBe(false);
+    expect(isEventStream("/api/eventsomething")).toBe(false);
   });
 });
 

@@ -1173,6 +1173,31 @@ textarea::placeholder {
   width: 100%;
 }
 
+/** Puts "Forgot?" on the password label's line, where it is found without hunting. */
+.field-label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s3);
+}
+
+.login-card .field-label-row label {
+  margin-bottom: 0;
+}
+
+.field-hint-link {
+  font-size: 11.5px;
+  font-family: var(--mono);
+  color: var(--teal);
+  text-decoration: none;
+  margin-bottom: 6px;
+}
+
+.field-hint-link:hover {
+  color: var(--teal-dark);
+  text-decoration: underline;
+}
+
 .login-card .btn {
   width: 100%;
   text-align: center;

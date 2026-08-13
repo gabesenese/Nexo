@@ -388,6 +388,13 @@ export const api = {
   login: (email: string, password: string) =>
     request<AuthUser>("/api/auth/login", { method: "POST", body: JSON.stringify({ email, password }) }),
   logout: () => request<{ ok: true }>("/api/auth/logout", { method: "POST" }),
+  /** Always resolves, whether or not the address has an account, so it cannot be used to enumerate users. */
+  forgotPassword: (email: string) =>
+    request<{ ok: true }>("/api/auth/forgot-password", { method: "POST", body: JSON.stringify({ email }) }),
+  checkResetToken: (token: string) =>
+    request<{ valid: boolean }>(`/api/auth/reset-password/${encodeURIComponent(token)}`),
+  resetPassword: (token: string, password: string) =>
+    request<{ ok: true }>("/api/auth/reset-password", { method: "POST", body: JSON.stringify({ token, password }) }),
   me: async (): Promise<AuthUser | null> => {
     const res = await fetch(`${API_URL}/api/auth/me`, { credentials: "include" });
     if (!res.ok) return null;
@@ -396,8 +403,12 @@ export const api = {
   getOrg: () => request<OrgDetails>("/api/org"),
   renameOrg: (name: string) =>
     request<{ id: string; name: string }>("/api/org", { method: "PATCH", body: JSON.stringify({ name }) }),
+  /** `delivered` is false when the invite exists but its email could not be sent, so the UI can say so. */
   createInvite: (email: string, role: "admin" | "member") =>
-    request<OrgInvite>("/api/org/invites", { method: "POST", body: JSON.stringify({ email, role }) }),
+    request<OrgInvite & { delivered: boolean }>("/api/org/invites", {
+      method: "POST",
+      body: JSON.stringify({ email, role }),
+    }),
   deleteInvite: (id: string) => request<{ ok: true }>(`/api/org/invites/${id}`, { method: "DELETE" }),
   rotateWidgetKey: () => request<{ widgetKey: string }>("/api/widget-key/rotate", { method: "POST" }),
   getWidgetConfig: () => request<WidgetConfig>("/api/widget-config"),

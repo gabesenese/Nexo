@@ -9,6 +9,11 @@ import { embeddingProvider } from "../ingestion/embeddings.js";
  * topics peak at 0.52. This sits between them. Raising it splits paraphrases
  * of the same ask; lowering it merges unrelated topics, which is the worse
  * failure because an operator cannot tell a bad merge from a real pattern.
+ *
+ * `npm run measure:thresholds` reproduces both bands and is what must be run
+ * before this number moves. A cosine similarity is only meaningful within one
+ * embedding space, so **changing the embedding model invalidates this constant
+ * even though no code changed.** Re-measure at that point; never carry it over.
  */
 const SIMILARITY_THRESHOLD = 0.57;
 
@@ -30,6 +35,14 @@ const GAP_REASON = "low_confidence";
  * The measurement used one source on one topic, so it is a starting point
  * rather than a settled number. Re-measure both bands against a broader
  * library before moving it, exactly as the clustering threshold requires.
+ *
+ * Re-measured 2026-08-13 against the demo workspace, which is a broader library
+ * than the original single source: covered 0.547 to 0.819, uncovered 0.427 to
+ * 0.547. **The bands now touch rather than separate**, so 0.57 reports a
+ * genuinely covered question or two as uncovered. Left alone deliberately,
+ * because the sample is thin (12 covered questions) and the move to a cloud
+ * embedding model invalidates the number anyway. Set it from a fresh
+ * `npm run measure:thresholds` at that cutover rather than nudging it now.
  */
 const COVERAGE_THRESHOLD = 0.57;
 

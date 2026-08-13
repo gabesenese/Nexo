@@ -7,13 +7,15 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.scripts.json",
     "test": "vitest run",
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
     "db:seed": "tsx prisma/seed.ts",
     "db:seed:demo": "tsx prisma/demo-seed.ts",
-    "db:backfill:escalation-questions": "tsx prisma/backfill-escalation-questions.ts"
+    "db:backfill:escalation-questions": "tsx prisma/backfill-escalation-questions.ts",
+    "db:reembed": "tsx prisma/reembed.ts",
+    "measure:thresholds": "tsx scripts/measure-thresholds.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.32.1",

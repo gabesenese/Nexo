@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api, can, ROLE_DESCRIPTIONS, ROLE_LABELS, type AuthUser, type InvitableRole, type MemberRole, type OrgDetails, type OrgInvite, type OrgMember } from "../api";
+import { api, AUDIT_LABELS, can, ROLE_DESCRIPTIONS, ROLE_LABELS, type AuthUser, type InvitableRole, type MemberRole, type AuditEvent, type OrgDetails, type OrgInvite, type OrgMember } from "../api";
 import { PlanUsageCard } from "../components/PlanUsageCard";
 import { WebhookCard } from "../components/WebhookCard";
 import { Select } from "../components/Select";
@@ -22,6 +22,7 @@ export function SettingsPage({ onWorkspaceRenamed }: { onWorkspaceRenamed?: (nam
   const [org, setOrg] = useState<OrgDetails | null>(null);
   const [me, setMe] = useState<AuthUser | null>(null);
   const [memberError, setMemberError] = useState<string | null>(null);
+  const [audit, setAudit] = useState<AuditEvent[] | null>(null);
   const [name, setName] = useState("");
   const [savingName, setSavingName] = useState(false);
   const [nameSaved, setNameSaved] = useState(false);
@@ -100,6 +101,8 @@ export function SettingsPage({ onWorkspaceRenamed }: { onWorkspaceRenamed?: (nam
 
   useEffect(() => {
     api.me().then(setMe).catch(() => {});
+    /** Only settings-writers may read it, so a 403 here just means the card stays hidden. */
+    api.getAudit().then((r) => setAudit(r.events)).catch(() => setAudit(null));
     load();
   }, []);
 
@@ -363,6 +366,28 @@ export function SettingsPage({ onWorkspaceRenamed }: { onWorkspaceRenamed?: (nam
           );
         })}
       </div>
+
+      {can(me, "settings:write") && audit && (
+        <div className="card">
+          <h3>Activity log</h3>
+          <div className="card-sub">Who changed what in this workspace.</div>
+          {audit.length === 0 ? (
+            <p className="empty-note">Nothing has been changed yet.</p>
+          ) : (
+            audit.slice(0, 12).map((e) => (
+              <div className="list-item" key={e.id}>
+                <div className="list-info">
+                  <div className="li-title">
+                    {e.actor?.name ?? e.actor?.email ?? "Nexo"} {AUDIT_LABELS[e.action] ?? e.action}
+                    {e.targetLabel && <span className="audit-target"> {e.targetLabel}</span>}
+                  </div>
+                  <div className="attention-meta">{new Date(e.at).toLocaleString()}</div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      )}
 
       {can(me, "team:manage") && (
       <div className="card">

@@ -110,6 +110,7 @@ model Organization {
   widgetConfig  WidgetConfig?
   notifications Notification[]
   webhookEndpoint WebhookEndpoint?
+  auditEvents   AuditEvent[]
 }
 
 model WidgetConfig {
@@ -172,6 +173,29 @@ model Membership {
 
   @@unique([userId, organizationId])
   @@index([organizationId])
+}
+
+model AuditEvent {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  /// Null when Nexo itself acted rather than a person. Email and name are copied
+  /// rather than joined, so the record still reads correctly after the account is
+  /// removed from the workspace, which is when an audit log is most likely read.
+  actorUserId    String?
+  actorEmail     String?
+  actorName      String?
+
+  action         String
+  targetType     String?
+  targetId       String?
+  targetLabel    String?
+  metadata       Json         @default("{}")
+  ip             String?
+  createdAt      DateTime     @default(now())
+
+  @@index([organizationId, createdAt])
 }
 
 model Source {

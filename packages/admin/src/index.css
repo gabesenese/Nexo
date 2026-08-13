@@ -2644,6 +2644,13 @@ textarea::placeholder {
 }
 
 /** Sits under a source in the list so the badge is never the whole story. */
+/** The thing acted on, set apart from the sentence describing the action. */
+.audit-target {
+  font-family: var(--mono);
+  font-size: var(--t-sm);
+  color: var(--slate-soft);
+}
+
 .source-health-detail {
   font-size: var(--t-xs);
   color: var(--slate);

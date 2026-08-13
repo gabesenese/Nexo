@@ -2,6 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { prisma } from "../db/client.js";
 import { requireAuth, requirePermission } from "./auth.js";
+import { recordAudit } from "../audit/record.js";
 import { deliver, newWebhookSecret } from "../handoff/webhookAdapter.js";
 
 const RECENT_DELIVERIES = 10;
@@ -74,7 +75,7 @@ export async function webhookRoutes(app: FastifyInstance) {
     };
   });
 
-  app.put("/api/webhook", { preHandler: [requireAuth, requirePermission("workspace:read")] }, async (req, reply) => {
+  app.put("/api/webhook", { preHandler: [requireAuth, requirePermission("settings:write")] }, async (req, reply) => {
     const { userId, organizationId } = req.auth!;
 
     const parsed = z
@@ -101,6 +102,8 @@ export async function webhookRoutes(app: FastifyInstance) {
       },
     });
 
+    await recordAudit(req, { organizationId, action: "webhook.configured", targetType: "webhook", targetLabel: parsed.data.url });
+
     return {
       url: endpoint.url,
       enabled: endpoint.enabled,
@@ -109,7 +112,7 @@ export async function webhookRoutes(app: FastifyInstance) {
     };
   });
 
-  app.delete("/api/webhook", { preHandler: [requireAuth, requirePermission("workspace:read")] }, async (req, reply) => {
+  app.delete("/api/webhook", { preHandler: [requireAuth, requirePermission("settings:write")] }, async (req, reply) => {
     const { userId, organizationId } = req.auth!;
     await prisma.webhookEndpoint.deleteMany({ where: { organizationId } });
     return { configured: false };

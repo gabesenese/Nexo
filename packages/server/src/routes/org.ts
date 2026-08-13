@@ -7,6 +7,7 @@ import { newWidgetKey, requireAuth, requirePermission, roleOf, setSession } from
 import { env } from "../config/env.js";
 import { sendQuietly } from "../email/provider.js";
 import { inviteEmail } from "../email/messages.js";
+import { recordAudit } from "../audit/record.js";
 
 /** True when removing or demoting this owner would leave the workspace with none. */
 async function lastOwner(organizationId: string): Promise<boolean> {
@@ -43,9 +44,14 @@ export async function orgRoutes(app: FastifyInstance) {
     if (!parsed.success) {
       return reply.status(400).send({ error: "A workspace name is required." });
     }
+    const before = await prisma.organization.findUniqueOrThrow({ where: { id: organizationId }, select: { name: true } });
     const org = await prisma.organization.update({
       where: { id: organizationId },
       data: { name: parsed.data.name },
+    });
+    await recordAudit(req, {
+      organizationId, action: "workspace.renamed", targetType: "organization",
+      targetId: org.id, targetLabel: org.name, metadata: { from: before.name, to: org.name },
     });
     return { id: org.id, name: org.name };
   });
@@ -92,12 +98,24 @@ export async function orgRoutes(app: FastifyInstance) {
      * answer when a delivery fails. `delivered` tells the UI which of the two
      * it is looking at, rather than leaving it to claim an email was sent.
      */
+    await recordAudit(req, {
+      organizationId, action: "invite.created", targetType: "invite",
+      targetId: invite.id, targetLabel: invite.email, metadata: { role: invite.role, delivered },
+    });
+
     return { id: invite.id, email: invite.email, role: invite.role, token: invite.token, delivered };
   });
 
   app.delete<{ Params: { id: string } }>("/api/org/invites/:id", { preHandler: [requireAuth, requirePermission("team:manage")] }, async (req, reply) => {
     const { organizationId } = req.auth!;
+    const invite = await prisma.invite.findFirst({ where: { id: req.params.id, organizationId } });
     await prisma.invite.deleteMany({ where: { id: req.params.id, organizationId } });
+    if (invite) {
+      await recordAudit(req, {
+        organizationId, action: "invite.revoked", targetType: "invite",
+        targetId: invite.id, targetLabel: invite.email,
+      });
+    }
     return { ok: true };
   });
 
@@ -149,6 +167,12 @@ export async function orgRoutes(app: FastifyInstance) {
       const updated = await prisma.membership.update({
         where: { userId_organizationId: { userId: req.params.userId, organizationId } },
         data: { role: nextRole },
+        include: { user: { select: { email: true } } },
+      });
+      await recordAudit(req, {
+        organizationId, action: "member.role_changed", targetType: "user",
+        targetId: updated.userId, targetLabel: updated.user.email,
+        metadata: { from: membership.role, to: nextRole },
       });
       return { id: updated.userId, role: updated.role };
     },
@@ -189,6 +213,8 @@ export async function orgRoutes(app: FastifyInstance) {
         });
       }
 
+      const removed = await prisma.user.findUnique({ where: { id: req.params.userId }, select: { email: true } });
+
       await prisma.$transaction([
         /** Scoped to this workspace: they may still hold assignments in another. */
         prisma.conversation.updateMany({
@@ -199,6 +225,11 @@ export async function orgRoutes(app: FastifyInstance) {
           where: { userId_organizationId: { userId: req.params.userId, organizationId } },
         }),
       ]);
+
+      await recordAudit(req, {
+        organizationId, action: "member.removed", targetType: "user",
+        targetId: req.params.userId, targetLabel: removed?.email, metadata: { role: membership.role },
+      });
       return { ok: true };
     },
   );
@@ -209,6 +240,7 @@ export async function orgRoutes(app: FastifyInstance) {
       where: { id: organizationId },
       data: { widgetKey: newWidgetKey() },
     });
+    await recordAudit(req, { organizationId, action: "widget.key_rotated", targetType: "organization", targetId: org.id });
     return { widgetKey: org.widgetKey };
   });
 
@@ -236,6 +268,10 @@ export async function orgRoutes(app: FastifyInstance) {
       where: { organizationId },
       update: parsed.data,
       create: { organizationId, ...parsed.data },
+    });
+    await recordAudit(req, {
+      organizationId, action: "widget.config_changed", targetType: "organization",
+      targetId: organizationId, metadata: { accentColor: config.accentColor },
     });
     return { accentColor: config.accentColor, welcomeMessage: config.welcomeMessage };
   });

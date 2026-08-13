@@ -4,6 +4,7 @@ import { queueHelpCenterUrl, queuePdf, reindexSource } from "../ingestion/pipeli
 import { requireAuth, requirePermission } from "./auth.js";
 import { canAddKnowledgeSource } from "../billing/usage.js";
 import { sourceHealth } from "../knowledge/sourceHealth.js";
+import { recordAudit } from "../audit/record.js";
 
 async function rejectIfAtSourceLimit(organizationId: string) {
   const check = await canAddKnowledgeSource(organizationId);
@@ -128,12 +129,26 @@ export async function sourcesRoutes(app: FastifyInstance) {
   });
 
   app.delete<{ Params: { id: string } }>("/api/sources/:id", { preHandler: [requireAuth, requirePermission("knowledge:write")] }, async (req, reply) => {
+    const organizationId = req.auth!.organizationId;
+    /** Read first so the record can name the source after the row is gone. */
+    const source = await prisma.source.findFirst({
+      where: { id: req.params.id, organizationId },
+      select: { name: true, type: true },
+    });
     const { count } = await prisma.source.deleteMany({
-      where: { id: req.params.id, organizationId: req.auth!.organizationId },
+      where: { id: req.params.id, organizationId },
     });
     if (count === 0) {
       return reply.status(404).send({ error: "source not found" });
     }
+    await recordAudit(req, {
+      organizationId,
+      action: "knowledge.source_removed",
+      targetType: "source",
+      targetId: req.params.id,
+      targetLabel: source?.name,
+      metadata: { type: source?.type },
+    });
     return { ok: true };
   });
 }

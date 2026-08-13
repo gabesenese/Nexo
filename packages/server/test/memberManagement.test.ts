@@ -21,7 +21,7 @@ suite("member management", () => {
   const cookies = new Map<Role, string>();
 
   beforeAll(async () => {
-    app = await buildApp({ logger: false, rateLimits: false });
+    app = await buildApp({ logger: false, rateLimits: false, retentionSweeps: false });
     await app.ready();
   });
 

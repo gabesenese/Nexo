@@ -29,7 +29,7 @@ suite("rate limiting", () => {
     await prisma.$executeRawUnsafe(
       'TRUNCATE "Membership","Invite","Escalation","Message","Conversation","Chunk","Source","Lead","User","Organization" RESTART IDENTITY CASCADE',
     );
-    app = await buildApp({ logger: false, rateLimits: LIMITS });
+    app = await buildApp({ logger: false, rateLimits: LIMITS, retentionSweeps: false });
     await app.ready();
   });
 

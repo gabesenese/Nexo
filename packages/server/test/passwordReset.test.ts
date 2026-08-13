@@ -21,7 +21,7 @@ suite("password reset", () => {
   let app: FastifyInstance;
 
   beforeAll(async () => {
-    app = await buildApp({ logger: false, rateLimits: false });
+    app = await buildApp({ logger: false, rateLimits: false, retentionSweeps: false });
     await app.ready();
   });
 

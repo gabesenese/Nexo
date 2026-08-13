@@ -23,7 +23,10 @@ export type AuditAction =
   | "webhook.configured"
   | "webhook.removed"
   | "knowledge.source_removed"
-  | "password.reset_completed";
+  | "password.reset_completed"
+  | "retention.policy_changed"
+  | "retention.applied"
+  | "data.exported";
 
 export interface AuditEntry {
   organizationId: string;
@@ -86,4 +89,7 @@ export const AUDIT_LABELS: Record<AuditAction, string> = {
   "webhook.removed": "removed the handoff webhook",
   "knowledge.source_removed": "removed a knowledge source",
   "password.reset_completed": "completed a password reset",
+  "retention.policy_changed": "changed the retention policy",
+  "retention.applied": "applied the retention policy",
+  "data.exported": "exported the workspace data",
 };

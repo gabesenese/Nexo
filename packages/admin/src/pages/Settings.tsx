@@ -23,6 +23,9 @@ export function SettingsPage({ onWorkspaceRenamed }: { onWorkspaceRenamed?: (nam
   const [me, setMe] = useState<AuthUser | null>(null);
   const [memberError, setMemberError] = useState<string | null>(null);
   const [audit, setAudit] = useState<AuditEvent[] | null>(null);
+  const [privacy, setPrivacy] = useState<{ conversationRetentionDays: number | null; anonymizedConversations: number } | null>(null);
+  const [savingRetention, setSavingRetention] = useState(false);
+  const [retentionNotice, setRetentionNotice] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [savingName, setSavingName] = useState(false);
   const [nameSaved, setNameSaved] = useState(false);
@@ -103,6 +106,7 @@ export function SettingsPage({ onWorkspaceRenamed }: { onWorkspaceRenamed?: (nam
     api.me().then(setMe).catch(() => {});
     /** Only settings-writers may read it, so a 403 here just means the card stays hidden. */
     api.getAudit().then((r) => setAudit(r.events)).catch(() => setAudit(null));
+    api.getPrivacy().then(setPrivacy).catch(() => setPrivacy(null));
     load();
   }, []);
 
@@ -169,6 +173,29 @@ export function SettingsPage({ onWorkspaceRenamed }: { onWorkspaceRenamed?: (nam
       await load();
     } catch (err) {
       setMemberError((err as Error).message);
+    }
+  }
+
+  async function saveRetention(days: number | null) {
+    setSavingRetention(true);
+    setRetentionNotice(null);
+    try {
+      const r = await api.setRetention(days);
+      setPrivacy((p) => (p ? { ...p, conversationRetentionDays: r.conversationRetentionDays } : p));
+      /**
+       * Says what it did, not what it will do. The policy is applied on save, so
+       * "0 conversations" is a real answer rather than a promise about later.
+       */
+      setRetentionNotice(
+        days === null
+          ? "Conversations are now kept indefinitely."
+          : `Kept for ${days} days. ${r.conversationsAnonymized} older conversation${r.conversationsAnonymized === 1 ? "" : "s"} cleared just now.`,
+      );
+      await api.getPrivacy().then(setPrivacy).catch(() => {});
+    } catch (err) {
+      setRetentionNotice((err as Error).message);
+    } finally {
+      setSavingRetention(false);
     }
   }
 
@@ -366,6 +393,55 @@ export function SettingsPage({ onWorkspaceRenamed }: { onWorkspaceRenamed?: (nam
           );
         })}
       </div>
+
+      {can(me, "settings:write") && privacy && (
+        <div className="card">
+          <h3>Data and retention</h3>
+          <div className="card-sub">
+            What Nexo keeps of your customers' conversations, and for how long.
+          </div>
+
+          <div className="field-row">
+            <label htmlFor="retention">Keep conversations for</label>
+            <div className="field-control">
+              <Select
+                id="retention"
+                ariaLabel="Conversation retention"
+                value={privacy.conversationRetentionDays === null ? "forever" : String(privacy.conversationRetentionDays)}
+                onChange={(v) => saveRetention(v === "forever" ? null : Number(v))}
+                options={[
+                  { value: "forever", label: "Indefinitely" },
+                  { value: "30", label: "30 days" },
+                  { value: "90", label: "90 days" },
+                  { value: "180", label: "180 days" },
+                  { value: "365", label: "1 year" },
+                ]}
+              />
+              <p className="field-help">
+                Past this, the message text, internal notes and escalation details are removed. The
+                conversation itself stays, so your resolution history and Impact figures do not change.
+                {privacy.anonymizedConversations > 0 &&
+                  ` ${privacy.anonymizedConversations} conversation${privacy.anonymizedConversations === 1 ? " has" : "s have"} been cleared so far.`}
+              </p>
+              {savingRetention && <p className="field-help">Applying…</p>}
+              {retentionNotice && <p className="source-note">{retentionNotice}</p>}
+            </div>
+          </div>
+
+          <div className="field-row">
+            <span className="field-label">Export everything</span>
+            <div className="field-control">
+              <p className="field-help">
+                Every conversation, message, escalation and internal note this workspace holds, as one
+                JSON file.
+              </p>
+            </div>
+            <a className="btn-small field-action" href={api.exportUrl()} download>
+              Download
+            </a>
+          </div>
+        </div>
+      )}
 
       {can(me, "settings:write") && audit && (
         <div className="card">

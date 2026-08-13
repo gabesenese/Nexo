@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { api, sourceStatusLabel, type SourceSummary } from "../api";
+import { api, can, sourceStatusLabel, type AuthUser, type SourceSummary } from "../api";
 
 type Notice =
   | { tone: "info"; text: string }
@@ -39,6 +39,7 @@ function progressLabel(source: SourceSummary): string {
 
 export function SourcesPage() {
   const [sources, setSources] = useState<SourceSummary[]>([]);
+  const [me, setMe] = useState<AuthUser | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [url, setUrl] = useState("");
   const [busy, setBusy] = useState(false);
@@ -73,6 +74,7 @@ export function SourcesPage() {
   }
 
   useEffect(() => {
+    api.me().then(setMe).catch(() => {});
     refresh();
     const id = setInterval(refresh, 2000);
     return () => clearInterval(id);
@@ -165,6 +167,7 @@ export function SourcesPage() {
     }
   }
 
+  const canEdit = can(me, "knowledge:write");
   const showEmptyHero = loaded && sources.length === 0;
   const selected = sources.find((s) => s.id === selectedId) ?? null;
 
@@ -212,6 +215,7 @@ export function SourcesPage() {
         </div>
       )}
 
+      {canEdit && (
       <div className="row">
         <div className="card">
           <h3>Add a help-center article</h3>
@@ -281,6 +285,7 @@ export function SourcesPage() {
           </label>
         </div>
       </div>
+      )}
 
       {notice && (
         <div className={`notice notice-${notice.tone}`}>
@@ -385,6 +390,7 @@ export function SourcesPage() {
               </p>
             )}
 
+            {canEdit && (
             <div className="reply-actions">
               {selected.type === "help_center" && (
                 <button
@@ -405,6 +411,7 @@ export function SourcesPage() {
                 {deletingId === selected.id ? "Removing…" : "Remove"}
               </button>
             </div>
+            )}
           </div>
         )}
       </div>

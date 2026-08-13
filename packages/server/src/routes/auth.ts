@@ -5,6 +5,7 @@ import { z } from "zod";
 import { prisma } from "../db/client.js";
 import { env } from "../config/env.js";
 import { trialEndDate } from "../billing/trial.js";
+import { can, deniedMessage, permissionsFor, type Permission } from "../auth/policy.js";
 
 /** Opaque, unguessable public key a customer embeds as data-org-key. */
 export function newWidgetKey(): string {
@@ -111,6 +112,8 @@ export async function authRoutes(app: FastifyInstance) {
       id: user.id,
       email: user.email,
       name: user.name,
+      role: "owner" as const,
+      permissions: permissionsFor("owner"),
       organization: {
         id: organization.id,
         name: organization.name,
@@ -143,6 +146,8 @@ export async function authRoutes(app: FastifyInstance) {
       id: user.id,
       email: user.email,
       name: user.name,
+      role: membership.role,
+      permissions: permissionsFor(membership.role),
       organization: {
         id: membership.organization.id,
         name: membership.organization.name,
@@ -186,6 +191,13 @@ export async function authRoutes(app: FastifyInstance) {
         id: membership.user.id,
         email: membership.user.email,
         name: membership.user.name,
+        /**
+         * Sent so the console can hide actions this person cannot take. The
+         * server remains the only thing enforcing them; this just stops the UI
+         * offering a button whose only outcome is a 403.
+         */
+        role: membership.role,
+        permissions: permissionsFor(membership.role),
         organization: {
           id: membership.organization.id,
           name: membership.organization.name,
@@ -204,6 +216,23 @@ export async function roleOf(userId: string, organizationId: string) {
     where: { userId_organizationId: { userId, organizationId } },
   });
   return membership?.role ?? null;
+}
+
+/**
+ * Guards a route with the permission it needs, rather than with a role check
+ * written out by hand. Used as `preHandler: [requireAuth, requirePermission(...)]`
+ * so the permission a route needs is visible in its declaration, and adding a
+ * route without one is a visible omission instead of a silent open door.
+ */
+export function requirePermission(permission: Permission) {
+  return async function checkPermission(req: FastifyRequest, reply: FastifyReply) {
+    /** requireAuth runs first and answers already if there is no session. */
+    if (!req.auth) return;
+    const role = await roleOf(req.auth.userId, req.auth.organizationId);
+    if (!can(role, permission)) {
+      return reply.status(403).send({ error: deniedMessage(role, permission) });
+    }
+  };
 }
 
 /**

@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { prisma } from "../db/client.js";
-import { requireAuth } from "./auth.js";
+import { requireAuth, requirePermission } from "./auth.js";
 import { notifyOrg, notifySession } from "../realtime/bus.js";
 import { DraftUnavailableError, generateDraft } from "../orchestrator/stateMachine.js";
 
@@ -12,7 +12,7 @@ const noteInclude = {
 } as const;
 
 export async function conversationsRoutes(app: FastifyInstance) {
-  app.get("/api/conversations", { preHandler: requireAuth }, async (req) => {
+  app.get("/api/conversations", { preHandler: [requireAuth, requirePermission("workspace:read")] }, async (req) => {
     const conversations = await prisma.conversation.findMany({
       where: { organizationId: req.auth!.organizationId },
       orderBy: { createdAt: "desc" },
@@ -34,7 +34,7 @@ export async function conversationsRoutes(app: FastifyInstance) {
    */
   app.post<{ Params: { id: string }; Body: { userId: string | null } }>(
     "/api/conversations/:id/assign",
-    { preHandler: requireAuth },
+    { preHandler: [requireAuth, requirePermission("conversations:write")] },
     async (req, reply) => {
       const parsed = z.object({ userId: z.string().min(1).nullable() }).safeParse(req.body);
       if (!parsed.success) {
@@ -73,7 +73,7 @@ export async function conversationsRoutes(app: FastifyInstance) {
 
   app.post<{ Params: { id: string }; Body: { message: string } }>(
     "/api/conversations/:id/reply",
-    { preHandler: requireAuth },
+    { preHandler: [requireAuth, requirePermission("conversations:write")] },
     async (req, reply) => {
       const content = req.body?.message?.trim();
       if (!content) {
@@ -111,7 +111,7 @@ export async function conversationsRoutes(app: FastifyInstance) {
    */
   app.post<{ Params: { id: string } }>(
     "/api/conversations/:id/draft",
-    { preHandler: requireAuth },
+    { preHandler: [requireAuth, requirePermission("conversations:write")] },
     async (req, reply) => {
       const { organizationId } = req.auth!;
       const conversation = await prisma.conversation.findFirst({
@@ -141,7 +141,7 @@ export async function conversationsRoutes(app: FastifyInstance) {
    */
   app.post<{ Params: { id: string }; Body: { note?: string } }>(
     "/api/conversations/:id/escalate",
-    { preHandler: requireAuth },
+    { preHandler: [requireAuth, requirePermission("conversations:write")] },
     async (req, reply) => {
       const { organizationId, userId } = req.auth!;
       const conversation = await prisma.conversation.findFirst({
@@ -187,7 +187,7 @@ export async function conversationsRoutes(app: FastifyInstance) {
    */
   app.post<{ Params: { id: string }; Body: { body: string } }>(
     "/api/conversations/:id/notes",
-    { preHandler: requireAuth },
+    { preHandler: [requireAuth, requirePermission("conversations:write")] },
     async (req, reply) => {
       const parsed = z.object({ body: z.string().trim().min(1) }).safeParse(req.body);
       if (!parsed.success) {
@@ -222,7 +222,7 @@ export async function conversationsRoutes(app: FastifyInstance) {
    */
   app.post<{ Params: { id: string } }>(
     "/api/conversations/:id/reopen",
-    { preHandler: requireAuth },
+    { preHandler: [requireAuth, requirePermission("conversations:write")] },
     async (req, reply) => {
       const { organizationId } = req.auth!;
       const conversation = await prisma.conversation.findFirst({
@@ -253,7 +253,7 @@ export async function conversationsRoutes(app: FastifyInstance) {
 
   app.post<{ Params: { id: string } }>(
     "/api/conversations/:id/resolve",
-    { preHandler: requireAuth },
+    { preHandler: [requireAuth, requirePermission("conversations:write")] },
     async (req, reply) => {
       const conversation = await prisma.conversation.findFirst({
         where: { id: req.params.id, organizationId: req.auth!.organizationId },

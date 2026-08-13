@@ -3,7 +3,7 @@ import type { FastifyInstance } from "fastify";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "../db/client.js";
-import { newWidgetKey, requireAuth, roleOf, setSession } from "./auth.js";
+import { newWidgetKey, requireAuth, requirePermission, setSession } from "./auth.js";
 import { env } from "../config/env.js";
 import { sendQuietly } from "../email/provider.js";
 import { inviteEmail } from "../email/messages.js";
@@ -13,7 +13,7 @@ function newToken() {
 }
 
 export async function orgRoutes(app: FastifyInstance) {
-  app.get("/api/org", { preHandler: requireAuth }, async (req) => {
+  app.get("/api/org", { preHandler: [requireAuth, requirePermission("workspace:read")] }, async (req) => {
     const organizationId = req.auth!.organizationId;
     const org = await prisma.organization.findUniqueOrThrow({
       where: { id: organizationId },
@@ -32,12 +32,8 @@ export async function orgRoutes(app: FastifyInstance) {
     };
   });
 
-  app.patch("/api/org", { preHandler: requireAuth }, async (req, reply) => {
-    const { userId, organizationId } = req.auth!;
-    const role = await roleOf(userId, organizationId);
-    if (role !== "owner" && role !== "admin") {
-      return reply.status(403).send({ error: "Only owners and admins can rename the workspace." });
-    }
+  app.patch("/api/org", { preHandler: [requireAuth, requirePermission("settings:write")] }, async (req, reply) => {
+    const { organizationId } = req.auth!;
     const parsed = z.object({ name: z.string().trim().min(1).max(120) }).safeParse(req.body);
     if (!parsed.success) {
       return reply.status(400).send({ error: "A workspace name is required." });
@@ -49,14 +45,16 @@ export async function orgRoutes(app: FastifyInstance) {
     return { id: org.id, name: org.name };
   });
 
-  app.post("/api/org/invites", { preHandler: requireAuth }, async (req, reply) => {
-    const { userId, organizationId } = req.auth!;
-    const role = await roleOf(userId, organizationId);
-    if (role !== "owner" && role !== "admin") {
-      return reply.status(403).send({ error: "Only owners and admins can invite teammates." });
-    }
+  app.post("/api/org/invites", { preHandler: [requireAuth, requirePermission("team:manage")] }, async (req, reply) => {
+    const { organizationId } = req.auth!;
     const parsed = z
-      .object({ email: z.string().trim().email(), role: z.enum(["admin", "member"]).default("member") })
+      /**
+       * Owner is absent on purpose: it is the role that can rotate the widget
+       * key and, later, end the subscription, so it is transferred rather than
+       * handed out at invite time. Agent is the default because most people
+       * joining a support workspace are there to answer customers.
+       */
+      .object({ email: z.string().trim().email(), role: z.enum(["admin", "agent", "viewer"]).default("agent") })
       .safeParse(req.body);
     if (!parsed.success) {
       return reply.status(400).send({ error: "A valid email is required." });
@@ -92,22 +90,14 @@ export async function orgRoutes(app: FastifyInstance) {
     return { id: invite.id, email: invite.email, role: invite.role, token: invite.token, delivered };
   });
 
-  app.delete<{ Params: { id: string } }>("/api/org/invites/:id", { preHandler: requireAuth }, async (req, reply) => {
-    const { userId, organizationId } = req.auth!;
-    const role = await roleOf(userId, organizationId);
-    if (role !== "owner" && role !== "admin") {
-      return reply.status(403).send({ error: "Only owners and admins can revoke invites." });
-    }
+  app.delete<{ Params: { id: string } }>("/api/org/invites/:id", { preHandler: [requireAuth, requirePermission("team:manage")] }, async (req, reply) => {
+    const { organizationId } = req.auth!;
     await prisma.invite.deleteMany({ where: { id: req.params.id, organizationId } });
     return { ok: true };
   });
 
-  app.post("/api/widget-key/rotate", { preHandler: requireAuth }, async (req, reply) => {
-    const { userId, organizationId } = req.auth!;
-    const role = await roleOf(userId, organizationId);
-    if (role !== "owner" && role !== "admin") {
-      return reply.status(403).send({ error: "Only owners and admins can rotate the widget key." });
-    }
+  app.post("/api/widget-key/rotate", { preHandler: [requireAuth, requirePermission("security:manage")] }, async (req, reply) => {
+    const { organizationId } = req.auth!;
     const org = await prisma.organization.update({
       where: { id: organizationId },
       data: { widgetKey: newWidgetKey() },
@@ -115,7 +105,7 @@ export async function orgRoutes(app: FastifyInstance) {
     return { widgetKey: org.widgetKey };
   });
 
-  app.get("/api/widget-config", { preHandler: requireAuth }, async (req) => {
+  app.get("/api/widget-config", { preHandler: [requireAuth, requirePermission("workspace:read")] }, async (req) => {
     const config = await prisma.widgetConfig.findUnique({ where: { organizationId: req.auth!.organizationId } });
     return {
       accentColor: config?.accentColor ?? "#204c40",
@@ -124,12 +114,8 @@ export async function orgRoutes(app: FastifyInstance) {
     };
   });
 
-  app.patch("/api/widget-config", { preHandler: requireAuth }, async (req, reply) => {
-    const { userId, organizationId } = req.auth!;
-    const role = await roleOf(userId, organizationId);
-    if (role !== "owner" && role !== "admin") {
-      return reply.status(403).send({ error: "Only owners and admins can change widget settings." });
-    }
+  app.patch("/api/widget-config", { preHandler: [requireAuth, requirePermission("settings:write")] }, async (req, reply) => {
+    const { organizationId } = req.auth!;
     const parsed = z
       .object({
         accentColor: z.string().trim().regex(/^#[0-9a-fA-F]{6}$/, "Accent color must be a hex value like #204c40."),

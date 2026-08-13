@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { api, type AuthUser, type Conversation, type Escalation, type Message, type OrgMember } from "../api";
+import { api, can, type AuthUser, type Conversation, type Escalation, type Message, type OrgMember } from "../api";
 import { subscribeToUpdates } from "../realtime";
 import { Select } from "../components/Select";
 
@@ -142,6 +142,7 @@ export function ConversationsPage() {
   const [filter, setFilter] = useState<Filter>("open");
   const [query, setQuery] = useState("");
   const [me, setMe] = useState<AuthUser | null>(null);
+  const canReply = can(me, "conversations:write");
   const [noteText, setNoteText] = useState("");
   const [savingNote, setSavingNote] = useState(false);
   const [drafting, setDrafting] = useState(false);
@@ -437,21 +438,27 @@ export function ConversationsPage() {
               </div>
               <div className="conv-detail-controls">
                 <span className={`badge ${selected.status}`}>{selected.status}</span>
-                {selected.assignedUserId !== me?.id && selected.status !== "resolved" && (
+                {canReply && selected.assignedUserId !== me?.id && selected.status !== "resolved" && (
                   <button className="btn-small" onClick={handleClaim}>
                     Claim
                   </button>
                 )}
-                <Select
-                  className="assign-select"
-                  ariaLabel="Owner"
-                  value={selected.assignedUserId ?? ""}
-                  onChange={handleAssign}
-                  options={[
-                    { value: "", label: "Unassigned" },
-                    ...members.map((m) => ({ value: m.id, label: m.name })),
-                  ]}
-                />
+                {canReply ? (
+                  <Select
+                    className="assign-select"
+                    ariaLabel="Owner"
+                    value={selected.assignedUserId ?? ""}
+                    onChange={handleAssign}
+                    options={[
+                      { value: "", label: "Unassigned" },
+                      ...members.map((m) => ({ value: m.id, label: m.name })),
+                    ]}
+                  />
+                ) : (
+                  <span className="badge neutral">
+                    {selected.assignedUser ? `Owned by ${selected.assignedUser.name}` : "Unassigned"}
+                  </span>
+                )}
               </div>
             </div>
 
@@ -526,6 +533,7 @@ export function ConversationsPage() {
                   ))}
                 </ul>
               )}
+              {canReply && (
               <div className="field-inline">
                 <input
                   type="text"
@@ -541,6 +549,7 @@ export function ConversationsPage() {
                   {savingNote ? "Saving…" : "Add note"}
                 </button>
               </div>
+              )}
             </div>
 
             <div className="conv-transcript">
@@ -576,7 +585,18 @@ export function ConversationsPage() {
               ))}
             </div>
 
-            {selected.status === "resolved" ? (
+            {!canReply ? (
+              /**
+               * A Viewer can read the thread and the context block, and cannot
+               * act on it. Saying so beats a disabled reply box, which reads as
+               * something broken rather than something they lack.
+               */
+              <div className="conv-resolved-note">
+                <span className="empty-note">
+                  Your role is read-only. Ask an agent or admin to reply to this conversation.
+                </span>
+              </div>
+            ) : selected.status === "resolved" ? (
               <div className="conv-resolved-note">
                 <span className="empty-note">This conversation is resolved.</span>
                 <button className="btn-small" onClick={handleReopen}>

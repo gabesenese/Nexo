@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api, type OrgDetails, type OrgInvite } from "../api";
+import { api, can, ROLE_DESCRIPTIONS, ROLE_LABELS, type AuthUser, type InvitableRole, type OrgDetails, type OrgInvite } from "../api";
 import { PlanUsageCard } from "../components/PlanUsageCard";
 import { WebhookCard } from "../components/WebhookCard";
 import { Select } from "../components/Select";
@@ -20,12 +20,13 @@ const WIDGET_COLORS = ["#204c40", "#2f6f5e", "#c9873a", "#181b1d", "#2b3f8a"];
 
 export function SettingsPage({ onWorkspaceRenamed }: { onWorkspaceRenamed?: (name: string) => void }) {
   const [org, setOrg] = useState<OrgDetails | null>(null);
+  const [me, setMe] = useState<AuthUser | null>(null);
   const [name, setName] = useState("");
   const [savingName, setSavingName] = useState(false);
   const [nameSaved, setNameSaved] = useState(false);
 
   const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteRole, setInviteRole] = useState<"admin" | "member">("member");
+  const [inviteRole, setInviteRole] = useState<InvitableRole>("agent");
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [inviteNotice, setInviteNotice] = useState<string | null>(null);
   const [inviting, setInviting] = useState(false);
@@ -97,6 +98,7 @@ export function SettingsPage({ onWorkspaceRenamed }: { onWorkspaceRenamed?: (nam
   }
 
   useEffect(() => {
+    api.me().then(setMe).catch(() => {});
     load();
   }, []);
 
@@ -157,12 +159,21 @@ export function SettingsPage({ onWorkspaceRenamed }: { onWorkspaceRenamed?: (nam
       <div className="page-top">
         <div>
           <h1>Settings</h1>
-          <div className="sub">Manage your workspace and team</div>
+          <div className="sub">
+            Manage your workspace and team
+            {me && (
+              <>
+                {" · "}
+                <span className="role-tag">{ROLE_LABELS[me.role]}</span>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
       <PlanUsageCard />
 
+      {can(me, "settings:write") && (
       <div className="card">
         <h3>Workspace</h3>
         <div className="card-sub">The name your team and customers see.</div>
@@ -182,7 +193,10 @@ export function SettingsPage({ onWorkspaceRenamed }: { onWorkspaceRenamed?: (nam
           </div>
         </form>
       </div>
+      )}
 
+      {can(me, "settings:write") && (
+      <>
       <div className="card">
         <h3>Widget</h3>
         <div className="card-sub">The branding your customers see in the chat widget.</div>
@@ -270,6 +284,8 @@ export function SettingsPage({ onWorkspaceRenamed }: { onWorkspaceRenamed?: (nam
       </div>
 
       <WebhookCard />
+      </>
+      )}
 
       <div className="card">
         <h3>Members</h3>
@@ -281,11 +297,12 @@ export function SettingsPage({ onWorkspaceRenamed }: { onWorkspaceRenamed?: (nam
               <div className="li-title">{m.name}</div>
               <div className="li-sub">{m.email}</div>
             </div>
-            <span className="badge neutral mono">{m.role}</span>
+            <span className="badge neutral mono">{ROLE_LABELS[m.role]}</span>
           </div>
         ))}
       </div>
 
+      {can(me, "team:manage") && (
       <div className="card">
         <h3>Invite a teammate</h3>
         <div className="card-sub">
@@ -307,10 +324,11 @@ export function SettingsPage({ onWorkspaceRenamed }: { onWorkspaceRenamed?: (nam
                   id="invite-role"
                   ariaLabel="Role"
                   value={inviteRole}
-                  onChange={(v) => setInviteRole(v as "admin" | "member")}
+                  onChange={(v) => setInviteRole(v as InvitableRole)}
                   options={[
-                    { value: "member", label: "Member" },
+                    { value: "agent", label: "Agent" },
                     { value: "admin", label: "Admin" },
+                    { value: "viewer", label: "Viewer" },
                   ]}
                 />
               </div>
@@ -332,7 +350,7 @@ export function SettingsPage({ onWorkspaceRenamed }: { onWorkspaceRenamed?: (nam
                   <div className="li-title">{inv.email}</div>
                   <div className="li-sub mono">{inviteLink(inv.token)}</div>
                 </div>
-                <span className="badge neutral mono">{inv.role}</span>
+                <span className="badge neutral mono" title={ROLE_DESCRIPTIONS[inv.role]}>{ROLE_LABELS[inv.role]}</span>
                 <button className="btn-small" onClick={() => copyLink(inv)}>
                   {copied === inv.id ? "Copied" : "Copy link"}
                 </button>
@@ -344,6 +362,7 @@ export function SettingsPage({ onWorkspaceRenamed }: { onWorkspaceRenamed?: (nam
           </div>
         )}
       </div>
+      )}
     </div>
   );
 }

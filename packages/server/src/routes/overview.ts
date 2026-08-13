@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { prisma } from "../db/client.js";
-import { requireAuth } from "./auth.js";
+import { requireAuth, requirePermission } from "./auth.js";
 import { findKnowledgeGaps } from "../knowledge/gaps.js";
 import { needsAttention, sourceHealth } from "../knowledge/sourceHealth.js";
 
@@ -30,7 +30,7 @@ function startOfToday(): Date {
  * section with nothing behind it returns empty rather than a placeholder.
  */
 export async function overviewRoutes(app: FastifyInstance) {
-  app.get("/api/overview", { preHandler: requireAuth }, async (req) => {
+  app.get("/api/overview", { preHandler: [requireAuth, requirePermission("workspace:read")] }, async (req) => {
     const organizationId = req.auth!.organizationId;
 
     const [

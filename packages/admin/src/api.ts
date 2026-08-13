@@ -1,11 +1,43 @@
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
 
+export type Permission =
+  | "workspace:read"
+  | "conversations:write"
+  | "knowledge:write"
+  | "settings:write"
+  | "team:manage"
+  | "security:manage";
+
 export interface AuthUser {
   id: string;
   email: string;
   name: string;
+  role: MemberRole;
+  /**
+   * Sent by the server rather than derived here, so the console cannot drift
+   * out of step with the policy. This only decides what to show: the server
+   * enforces it, and hiding a button is a courtesy, never a control.
+   */
+  permissions: Permission[];
   organization: { id: string; name: string; slug: string; widgetKey: string };
 }
+
+export function can(user: AuthUser | null, permission: Permission): boolean {
+  return user?.permissions?.includes(permission) ?? false;
+}
+
+export const ROLE_LABELS: Record<MemberRole, string> = {
+  owner: "Owner",
+  admin: "Admin",
+  agent: "Agent",
+  viewer: "Viewer",
+};
+
+export const ROLE_DESCRIPTIONS: Record<InvitableRole, string> = {
+  admin: "Everything except transferring ownership",
+  agent: "Answer and resolve conversations",
+  viewer: "Read-only",
+};
 
 export interface ChatCitation {
   id: string;
@@ -21,7 +53,10 @@ export interface ChatReply {
   escalated: boolean;
 }
 
-export type MemberRole = "owner" | "admin" | "member";
+export type MemberRole = "owner" | "admin" | "agent" | "viewer";
+
+/** Owner is transferred rather than invited, so it is not offered here. */
+export type InvitableRole = "admin" | "agent" | "viewer";
 
 export interface OrgMember {
   id: string;
@@ -33,7 +68,7 @@ export interface OrgMember {
 export interface OrgInvite {
   id: string;
   email: string;
-  role: "admin" | "member";
+  role: InvitableRole;
   token: string;
   createdAt: string;
 }
@@ -404,7 +439,7 @@ export const api = {
   renameOrg: (name: string) =>
     request<{ id: string; name: string }>("/api/org", { method: "PATCH", body: JSON.stringify({ name }) }),
   /** `delivered` is false when the invite exists but its email could not be sent, so the UI can say so. */
-  createInvite: (email: string, role: "admin" | "member") =>
+  createInvite: (email: string, role: InvitableRole) =>
     request<OrgInvite & { delivered: boolean }>("/api/org/invites", {
       method: "POST",
       body: JSON.stringify({ email, role }),

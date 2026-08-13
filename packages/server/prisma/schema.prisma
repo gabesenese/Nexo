@@ -100,6 +100,11 @@ model Organization {
   plan          Plan           @default(essentials)
   trialEndsAt   DateTime?
 
+  /// How long conversation content is kept, in days. Null keeps it indefinitely,
+  /// which is the existing behaviour and stays the default: a retention policy
+  /// deletes customer data, so it is opted into rather than applied silently.
+  conversationRetentionDays Int?
+
   averageHandleMinutes Int?
   supportHourlyCostCad Float?
   memberships   Membership[]
@@ -243,6 +248,9 @@ model Conversation {
   assignedUser   User?              @relation("ConversationAssignee", fields: [assignedUserId], references: [id], onDelete: SetNull)
   assignedAt     DateTime?
   resolvedAt     DateTime?
+  /// Set when retention stripped the content. The row survives so counts and
+  /// resolution history stay true; only what the customer said is gone.
+  anonymizedAt   DateTime?
   reopenCount    Int                @default(0)
   lastReopenedAt DateTime?
   createdAt      DateTime           @default(now())

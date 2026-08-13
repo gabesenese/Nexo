@@ -45,6 +45,9 @@ export const AUDIT_LABELS: Record<string, string> = {
   "webhook.removed": "removed the handoff webhook",
   "knowledge.source_removed": "removed a knowledge source",
   "password.reset_completed": "completed a password reset",
+  "retention.policy_changed": "changed the retention policy",
+  "retention.applied": "applied the retention policy",
+  "data.exported": "exported the workspace data",
 };
 
 export function can(user: AuthUser | null, permission: Permission): boolean {
@@ -464,6 +467,13 @@ export const api = {
   renameOrg: (name: string) =>
     request<{ id: string; name: string }>("/api/org", { method: "PATCH", body: JSON.stringify({ name }) }),
   /** `delivered` is false when the invite exists but its email could not be sent, so the UI can say so. */
+  getPrivacy: () => request<{ conversationRetentionDays: number | null; anonymizedConversations: number }>("/api/privacy"),
+  setRetention: (conversationRetentionDays: number | null) =>
+    request<{ conversationRetentionDays: number | null; conversationsAnonymized: number }>("/api/privacy", {
+      method: "PATCH",
+      body: JSON.stringify({ conversationRetentionDays }),
+    }),
+  exportUrl: () => `${API_URL}/api/privacy/export`,
   getAudit: () => request<{ events: AuditEvent[]; nextBefore: string | null }>("/api/audit"),
   setMemberRole: (userId: string, role: MemberRole) =>
     request<{ id: string; role: MemberRole }>(`/api/org/members/${userId}`, {

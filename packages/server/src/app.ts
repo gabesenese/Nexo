@@ -34,6 +34,8 @@ import { overviewRoutes } from "./routes/overview.js";
 import { authRoutes } from "./routes/auth.js";
 import { passwordResetRoutes } from "./routes/passwordReset.js";
 import { auditRoutes } from "./routes/audit.js";
+import { privacyRoutes } from "./routes/privacy.js";
+import { startRetentionSweeps } from "./privacy/retention.js";
 import { orgRoutes } from "./routes/org.js";
 
 export interface BuildAppOptions {
@@ -45,6 +47,11 @@ export interface BuildAppOptions {
    * a reason unrelated to what they assert.
    */
   rateLimits?: RateLimits | false;
+  /**
+   * The background retention sweep. Off in tests, which drive `sweepRetention`
+   * directly and would otherwise race a timer mutating the same rows.
+   */
+  retentionSweeps?: boolean;
 }
 
 export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyInstance> {
@@ -110,6 +117,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   await app.register(passwordResetRoutes);
   await app.register(orgRoutes);
   await app.register(auditRoutes);
+  await app.register(privacyRoutes);
   await app.register(sourcesRoutes);
   await app.register(chatRoutes);
   await app.register(conversationsRoutes);
@@ -125,6 +133,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   await app.register(overviewRoutes);
 
   await recoverInterruptedSources();
+  if (options.retentionSweeps ?? true) startRetentionSweeps();
 
   return app;
 }

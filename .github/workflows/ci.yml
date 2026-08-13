@@ -54,3 +54,31 @@ jobs:
 
       - name: Test (all workspaces, incl. cross-tenant isolation)
         run: npm run test
+
+      # Typecheck and tests never build the browser bundles, so the guards that
+      # keep localhost URLs out of them were only exercised by hand or at deploy
+      # time. Representative URLs here, because the property being checked is
+      # that the guard runs and the output is clean, not what the values are.
+      - name: Build landing and admin (production)
+        run: |
+          npm run build --workspace=@nexo/landing
+          npm run build --workspace=@nexo/admin
+        env:
+          VITE_APP_URL: https://app.example.com
+          VITE_API_URL: https://api.example.com
+
+      # The assertion that actually matters. A guard can be weakened or a new
+      # hardcoded fallback added without either build failing, and the result
+      # looks perfect while pointing every request at the visitor's own machine.
+      - name: Assert no localhost URLs shipped
+        run: |
+          if grep -rl "localhost" packages/landing/dist packages/admin/dist; then
+            echo "::error::A production bundle contains localhost. Check the VITE_* fallbacks in the files listed above."
+            exit 1
+          fi
+          echo "No localhost URLs in either bundle."
+
+      # The deploy artifact. A broken Dockerfile would otherwise surface during
+      # a deploy rather than on the pull request that broke it.
+      - name: Build the server image
+        run: docker build -t nexo-server:ci .

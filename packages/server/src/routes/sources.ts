@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { prisma } from "../db/client.js";
 import { queueHelpCenterUrl, queuePdf, reindexSource } from "../ingestion/pipeline.js";
-import { requireAuth } from "./auth.js";
+import { requireAuth, requirePermission } from "./auth.js";
 import { canAddKnowledgeSource } from "../billing/usage.js";
 import { sourceHealth } from "../knowledge/sourceHealth.js";
 
@@ -62,7 +62,7 @@ function serializeSource(s: {
 }
 
 export async function sourcesRoutes(app: FastifyInstance) {
-  app.get("/api/sources", { preHandler: requireAuth }, async (req) => {
+  app.get("/api/sources", { preHandler: [requireAuth, requirePermission("workspace:read")] }, async (req) => {
     const organizationId = req.auth!.organizationId;
     const sources = await prisma.source.findMany({
       where: { organizationId },
@@ -91,7 +91,7 @@ export async function sourcesRoutes(app: FastifyInstance) {
     }));
   });
 
-  app.post<{ Body: { url: string } }>("/api/sources/help-center", { preHandler: requireAuth }, async (req, reply) => {
+  app.post<{ Body: { url: string } }>("/api/sources/help-center", { preHandler: [requireAuth, requirePermission("knowledge:write")] }, async (req, reply) => {
     const { url } = req.body ?? {};
     if (!url) {
       return reply.status(400).send({ error: "url is required" });
@@ -104,7 +104,7 @@ export async function sourcesRoutes(app: FastifyInstance) {
     return reply.status(202).send(queued);
   });
 
-  app.post("/api/sources/pdf", { preHandler: requireAuth }, async (req, reply) => {
+  app.post("/api/sources/pdf", { preHandler: [requireAuth, requirePermission("knowledge:write")] }, async (req, reply) => {
     const denied = await rejectIfAtSourceLimit(req.auth!.organizationId);
     if (denied) {
       return reply.status(403).send(denied);
@@ -118,7 +118,7 @@ export async function sourcesRoutes(app: FastifyInstance) {
     return reply.status(202).send(queued);
   });
 
-  app.post<{ Params: { id: string } }>("/api/sources/:id/reindex", { preHandler: requireAuth }, async (req, reply) => {
+  app.post<{ Params: { id: string } }>("/api/sources/:id/reindex", { preHandler: [requireAuth, requirePermission("knowledge:write")] }, async (req, reply) => {
     try {
       await reindexSource(req.params.id, req.auth!.organizationId);
       return reply.status(202).send({ ok: true });
@@ -127,7 +127,7 @@ export async function sourcesRoutes(app: FastifyInstance) {
     }
   });
 
-  app.delete<{ Params: { id: string } }>("/api/sources/:id", { preHandler: requireAuth }, async (req, reply) => {
+  app.delete<{ Params: { id: string } }>("/api/sources/:id", { preHandler: [requireAuth, requirePermission("knowledge:write")] }, async (req, reply) => {
     const { count } = await prisma.source.deleteMany({
       where: { id: req.params.id, organizationId: req.auth!.organizationId },
     });

@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { prisma } from "../db/client.js";
-import { requireAuth, roleOf } from "./auth.js";
+import { requireAuth, requirePermission } from "./auth.js";
 
 const DEFAULT_WINDOW_DAYS = 30;
 
@@ -32,7 +32,7 @@ export interface ImpactSummary {
 export async function impactRoutes(app: FastifyInstance) {
   app.get<{ Querystring: { days?: string } }>(
     "/api/impact",
-    { preHandler: requireAuth },
+    { preHandler: [requireAuth, requirePermission("workspace:read")] },
     async (req): Promise<ImpactSummary> => {
       const organizationId = req.auth!.organizationId;
       const windowDays = clampWindow(req.query?.days);
@@ -91,12 +91,8 @@ export async function impactRoutes(app: FastifyInstance) {
     },
   );
 
-  app.patch("/api/impact/assumptions", { preHandler: requireAuth }, async (req, reply) => {
+  app.patch("/api/impact/assumptions", { preHandler: [requireAuth, requirePermission("settings:write")] }, async (req, reply) => {
     const { userId, organizationId } = req.auth!;
-    const role = await roleOf(userId, organizationId);
-    if (role !== "owner" && role !== "admin") {
-      return reply.status(403).send({ error: "Only owners and admins can change these figures." });
-    }
 
     const parsed = z
       .object({

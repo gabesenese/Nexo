@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { prisma } from "../db/client.js";
-import { requireAuth, roleOf } from "./auth.js";
+import { requireAuth, requirePermission } from "./auth.js";
 import { deliver, newWebhookSecret } from "../handoff/webhookAdapter.js";
 
 const RECENT_DELIVERIES = 10;
@@ -40,7 +40,14 @@ function validateUrl(raw: string) {
 }
 
 export async function webhookRoutes(app: FastifyInstance) {
-  app.get("/api/webhook", { preHandler: requireAuth }, async (req) => {
+  /**
+   * Guarded as a settings write rather than a read, even though it only reads.
+   * The response carries the HMAC signing secret, and anyone holding that can
+   * forge escalation deliveries into the customer's helpdesk. Handing it to
+   * every role that can read the workspace would make Viewer a way to obtain a
+   * credential rather than a way to look at conversations.
+   */
+  app.get("/api/webhook", { preHandler: [requireAuth, requirePermission("settings:write")] }, async (req) => {
     const organizationId = req.auth!.organizationId;
     const endpoint = await prisma.webhookEndpoint.findUnique({
       where: { organizationId },
@@ -67,12 +74,8 @@ export async function webhookRoutes(app: FastifyInstance) {
     };
   });
 
-  app.put("/api/webhook", { preHandler: requireAuth }, async (req, reply) => {
+  app.put("/api/webhook", { preHandler: [requireAuth, requirePermission("workspace:read")] }, async (req, reply) => {
     const { userId, organizationId } = req.auth!;
-    const role = await roleOf(userId, organizationId);
-    if (role !== "owner" && role !== "admin") {
-      return reply.status(403).send({ error: "Only owners and admins can change the webhook." });
-    }
 
     const parsed = z
       .object({ url: z.string().trim().min(1), enabled: z.boolean().optional() })
@@ -106,12 +109,8 @@ export async function webhookRoutes(app: FastifyInstance) {
     };
   });
 
-  app.delete("/api/webhook", { preHandler: requireAuth }, async (req, reply) => {
+  app.delete("/api/webhook", { preHandler: [requireAuth, requirePermission("workspace:read")] }, async (req, reply) => {
     const { userId, organizationId } = req.auth!;
-    const role = await roleOf(userId, organizationId);
-    if (role !== "owner" && role !== "admin") {
-      return reply.status(403).send({ error: "Only owners and admins can change the webhook." });
-    }
     await prisma.webhookEndpoint.deleteMany({ where: { organizationId } });
     return { configured: false };
   });
@@ -120,12 +119,8 @@ export async function webhookRoutes(app: FastifyInstance) {
    * The test send is awaited, unlike a real handoff. An operator pressing the
    * button is waiting for the answer, and there is no customer behind it.
    */
-  app.post("/api/webhook/test", { preHandler: requireAuth }, async (req, reply) => {
+  app.post("/api/webhook/test", { preHandler: [requireAuth, requirePermission("settings:write")] }, async (req, reply) => {
     const { userId, organizationId } = req.auth!;
-    const role = await roleOf(userId, organizationId);
-    if (role !== "owner" && role !== "admin") {
-      return reply.status(403).send({ error: "Only owners and admins can change the webhook." });
-    }
 
     const endpoint = await prisma.webhookEndpoint.findUnique({ where: { organizationId } });
     if (!endpoint) {

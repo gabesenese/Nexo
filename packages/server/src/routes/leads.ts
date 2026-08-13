@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { prisma } from "../db/client.js";
-import { requireAuth } from "./auth.js";
+import { requireAuth, requirePermission } from "./auth.js";
 
 const createLeadSchema = z.object({
   name: z.string().trim().min(1, "name is required").max(200),
@@ -25,7 +25,7 @@ export async function leadsRoutes(app: FastifyInstance) {
     return reply.status(201).send({ id: lead.id, createdAt: lead.createdAt });
   });
 
-  app.get("/api/leads", { preHandler: requireAuth }, async (req) => {
+  app.get("/api/leads", { preHandler: [requireAuth, requirePermission("workspace:read")] }, async (req) => {
     return prisma.lead.findMany({
       where: { organizationId: req.auth!.organizationId },
       orderBy: { createdAt: "desc" },

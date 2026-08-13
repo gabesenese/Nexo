@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { prisma } from "../db/client.js";
-import { requireAuth } from "./auth.js";
+import { requireAuth, requirePermission } from "./auth.js";
 import { orgChannel, sessionChannel } from "../realtime/bus.js";
 import { openEventStream } from "../realtime/sse.js";
 
@@ -12,7 +12,7 @@ import { openEventStream } from "../realtime/sse.js";
  * while offline recovers on its next fetch rather than holding a gap forever.
  */
 export async function eventsRoutes(app: FastifyInstance) {
-  app.get("/api/events", { preHandler: requireAuth }, async (req, reply) => {
+  app.get("/api/events", { preHandler: [requireAuth, requirePermission("workspace:read")] }, async (req, reply) => {
     openEventStream(req, reply, orgChannel(req.auth!.organizationId));
   });
 

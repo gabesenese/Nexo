@@ -47,7 +47,8 @@ enum NotificationType {
 enum Role {
   owner
   admin
-  member
+  agent
+  viewer
 }
 
 enum Plan {
@@ -126,7 +127,7 @@ model Invite {
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   email          String
-  role           Role         @default(member)
+  role           Role         @default(agent)
   token          String       @unique
   createdAt      DateTime     @default(now())
   acceptedAt     DateTime?

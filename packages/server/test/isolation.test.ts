@@ -128,7 +128,7 @@ suite("tenant isolation", () => {
       method: "POST",
       url: "/api/org/invites",
       headers: { cookie: a.cookie, "content-type": "application/json" },
-      payload: { email: "invitee@acme.test", role: "member" },
+      payload: { email: "invitee@acme.test", role: "agent" },
     });
     expect(created.statusCode).toBe(200);
     const inviteId = created.json().id as string;
@@ -151,7 +151,7 @@ suite("tenant isolation", () => {
       method: "POST",
       url: "/api/org/invites",
       headers: { cookie: a.cookie, "content-type": "application/json" },
-      payload: { email: "member@acme.test", role: "member" },
+      payload: { email: "member@acme.test", role: "agent" },
     });
     const token = (await prisma.invite.findUniqueOrThrow({ where: { id: invite.json().id } })).token;
 
@@ -176,7 +176,7 @@ suite("tenant isolation", () => {
       method: "POST",
       url: "/api/org/invites",
       headers: { cookie: memberCookie, "content-type": "application/json" },
-      payload: { email: "x@acme.test", role: "member" },
+      payload: { email: "x@acme.test", role: "agent" },
     });
     expect(memberInvite.statusCode).toBe(403);
   });
@@ -274,7 +274,7 @@ suite("tenant isolation", () => {
       method: "POST",
       url: "/api/org/invites",
       headers: { cookie: a.cookie, "content-type": "application/json" },
-      payload: { email: "m@acme.test", role: "member" },
+      payload: { email: "m@acme.test", role: "agent" },
     });
     const token = (await prisma.invite.findUniqueOrThrow({ where: { id: invite.json().id } })).token;
     const accept = await app.inject({
@@ -310,7 +310,7 @@ suite("tenant isolation", () => {
       method: "POST",
       url: "/api/org/invites",
       headers: { cookie: a.cookie, "content-type": "application/json" },
-      payload: { email: "m@acme.test", role: "member" },
+      payload: { email: "m@acme.test", role: "agent" },
     });
     const token = (await prisma.invite.findUniqueOrThrow({ where: { id: invite.json().id } })).token;
     const accept = await app.inject({

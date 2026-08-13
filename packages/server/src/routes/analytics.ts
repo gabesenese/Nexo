@@ -1,9 +1,9 @@
 import type { FastifyInstance } from "fastify";
 import { prisma } from "../db/client.js";
-import { requireAuth } from "./auth.js";
+import { requireAuth, requirePermission } from "./auth.js";
 
 export async function analyticsRoutes(app: FastifyInstance) {
-  app.get("/api/analytics", { preHandler: requireAuth }, async (req) => {
+  app.get("/api/analytics", { preHandler: [requireAuth, requirePermission("workspace:read")] }, async (req) => {
     const organizationId = req.auth!.organizationId;
 
     const totalConversations = await prisma.conversation.count({ where: { organizationId } });

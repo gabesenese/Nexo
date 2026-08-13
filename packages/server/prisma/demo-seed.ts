@@ -330,7 +330,7 @@ async function main() {
       create: {
         userId: user.id,
         organizationId: organization.id,
-        role: user.id === owner.id ? "owner" : "member",
+        role: user.id === owner.id ? "owner" : "agent",
       },
     });
   }

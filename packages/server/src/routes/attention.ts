@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { prisma } from "../db/client.js";
-import { requireAuth } from "./auth.js";
+import { requireAuth, requirePermission } from "./auth.js";
 
 export type AttentionType = "waiting_for_human" | "customer_replied" | "reopened";
 
@@ -38,7 +38,7 @@ const TYPE_RANK: Record<AttentionType, number> = {
  * that the resolution did not hold. Resolving it again clears it.
  */
 export async function attentionRoutes(app: FastifyInstance) {
-  app.get("/api/attention", { preHandler: requireAuth }, async (req) => {
+  app.get("/api/attention", { preHandler: [requireAuth, requirePermission("workspace:read")] }, async (req) => {
     const conversations = await prisma.conversation.findMany({
       where: {
         organizationId: req.auth!.organizationId,

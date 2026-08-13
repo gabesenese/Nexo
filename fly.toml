@@ -1,0 +1,57 @@
+# Nexo API server on Fly.io.
+#
+# `yyz` because the customer data lives in Canada, which is a stated part of the
+# pitch rather than an operational detail: pricing in CAD, billing in CAD, and
+# holding the data here is the combination none of the Canadian competitors
+# leads with.
+
+app = "nexo-api"
+primary_region = "yyz"
+
+[build]
+  dockerfile = "Dockerfile"
+
+# Runs once per deploy, before the new machines take traffic. A failed migration
+# fails the deploy rather than leaving a released version talking to a schema it
+# does not match.
+[deploy]
+  release_command = "npx prisma migrate deploy --schema packages/server/prisma/schema.prisma"
+  strategy = "rolling"
+
+[env]
+  PORT = "4000"
+  NODE_ENV = "production"
+  AI_PROVIDER = "cloud"
+  EMAIL_TRANSPORT = "smtp"
+
+[http_service]
+  internal_port = 4000
+  force_https = true
+  # Never scaled to zero. Ingestion runs in process and the realtime bus is
+  # in memory, so a stopped machine drops both a crawl in progress and every
+  # operator's event stream.
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  # One machine, deliberately. The realtime bus is in-process, so a widget and
+  # its operator's dashboard landing on different machines would never see each
+  # other's events. Scaling past one needs a shared broker first.
+  [http_service.concurrency]
+    type = "requests"
+    hard_limit = 200
+    soft_limit = 150
+
+[[http_service.checks]]
+  interval = "15s"
+  timeout = "3s"
+  grace_period = "10s"
+  method = "GET"
+  path = "/health"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  # 1GB rather than 512MB because ingestion is the memory-hungry path, not the
+  # API: a 20MB PDF is parsed and chunked in memory, and an OOM there would kill
+  # the process mid-crawl for everyone else on the machine.
+  memory = "1gb"

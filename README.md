@@ -87,6 +87,39 @@ Covers the pure logic worth locking down early: chunking token bounds/overlap
 (`test/chunking.test.ts`) and the confidence-threshold escalation decision
 (`test/confidence.test.ts`).
 
+## Deploying
+
+The API server, its SSE streams and `/widget.js` all ship as one container
+(`Dockerfile`), because `app.ts` resolves the widget bundle relative to the
+compiled server. `fly.toml` targets Fly.io in `yyz`, with Postgres on a managed
+provider that has `pgvector`.
+
+```bash
+docker build -t nexo-server .
+fly deploy
+```
+
+Migrations run as the release step, so a failed migration fails the deploy
+instead of releasing a version that does not match its schema.
+
+**Two constraints that are easy to get wrong and expensive to discover late.**
+
+*The console and the API must share a registrable domain.* The session cookie is
+`SameSite=lax`, so `app.example.com` and `api.example.com` work, while a console
+on one provider's domain and an API on another's would silently stop sending the
+cookie. The fix that suggests itself, `SameSite=None`, reopens what the CORS
+split in `http/security.ts` closes.
+
+*One machine, for now.* The realtime bus is in memory and ingestion runs in
+process, so two machines would mean a widget and its operator's dashboard never
+seeing each other's events. Scaling past one needs a shared broker first, and
+`auto_stop_machines` stays off because a stopped machine drops both a crawl in
+progress and every open event stream.
+
+Required secrets beyond `.env.example`: `DATABASE_URL`, `JWT_SECRET`, `APP_URL`
+(https, or the server refuses to boot), `CORS_ORIGIN`, `SMTP_URL`, and the AI
+provider keys.
+
 ## Explicitly out of scope in this pass
 
 These land in later milestones (see `structured-plan.md` §3) or are open decisions pending

@@ -1,6 +1,10 @@
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["postgresqlExtensions"]
+  /// The deploy image is Debian slim, which needs a different query engine than
+  /// a developer's machine. Listed explicitly so the engine is present in the
+  /// image rather than discovered missing at the first query.
+  binaryTargets   = ["native", "debian-openssl-3.0.x"]
 }
 
 datasource db {

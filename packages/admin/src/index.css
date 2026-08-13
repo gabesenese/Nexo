@@ -324,6 +324,7 @@ h4 {
   border: 1px solid var(--line);
   color: var(--ink);
   border-radius: var(--r-sm);
+  text-decoration: none;
   height: var(--ctl-h-sm);
   padding: 0 var(--s3);
   font-family: var(--sans);
@@ -1169,6 +1170,11 @@ textarea::placeholder {
   }
 }
 
+/**
+ * Buttons are sometimes real buttons and sometimes router links wearing the
+ * same class. An anchor carries the browser's underline unless told otherwise,
+ * so without this a link-button reads as underlined body text.
+ */
 .btn {
   font-family: var(--sans);
   font-size: var(--t-base);
@@ -1178,6 +1184,7 @@ textarea::placeholder {
   border-radius: var(--r-sm);
   cursor: pointer;
   border: 1px solid transparent;
+  text-decoration: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;

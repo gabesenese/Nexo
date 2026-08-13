@@ -3,6 +3,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "../db/client.js";
+import { env } from "../config/env.js";
 import { trialEndDate } from "../billing/trial.js";
 
 /** Opaque, unguessable public key a customer embeds as data-org-key. */
@@ -55,12 +56,24 @@ async function uniqueSlug(base: string): Promise<string> {
   return `${root}-${Date.now().toString(36)}`;
 }
 
+/**
+ * `secure` follows APP_URL rather than being hardcoded, because a dev server on
+ * plain http cannot set a secure cookie at all and production must never set a
+ * cookie without one. env.ts refuses to boot a production process whose APP_URL
+ * is not https, so this cannot silently stay false where it matters.
+ *
+ * `sameSite: "lax"` is load-bearing beyond CSRF: it means the admin console and
+ * this API must share a registrable domain in production. Splitting them across
+ * unrelated hosts would make every admin request cross-site, the cookie would
+ * stop being sent, and the fix would be `SameSite=None`, which reopens exactly
+ * what this closes.
+ */
 export function setSession(app: FastifyInstance, reply: FastifyReply, claims: SessionClaims) {
   const token = app.jwt.sign(claims, { expiresIn: "7d" });
   reply.setCookie(COOKIE_NAME, token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: false,
+    secure: env.APP_URL.startsWith("https://"),
     path: "/",
     maxAge: COOKIE_MAX_AGE_SECONDS,
   });

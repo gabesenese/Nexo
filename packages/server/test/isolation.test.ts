@@ -27,7 +27,7 @@ suite("tenant isolation", () => {
   let app: FastifyInstance;
 
   beforeAll(async () => {
-    app = await buildApp({ logger: false });
+    app = await buildApp({ logger: false, rateLimits: false });
     await app.ready();
   });
 

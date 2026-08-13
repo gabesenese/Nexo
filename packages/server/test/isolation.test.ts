@@ -224,6 +224,15 @@ suite("tenant isolation", () => {
     });
     expect(bResolve.statusCode).toBe(404);
 
+    // Drafting another org's conversation 404s at the org-scoped lookup,
+    // before any retrieval or model call.
+    const bDraft = await app.inject({
+      method: "POST",
+      url: `/api/conversations/${convo.id}/draft`,
+      headers: { cookie: b.cookie },
+    });
+    expect(bDraft.statusCode).toBe(404);
+
     const aReply = await app.inject({
       method: "POST",
       url: `/api/conversations/${convo.id}/reply`,

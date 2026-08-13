@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "../db/client.js";
 import { requireAuth } from "./auth.js";
 import { notifyOrg, notifySession } from "../realtime/bus.js";
+import { generateDraft } from "../orchestrator/stateMachine.js";
 
 const assigneeSelect = { select: { id: true, name: true, email: true } };
 const noteInclude = {
@@ -98,6 +99,32 @@ export async function conversationsRoutes(app: FastifyInstance) {
       notifySession(req.auth!.organizationId, conversation.sessionId);
 
       return message;
+    },
+  );
+
+  /**
+   * A suggested reply for the operator to approve or edit. Reuses the same
+   * retrieval + generation as the customer path but writes nothing and changes
+   * no status — the draft only becomes a real message if the operator sends it
+   * through /reply. Behind requireAuth because generating one calls the LLM.
+   */
+  app.post<{ Params: { id: string } }>(
+    "/api/conversations/:id/draft",
+    { preHandler: requireAuth },
+    async (req, reply) => {
+      const { organizationId } = req.auth!;
+      const conversation = await prisma.conversation.findFirst({
+        where: { id: req.params.id, organizationId },
+        select: { id: true },
+      });
+      if (!conversation) {
+        return reply.status(404).send({ error: "conversation not found" });
+      }
+      try {
+        return await generateDraft({ conversationId: conversation.id, organizationId });
+      } catch (err) {
+        return reply.status(400).send({ error: (err as Error).message });
+      }
     },
   );
 

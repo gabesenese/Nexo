@@ -281,6 +281,13 @@ export interface Conversation {
   escalations: Escalation[];
 }
 
+/** A suggested reply the operator can approve or edit before sending. */
+export interface DraftReply {
+  draft: string;
+  confidence: number | null;
+  citations: Citation[];
+}
+
 export interface Notification {
   id: string;
   conversationId: string;
@@ -343,6 +350,7 @@ export const api = {
   listConversations: () => request<Conversation[]>("/api/conversations"),
   replyToConversation: (id: string, message: string) =>
     request<Message>(`/api/conversations/${id}/reply`, { method: "POST", body: JSON.stringify({ message }) }),
+  draftReply: (id: string) => request<DraftReply>(`/api/conversations/${id}/draft`, { method: "POST" }),
   assignConversation: (id: string, userId: string | null) =>
     request<Conversation>(`/api/conversations/${id}/assign`, { method: "POST", body: JSON.stringify({ userId }) }),
   resolveConversation: (id: string) =>

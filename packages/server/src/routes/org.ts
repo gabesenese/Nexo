@@ -4,6 +4,9 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "../db/client.js";
 import { newWidgetKey, requireAuth, roleOf, setSession } from "./auth.js";
+import { env } from "../config/env.js";
+import { sendQuietly } from "../email/provider.js";
+import { inviteEmail } from "../email/messages.js";
 
 function newToken() {
   return (randomUUID() + randomUUID()).replace(/-/g, "");
@@ -72,7 +75,21 @@ export async function orgRoutes(app: FastifyInstance) {
       update: { role: inviteRole, token: newToken(), acceptedAt: null, createdAt: new Date() },
       create: { organizationId, email, role: inviteRole, token: newToken() },
     });
-    return { id: invite.id, email: invite.email, role: invite.role, token: invite.token };
+
+    const org = await prisma.organization.findUniqueOrThrow({
+      where: { id: organizationId },
+      select: { name: true },
+    });
+    const inviteUrl = `${env.APP_URL.replace(/\/$/, "")}/invite/${invite.token}`;
+    const delivered = await sendQuietly(inviteEmail(invite.email, org.name, inviteUrl));
+
+    /**
+     * The link is still returned so the inviter can pass it on by hand, which
+     * is the only thing that worked before email existed and is still the
+     * answer when a delivery fails. `delivered` tells the UI which of the two
+     * it is looking at, rather than leaving it to claim an email was sent.
+     */
+    return { id: invite.id, email: invite.email, role: invite.role, token: invite.token, delivered };
   });
 
   app.delete<{ Params: { id: string } }>("/api/org/invites/:id", { preHandler: requireAuth }, async (req, reply) => {

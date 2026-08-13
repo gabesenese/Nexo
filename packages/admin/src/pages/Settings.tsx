@@ -27,6 +27,7 @@ export function SettingsPage({ onWorkspaceRenamed }: { onWorkspaceRenamed?: (nam
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<"admin" | "member">("member");
   const [inviteError, setInviteError] = useState<string | null>(null);
+  const [inviteNotice, setInviteNotice] = useState<string | null>(null);
   const [inviting, setInviting] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
 
@@ -117,9 +118,20 @@ export function SettingsPage({ onWorkspaceRenamed }: { onWorkspaceRenamed?: (nam
   async function sendInvite(e: React.FormEvent) {
     e.preventDefault();
     setInviteError(null);
+    setInviteNotice(null);
     setInviting(true);
     try {
-      await api.createInvite(inviteEmail.trim(), inviteRole);
+      const invited = await api.createInvite(inviteEmail.trim(), inviteRole);
+      /**
+       * Said plainly rather than assumed. Delivery is deliberately allowed to
+       * fail without failing the invite, so the operator has to be told which
+       * of the two happened, or they will wait for an email that never went.
+       */
+      setInviteNotice(
+        invited.delivered
+          ? `Invitation emailed to ${invited.email}.`
+          : `Invite created, but the email could not be sent. Copy the link below and send it yourself.`,
+      );
       setInviteEmail("");
       await load();
     } catch (err) {
@@ -276,7 +288,9 @@ export function SettingsPage({ onWorkspaceRenamed }: { onWorkspaceRenamed?: (nam
 
       <div className="card">
         <h3>Invite a teammate</h3>
-        <div className="card-sub">They join this workspace and see the same data. Share the invite link with them.</div>
+        <div className="card-sub">
+          They join this workspace and see the same data. We email them the invitation.
+        </div>
         <form onSubmit={sendInvite}>
           <div className="field-row">
             <label htmlFor="invite-email">Work email</label>
@@ -307,6 +321,7 @@ export function SettingsPage({ onWorkspaceRenamed }: { onWorkspaceRenamed?: (nam
           </div>
         </form>
         {inviteError && <p className="error-text">{inviteError}</p>}
+        {inviteNotice && <p className="source-note">{inviteNotice}</p>}
 
         {org && org.invites.length > 0 && (
           <div style={{ marginTop: 16 }}>

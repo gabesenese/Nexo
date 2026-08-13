@@ -84,10 +84,30 @@ export const DEFAULT_RATE_LIMITS: RateLimits = {
   general: env.RATE_LIMIT_MAX,
 };
 
+/**
+ * Endpoints that take credentials or hand them out. Login and signup answer
+ * whether an email and password match; the reset endpoints mint and spend a
+ * bearer credential. The per-account budget in passwordReset.ts sits on top of
+ * this, since an attacker flooding one victim's mailbox from many addresses is
+ * not a volume problem this bucket can see.
+ *
+ * Listed rather than matched by an `/api/auth/` prefix, which would also
+ * capture `/api/auth/me`. The admin console calls that on nearly every page
+ * load, so the prefix put ordinary navigation on the credential budget and
+ * would have locked an operator out of signing in after browsing for a minute:
+ * exactly the failure separate counters exist to prevent.
+ */
+const CREDENTIAL_PATHS: readonly string[] = [
+  "/api/auth/login",
+  "/api/auth/signup",
+  "/api/auth/forgot-password",
+  "/api/auth/reset-password",
+];
+
 export function bucketFor(url: string): RateBucket {
   const path = pathOf(url);
-  /** Both take an email and a password and say whether they match, so both are guessing oracles. */
-  if (path === "/api/auth/login" || path === "/api/auth/signup") return "auth";
+  /** The GET form carries the token in the path, so it is matched as a prefix. */
+  if (CREDENTIAL_PATHS.includes(path) || path.startsWith("/api/auth/reset-password/")) return "auth";
   /** The one public endpoint that spends money on every call. */
   if (path === "/api/chat") return "chat";
   return "general";

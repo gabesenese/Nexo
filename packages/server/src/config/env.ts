@@ -19,6 +19,19 @@ const envSchema = z.object({
 
   HANDOFF_ADAPTER: z.enum(["webhook", "mock"]).default("webhook"),
 
+  /**
+   * "log" prints emails instead of sending them, so a fresh clone can complete
+   * a password reset with no account anywhere. Production must use "smtp";
+   * env.ts refuses to boot otherwise, because a reset that silently sends
+   * nothing looks exactly like one that worked.
+   */
+  EMAIL_TRANSPORT: z.enum(["log", "smtp"]).default("log"),
+  /** Any provider's SMTP connection string, e.g. smtps://user:pass@smtp.host:465 */
+  SMTP_URL: z.string().optional(),
+  EMAIL_FROM: z.string().default("Nexo <no-reply@localhost>"),
+  /** How long a password reset link stays usable. Short, because it is a bearer credential. */
+  PASSWORD_RESET_TTL_MINUTES: z.coerce.number().int().positive().default(60),
+
   TRIAL_DAYS: z.coerce.number().int().positive().default(14),
 
   INGESTION_CONCURRENCY: z.coerce.number().int().positive().default(1),
@@ -76,6 +89,20 @@ if (process.env.NODE_ENV === "production" && !parsed.APP_URL.startsWith("https:/
   throw new Error(
     `APP_URL must be https in production (got ${parsed.APP_URL}), otherwise the session cookie cannot be marked secure.`,
   );
+}
+
+/**
+ * A password reset whose email never leaves the building is worse than no reset
+ * at all: the customer is told to check their inbox, nothing arrives, and the
+ * server reports success. Refuse to start rather than ship that.
+ */
+if (process.env.NODE_ENV === "production") {
+  if (parsed.EMAIL_TRANSPORT !== "smtp") {
+    throw new Error("EMAIL_TRANSPORT must be 'smtp' in production; 'log' silently discards every email.");
+  }
+  if (!parsed.SMTP_URL) {
+    throw new Error("SMTP_URL is required when EMAIL_TRANSPORT=smtp");
+  }
 }
 
 if (parsed.AI_PROVIDER === "cloud") {

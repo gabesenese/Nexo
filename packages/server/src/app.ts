@@ -32,6 +32,7 @@ import { webhookRoutes } from "./routes/webhooks.js";
 import { eventsRoutes } from "./routes/events.js";
 import { overviewRoutes } from "./routes/overview.js";
 import { authRoutes } from "./routes/auth.js";
+import { passwordResetRoutes } from "./routes/passwordReset.js";
 import { orgRoutes } from "./routes/org.js";
 
 export interface BuildAppOptions {
@@ -105,6 +106,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   });
 
   await app.register(authRoutes);
+  await app.register(passwordResetRoutes);
   await app.register(orgRoutes);
   await app.register(sourcesRoutes);
   await app.register(chatRoutes);

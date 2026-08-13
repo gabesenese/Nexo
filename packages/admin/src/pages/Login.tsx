@@ -54,7 +54,12 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: AuthUser) => void }) 
             />
           </div>
           <div className="field">
-            <label htmlFor="login-password">Password</label>
+            <div className="field-label-row">
+              <label htmlFor="login-password">Password</label>
+              <Link className="field-hint-link" to="/forgot-password">
+                Forgot?
+              </Link>
+            </div>
             <input
               id="login-password"
               type="password"

@@ -11,6 +11,8 @@ import { LoginPage } from "./pages/Login";
 import { SignupPage } from "./pages/Signup";
 import { SettingsPage } from "./pages/Settings";
 import { InviteAcceptPage } from "./pages/InviteAccept";
+import { ForgotPasswordPage } from "./pages/ForgotPassword";
+import { ResetPasswordPage } from "./pages/ResetPassword";
 import { OnboardingWizard } from "./onboarding/OnboardingWizard";
 import { NotificationBell } from "./components/NotificationBell";
 import { api, type AuthUser } from "./api";
@@ -178,6 +180,8 @@ export default function App() {
       <Route path="/onboarding/*" element={<OnboardingWizard />} />
       <Route path="/signup" element={<AuthScreen mode="signup" />} />
       <Route path="/login" element={<AuthScreen mode="login" />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
       <Route path="/invite/:token" element={<InviteAcceptPage />} />
       <Route path="/*" element={<Dashboard />} />
     </Routes>

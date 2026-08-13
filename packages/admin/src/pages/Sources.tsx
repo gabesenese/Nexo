@@ -6,16 +6,27 @@ type Notice =
   | { tone: "success"; text: string }
   | { tone: "error"; text: string };
 
-function statusBadgeClass(status: SourceSummary["status"]) {
-  switch (status) {
-    case "ready":
-      return "healthy";
+/**
+ * One badge, not two. "Ready" was the only thing a source ever said about
+ * itself once it finished indexing, which is exactly the case health exists to
+ * contradict: a crawl that stopped at the cap and a source last read in March
+ * both reported Ready. While a source is still indexing there is no health to
+ * report yet, so the badge falls back to the stage it is in.
+ */
+function healthBadge(source: SourceSummary): { label: string; tone: string } {
+  switch (source.health.state) {
     case "failed":
-      return "escalated";
-    case "queued":
-      return "neutral";
+      return { label: "Failed", tone: "alert" };
+    case "empty":
+      return { label: "Empty", tone: "alert" };
+    case "truncated":
+      return { label: "Partial", tone: "escalated" };
+    case "stale":
+      return { label: "Stale", tone: "escalated" };
+    case "ok":
+      return { label: "Ready", tone: "healthy" };
     default:
-      return "active";
+      return { label: sourceStatusLabel(source.status), tone: source.status === "queued" ? "neutral" : "active" };
   }
 }
 
@@ -313,8 +324,9 @@ export function SourcesPage() {
                       : "Not cited in any answer yet"}
                   </div>
                 )}
+                {s.health.detail && <div className="source-health-detail">{s.health.detail}</div>}
               </div>
-              <span className={`badge ${statusBadgeClass(s.status)}`}>{sourceStatusLabel(s.status)}</span>
+              <span className={`badge ${healthBadge(s).tone}`}>{healthBadge(s).label}</span>
             </div>
           ))}
           {loaded && sources.length === 0 && (
@@ -326,9 +338,7 @@ export function SourcesPage() {
           <div className="card">
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <h3>{selected.name}</h3>
-              <span className={`badge ${statusBadgeClass(selected.status)}`}>
-                {sourceStatusLabel(selected.status)}
-              </span>
+              <span className={`badge ${healthBadge(selected).tone}`}>{healthBadge(selected).label}</span>
             </div>
             <div className="card-sub">{selected.type === "pdf" ? "PDF" : "Help center article"}</div>
 
@@ -341,22 +351,44 @@ export function SourcesPage() {
                   ? `${selected.processedChunks} / ${selected.totalChunks}`
                   : selected.chunkCount}
               </dd>
+              {/**
+               * A chunk count says how much was indexed, not how much of the
+               * help centre that was. Pages reached is the number an operator
+               * can compare against what they know they published.
+               */}
+              {selected.pageCount !== null && (
+                <>
+                  <dt>Pages reached</dt>
+                  <dd>{selected.pageCount}</dd>
+                </>
+              )}
               <dt>Last indexed</dt>
               <dd>{selected.lastSyncedAt ? new Date(selected.lastSyncedAt).toLocaleString() : "Never"}</dd>
               <dt>Added</dt>
               <dd>{new Date(selected.createdAt).toLocaleString()}</dd>
             </dl>
 
-            {selected.status === "failed" && selected.errorMessage && (
-              <p className="error-text">{selected.errorMessage}</p>
+            {/**
+             * The stored notice is kept ahead of the derived sentence because it
+             * names the actual cap, which is the more useful thing to read when
+             * deciding where to split a source.
+             */}
+            {selected.health.detail && (
+              <p
+                className={
+                  selected.health.state === "failed" || selected.health.state === "empty"
+                    ? "error-text"
+                    : "source-note"
+                }
+              >
+                {selected.notice ?? selected.health.detail}
+              </p>
             )}
-
-            {selected.notice && <p className="source-note">{selected.notice}</p>}
 
             <div className="reply-actions">
               {selected.type === "help_center" && (
                 <button
-                  className="btn-small"
+                  className={`btn-small${selected.health.reindexable && selected.health.detail ? " suggested" : ""}`}
                   onClick={() => handleReindex(selected)}
                   disabled={
                     reindexingId === selected.id || (selected.status !== "ready" && selected.status !== "failed")

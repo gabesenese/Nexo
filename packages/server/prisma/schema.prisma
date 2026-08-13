@@ -171,6 +171,8 @@ model Source {
   notice          String?
   totalChunks     Int?
   processedChunks Int           @default(0)
+  pageCount       Int?
+  truncated       Boolean       @default(false)
   lastSyncedAt    DateTime?
   createdAt       DateTime      @default(now())
   chunks          Chunk[]

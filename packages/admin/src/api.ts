@@ -86,11 +86,23 @@ export interface SourceSummary {
   notice: string | null;
   totalChunks: number | null;
   processedChunks: number;
+  /** Pages that yielded content on the last crawl. Null for uploads. */
+  pageCount: number | null;
+  truncated: boolean;
   lastSyncedAt: string | null;
   createdAt: string;
   chunkCount: number;
   /** Distinct answers that cited this source. */
   answersCited: number;
+  health: SourceHealth;
+}
+
+export type SourceHealthState = "indexing" | "failed" | "empty" | "truncated" | "stale" | "ok";
+
+export interface SourceHealth {
+  state: SourceHealthState;
+  detail: string | null;
+  reindexable: boolean;
 }
 
 export interface QueuedSource {
@@ -195,7 +207,14 @@ export interface OverviewSummary {
   /** Null when there is nothing to divide, so the page says so rather than showing 0%. */
   rates: { resolution: number | null; escalation: number | null };
   knowledgeHealth: { total: number; uncovered: number; top: KnowledgeGap[] };
+  sourceHealth: { total: number; needsAttention: number; top: SourceHealthSummary[] };
   activity: ActivityEntry[];
+}
+
+export interface SourceHealthSummary {
+  id: string;
+  name: string;
+  health: SourceHealth;
 }
 
 export interface GapCoverage {

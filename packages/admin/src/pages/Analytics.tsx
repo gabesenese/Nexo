@@ -100,7 +100,13 @@ export function AnalyticsPage() {
   }
 
   const hasConversations = overview.counts.total > 0;
-  const hasSources = sources.length > 0;
+  /**
+   * Adding a source is not the same as having one Nexo can answer from. The
+   * checklist used to count rows, so a workspace whose only crawl failed was
+   * told step one was done while the widget had nothing to say.
+   */
+  const brokenSources = sources.filter((s) => s.health.state === "failed" || s.health.state === "empty");
+  const hasSources = sources.some((s) => s.status === "ready" && s.chunkCount > 0);
 
   /** Nothing has happened yet, so the page is a setup checklist rather than a wall of zeroes. */
   if (!hasConversations) {
@@ -132,6 +138,13 @@ export function AnalyticsPage() {
               Install the widget on your site
             </div>
           </div>
+          {!hasSources && brokenSources.length > 0 && (
+            <p className="error-text">
+              {brokenSources.length === 1
+                ? `“${brokenSources[0].name}” was added but could not be indexed, so Nexo still has nothing to answer from.`
+                : `${brokenSources.length} sources were added but none could be indexed, so Nexo still has nothing to answer from.`}
+            </p>
+          )}
           <div className="empty-hero-actions">
             <Link className="btn btn-primary" to="/sources">
               Add a knowledge source
@@ -176,6 +189,41 @@ export function AnalyticsPage() {
       </div>
 
       <NeedsAttention />
+
+      {/**
+       * Only rendered when something is wrong. A card reporting that every
+       * source is fine would be the kind of standing panel this page exists to
+       * avoid, but knowledge that has quietly stopped being trustworthy is a
+       * morning problem: it degrades every answer Nexo gives until someone acts.
+       */}
+      {overview.sourceHealth.needsAttention > 0 && (
+        <div className="card source-attention">
+          <div className="card-head">
+            <div>
+              <h3>Sources need attention</h3>
+              <div className="card-sub">
+                {overview.sourceHealth.needsAttention === 1
+                  ? "One source is not answering as well as it looks"
+                  : `${overview.sourceHealth.needsAttention} sources are not answering as well as they look`}
+              </div>
+            </div>
+            <Link className="btn-small" to="/sources">
+              Open Sources
+            </Link>
+          </div>
+
+          {overview.sourceHealth.top.map((source) => (
+            <div className="list-item" key={source.id} data-clickable onClick={() => navigate("/sources")}>
+              <span className={`attention-dot ${source.health.state}`} aria-hidden="true" />
+              <div className="list-info">
+                <div className="li-title">{source.name}</div>
+                <div className="attention-meta">{source.health.detail}</div>
+              </div>
+              <span className="attention-action">{source.health.reindexable ? "Re-index" : "Review"} →</span>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="row">
         <div className="card">

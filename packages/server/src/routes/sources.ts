@@ -3,6 +3,7 @@ import { prisma } from "../db/client.js";
 import { queueHelpCenterUrl, queuePdf, reindexSource } from "../ingestion/pipeline.js";
 import { requireAuth } from "./auth.js";
 import { canAddKnowledgeSource } from "../billing/usage.js";
+import { sourceHealth } from "../knowledge/sourceHealth.js";
 
 async function rejectIfAtSourceLimit(organizationId: string) {
   const check = await canAddKnowledgeSource(organizationId);
@@ -24,6 +25,8 @@ function serializeSource(s: {
   notice: string | null;
   totalChunks: number | null;
   processedChunks: number;
+  pageCount: number | null;
+  truncated: boolean;
   lastSyncedAt: Date | null;
   createdAt: Date;
   _count: { chunks: number };
@@ -38,9 +41,23 @@ function serializeSource(s: {
     notice: s.notice,
     totalChunks: s.totalChunks,
     processedChunks: s.processedChunks,
+    pageCount: s.pageCount,
+    truncated: s.truncated,
     lastSyncedAt: s.lastSyncedAt,
     createdAt: s.createdAt,
     chunkCount: s._count.chunks,
+    /**
+     * Derived here rather than in the browser so the Sources page and the
+     * command centre cannot drift into disagreeing about the same source.
+     */
+    health: sourceHealth({
+      status: s.status,
+      type: s.type,
+      chunkCount: s._count.chunks,
+      truncated: s.truncated,
+      errorMessage: s.errorMessage,
+      lastSyncedAt: s.lastSyncedAt,
+    }),
   };
 }
 

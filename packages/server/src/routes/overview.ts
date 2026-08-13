@@ -2,6 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { prisma } from "../db/client.js";
 import { requireAuth } from "./auth.js";
 import { findKnowledgeGaps } from "../knowledge/gaps.js";
+import { needsAttention, sourceHealth } from "../knowledge/sourceHealth.js";
 
 /** How many gaps and activity entries the command centre shows before deferring to the full page. */
 const KNOWLEDGE_HEALTH_LIMIT = 3;
@@ -114,6 +115,32 @@ export async function overviewRoutes(app: FastifyInstance) {
 
     const gaps = await findKnowledgeGaps(organizationId);
 
+    /**
+     * Knowledge that has quietly stopped being trustworthy belongs on the
+     * morning screen, not on a page someone has to think to visit. A crawl
+     * that stopped at the cap or a source months out of date still reads as
+     * "Ready" everywhere else.
+     */
+    const allSources = await prisma.source.findMany({
+      where: { organizationId },
+      orderBy: { createdAt: "desc" },
+      include: { _count: { select: { chunks: true } } },
+    });
+    const sourcesNeedingAttention = allSources
+      .map((s) => ({
+        id: s.id,
+        name: s.name,
+        health: sourceHealth({
+          status: s.status,
+          type: s.type,
+          chunkCount: s._count.chunks,
+          truncated: s.truncated,
+          errorMessage: s.errorMessage,
+          lastSyncedAt: s.lastSyncedAt,
+        }),
+      }))
+      .filter((s) => needsAttention(s.health));
+
     return {
       counts: {
         open: openConversations,
@@ -130,6 +157,11 @@ export async function overviewRoutes(app: FastifyInstance) {
         total: gaps.length,
         uncovered: gaps.filter((g) => !g.coverage.covered).length,
         top: gaps.slice(0, KNOWLEDGE_HEALTH_LIMIT),
+      },
+      sourceHealth: {
+        total: allSources.length,
+        needsAttention: sourcesNeedingAttention.length,
+        top: sourcesNeedingAttention.slice(0, KNOWLEDGE_HEALTH_LIMIT),
       },
       activity,
     };

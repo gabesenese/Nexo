@@ -372,7 +372,12 @@ export async function crawlHelpCenter(startUrl: string, opts: CrawlOptions = {})
     throw new Error(pass.startError ?? `No readable content found at ${startUrl}.`);
   }
 
-  return { name: pass.sourceName ?? new URL(start).hostname, origin: start, documents: pass.documents };
+  return {
+    name: pass.sourceName ?? new URL(start).hostname,
+    origin: start,
+    documents: pass.documents,
+    pageCount: pass.pagesWithDocuments,
+  };
 }
 
 export const helpCenterConnector: Connector = {

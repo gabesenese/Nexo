@@ -3,11 +3,20 @@ import { ONBOARDING_URL } from "../config";
 export function Hero({ onOpenTrial }: { onOpenTrial: () => void }) {
   return (
     <div className="l-hero">
-      <span className="l-eyebrow">● Built for growing support teams</span>
+      {/**
+       * Three levels and no more: who it is for, what it does, how to start.
+       * This previously stacked six blocks in four typefaces before the visual,
+       * including two grey monospace lines doing unrelated jobs, which read as
+       * writing piled on writing rather than a hierarchy.
+       */}
+      <span className="l-eyebrow">For growing support teams</span>
       <h1>
         Every answer has <span className="accent">an exit.</span>
       </h1>
-      <p>AI support that knows when to answer, and when to bring in a person.</p>
+      <p>
+        AI support that knows when to answer, and when to bring in a person. Set it up yourself in
+        minutes, with no sales call.
+      </p>
       <div className="l-hero-ctas">
         <a className="btn btn-primary" href={ONBOARDING_URL}>
           Start free trial
@@ -16,9 +25,7 @@ export function Hero({ onOpenTrial }: { onOpenTrial: () => void }) {
           Talk to us
         </button>
       </div>
-      <div className="l-hero-note">Set it up yourself in minutes. No sales call required.</div>
 
-      <div className="proof-label">An illustration of the handoff. Real screenshots further down.</div>
       <div className="proof-card">
         <div className="proof-head">
           <div className="proof-mark">N</div>
@@ -26,6 +33,13 @@ export function Hero({ onOpenTrial }: { onOpenTrial: () => void }) {
             <div className="proof-title">Nexo Support</div>
             <div className="proof-sub">Usually replies instantly</div>
           </div>
+          {/**
+           * The honesty label moves onto the thing it describes. As a shouted
+           * caption above the card it was a disclaimer competing with the
+           * headline; here it sits where someone actually looks to judge
+           * whether an image is real, and still says so plainly.
+           */}
+          <span className="proof-tag">Illustration</span>
         </div>
         <div className="proof-msg user">
           I was charged twice this month and I'm not sure why. Can someone look into my account?

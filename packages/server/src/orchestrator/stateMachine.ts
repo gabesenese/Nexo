@@ -9,6 +9,7 @@ import { mockHandoffAdapter } from "../handoff/mockAdapter.js";
 import { webhookHandoffAdapter } from "../handoff/webhookAdapter.js";
 import type { HandoffAdapter } from "../handoff/adapter.js";
 import { computeCombinedConfidence, shouldEscalate } from "./confidence.js";
+import { toHistory } from "./history.js";
 import { storeEscalationQuestion } from "../knowledge/gaps.js";
 import { notifyOrg, notifySession } from "../realtime/bus.js";
 
@@ -130,9 +131,7 @@ export async function handleUserMessage(params: {
     orderBy: { createdAt: "asc" },
   });
   /** Drop the last row: it's the message just inserted, passed separately as `message`. */
-  const history: ChatTurn[] = priorMessages
-    .slice(0, -1)
-    .map((m: Message) => ({ role: m.role === "user" ? "user" : "assistant", content: m.content }));
+  const history: ChatTurn[] = toHistory(priorMessages.slice(0, -1));
 
   const retrieved = await hybridSearch(message, organizationId);
   const context = retrieved.map((r) => ({ id: r.id, sourceName: r.sourceName, content: r.content }));
@@ -219,9 +218,7 @@ export async function generateDraft(params: {
   }
 
   const question = messages[lastUserIndex].content;
-  const history: ChatTurn[] = messages
-    .slice(0, lastUserIndex)
-    .map((m: Message) => ({ role: m.role === "user" ? "user" : "assistant", content: m.content }));
+  const history: ChatTurn[] = toHistory(messages.slice(0, lastUserIndex));
 
   const retrieved = await hybridSearch(question, organizationId);
   const context = retrieved.map((r) => ({ id: r.id, sourceName: r.sourceName, content: r.content }));

@@ -74,6 +74,19 @@ const envSchema = z.object({
   RATE_LIMIT_CHAT_MAX: z.coerce.number().int().positive().default(30),
 
   CONFIDENCE_THRESHOLD: z.coerce.number().min(0).max(1).default(0.55),
+  /**
+   * How many prior messages travel with each question. Every turn resends the
+   * history, so an uncapped thread costs tokens quadratically in its own
+   * length: turn 20 pays to reread turns 1 to 19. Most support threads are
+   * short, but the long ones are exactly the expensive case, a customer going
+   * round after round before escalating. Retrieval reruns against the newest
+   * message every turn, so older turns are only carrying conversational
+   * reference ("it", "that one"), which a recent window keeps. Tunable because
+   * the right window is a quality/cost tradeoff that only real traffic settles.
+   * Must stay positive: `slice(-0)` returns the whole array, so a zero here
+   * would silently restore the unbounded behaviour it exists to prevent.
+   */
+  CHAT_HISTORY_MESSAGES: z.coerce.number().int().positive().default(10),
   REOPEN_WINDOW_HOURS: z.coerce.number().positive().default(72),
   JWT_SECRET: z.string().min(32, "JWT_SECRET must be at least 32 characters"),
 });

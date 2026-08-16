@@ -8,7 +8,7 @@ import type { ChatProvider, ChatTurn } from "../llm/provider.js";
 import { mockHandoffAdapter } from "../handoff/mockAdapter.js";
 import { webhookHandoffAdapter } from "../handoff/webhookAdapter.js";
 import type { HandoffAdapter } from "../handoff/adapter.js";
-import { computeCombinedConfidence, shouldEscalate } from "./confidence.js";
+import { shouldEscalate } from "./confidence.js";
 import { toHistory } from "./history.js";
 import { storeEscalationQuestion } from "../knowledge/gaps.js";
 import { notifyOrg, notifySession } from "../realtime/bus.js";
@@ -138,20 +138,18 @@ export async function handleUserMessage(params: {
 
   const result = await chatProvider.generateResponse({ history, message, context });
 
-  const topRetrievalScore = retrieved[0]?.score ?? 0;
-  const combinedConfidence = computeCombinedConfidence(result.confidence, topRetrievalScore);
-
   const citations = retrieved
     .filter((r) => result.usedSourceIds.includes(r.id))
     .map((r) => ({ id: r.id, sourceName: r.sourceName, headingPath: r.headingPath }));
 
-  if (shouldEscalate(combinedConfidence, env.CONFIDENCE_THRESHOLD)) {
+  const gate = { modelConfidence: result.confidence, retrievedCount: retrieved.length };
+  if (shouldEscalate(gate, env.CONFIDENCE_THRESHOLD)) {
     return escalate({
       conversationId: conversation.id,
       organizationId,
       sessionId,
       reason: "low_confidence",
-      confidence: combinedConfidence,
+      confidence: result.confidence,
       answer: result.answer,
       citations,
       question: message,
@@ -164,7 +162,7 @@ export async function handleUserMessage(params: {
       role: "assistant",
       content: result.answer,
       citations: citations,
-      confidence: combinedConfidence,
+      confidence: result.confidence,
     },
   });
 
@@ -174,7 +172,7 @@ export async function handleUserMessage(params: {
   return {
     conversationId: conversation.id,
     answer: result.answer,
-    confidence: combinedConfidence,
+    confidence: result.confidence,
     citations,
     escalated: false,
   };
@@ -225,13 +223,11 @@ export async function generateDraft(params: {
 
   const result = await chatProvider.generateResponse({ history, message: question, context });
 
-  const topRetrievalScore = retrieved[0]?.score ?? 0;
-  const confidence = computeCombinedConfidence(result.confidence, topRetrievalScore);
   const citations = retrieved
     .filter((r) => result.usedSourceIds.includes(r.id))
     .map((r) => ({ id: r.id, sourceName: r.sourceName, headingPath: r.headingPath }));
 
-  return { draft: result.answer, confidence, citations };
+  return { draft: result.answer, confidence: result.confidence, citations };
 }
 
 async function escalate(params: {

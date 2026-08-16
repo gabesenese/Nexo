@@ -155,9 +155,13 @@ nothing covered deploying *Nexo*. Three tracks:
    so it is not a config flip: `dimensions: 768` on the OpenAI embedding call keeps both pgvector
    columns as they are, and `npm run db:reembed` rewrites every vector. **Re-measure the tuned
    constants with `npm run measure:thresholds`, never nudge them:** the coverage and
-   gap-similarity thresholds in `knowledge/gaps.ts` were measured against `nomic-embed-text`, and
-   `CONFIDENCE_THRESHOLD` is calibrated against `llama3.1:8b`'s self-assessment rather than a
-   frontier model's.
+   gap-similarity thresholds in `knowledge/gaps.ts` were measured against `nomic-embed-text`.
+
+   `CONFIDENCE_THRESHOLD` is **done**, verified against `claude-haiku-4-5` on 2026-08-16 and left
+   at 0.55. Covered questions score 0.60-0.95 and uncovered ones 0.05-0.10, so the valid window is
+   0.50 to 0.60 and the current value is its midpoint. See the comment in `config/env.ts` for what
+   bounds each side. Worth knowing: `llama3.1:8b` does not separate those bands at any threshold,
+   so escalation behaviour observed locally on Ollama says nothing about production.
 
    **Sequenced here on purpose (decided 2026-08-13).** It was originally step 1, on the reasoning
    that it gates everything. It does not: development continues perfectly well on Ollama, and

@@ -1,21 +1,58 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../db/client.js";
 import { embeddingProvider } from "../ingestion/embeddings.js";
+import { env } from "../config/env.js";
 
 /**
- * Two questions belong to the same gap above this cosine similarity.
- * Measured rather than guessed: with nomic-embed-text, paraphrases of one
- * question score no lower than 0.61, while questions on genuinely different
- * topics peak at 0.52. This sits between them. Raising it splits paraphrases
- * of the same ask; lowering it merges unrelated topics, which is the worse
- * failure because an operator cannot tell a bad merge from a real pattern.
+ * Both thresholds below are cosine similarities, and a cosine similarity is
+ * only meaningful inside one embedding space. Switching the embedding model
+ * invalidates both even though no code changed, which is why they are a table
+ * keyed by provider rather than two bare numbers: flipping `AI_PROVIDER` moves
+ * the thresholds with it instead of leaving the previous model's values in
+ * place. That failure would be silent. Nothing throws, the page simply starts
+ * reporting the wrong thing.
  *
- * `npm run measure:thresholds` reproduces both bands and is what must be run
- * before this number moves. A cosine similarity is only meaningful within one
- * embedding space, so **changing the embedding model invalidates this constant
- * even though no code changed.** Re-measure at that point; never carry it over.
+ * `similarity` decides that two questions belong to the same gap. Raising it
+ * splits paraphrases of one ask into separate gaps; lowering it merges
+ * unrelated topics, which is the worse failure because an operator cannot tell
+ * a bad merge from a real pattern.
+ *
+ * `coverage` decides whether the library has anything on the subject at all.
+ *
+ * `npm run measure:thresholds` reproduces every band below and is what must be
+ * run before any of these numbers move. Never carry a value across providers.
+ *
+ * ollama / nomic-embed-text, measured 2026-08-13 against the demo workspace:
+ *   similarity  paraphrases 0.470-0.913 (p05 0.528) · different asks 0.287-0.521 (p95 0.485)
+ *   coverage    covered 0.547-0.819 · uncovered 0.427-0.547
+ * The coverage bands touch there, so 0.57 reports the occasional covered
+ * question as uncovered. Left as measured: the sample is thin and the honest
+ * fix is a better signal, not a nudged number.
+ *
+ * cloud / text-embedding-3-small at 768 dims, measured 2026-08-16 against the
+ * same workspace:
+ *   similarity  paraphrases 0.419-0.824 (p05 0.442) · different asks 0.085-0.447 (p95 0.349)
+ *   coverage    covered 0.483-0.725 (p05 0.483) · uncovered 0.242-0.442 (p95 0.378)
+ * Both bands separate cleanly here, so coverage is a better signal after the
+ * cutover than before it. Note how far these sit from the ollama pair: 0.57
+ * would land above the paraphrase median, shattering every gap into singletons
+ * while also reporting documented subjects as undocumented.
+ *
+ * The cloud pair is n=12 covered and n=10 uncovered, so confirm it with a fresh
+ * `measure:thresholds` run after the corpus is actually re-embedded.
  */
-const SIMILARITY_THRESHOLD = 0.57;
+export const embeddingThresholds: Record<
+  typeof env.AI_PROVIDER,
+  { similarity: number; coverage: number }
+> = {
+  ollama: { similarity: 0.57, coverage: 0.57 },
+  cloud: { similarity: 0.396, coverage: 0.431 },
+};
+
+/** The pair in force for the configured provider, exported so tooling reports what the code uses. */
+export const activeThresholds = embeddingThresholds[env.AI_PROVIDER];
+
+const SIMILARITY_THRESHOLD = activeThresholds.similarity;
 
 /**
  * A customer choosing "talk to a human" is not a documentation failure, so
@@ -23,28 +60,8 @@ const SIMILARITY_THRESHOLD = 0.57;
  */
 const GAP_REASON = "low_confidence";
 
-/**
- * Below this cosine similarity, nothing in the library is on the subject at
- * all. Measured the same way as SIMILARITY_THRESHOLD rather than guessed:
- * against a workspace whose only source is Stripe's refund documentation,
- * questions that source genuinely answers scored 0.669 to 0.800, while
- * questions on subjects it never mentions (SSO, data residency, rate limits,
- * seats, uptime) scored 0.423 to 0.473. The bands do not overlap and this sits
- * between them.
- *
- * The measurement used one source on one topic, so it is a starting point
- * rather than a settled number. Re-measure both bands against a broader
- * library before moving it, exactly as the clustering threshold requires.
- *
- * Re-measured 2026-08-13 against the demo workspace, which is a broader library
- * than the original single source: covered 0.547 to 0.819, uncovered 0.427 to
- * 0.547. **The bands now touch rather than separate**, so 0.57 reports a
- * genuinely covered question or two as uncovered. Left alone deliberately,
- * because the sample is thin (12 covered questions) and the move to a cloud
- * embedding model invalidates the number anyway. Set it from a fresh
- * `npm run measure:thresholds` at that cutover rather than nudging it now.
- */
-const COVERAGE_THRESHOLD = 0.57;
+/** Below this, nothing in the library is on the subject at all. See THRESHOLDS above. */
+const COVERAGE_THRESHOLD = activeThresholds.coverage;
 
 /**
  * Whether the library has anything on this subject, which decides what the

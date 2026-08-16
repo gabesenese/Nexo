@@ -2,6 +2,7 @@ import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
 import { embeddingProvider } from "../src/ingestion/embeddings.js";
 import { env, EMBEDDING_DIMENSIONS } from "../src/config/env.js";
+import { activeThresholds } from "../src/knowledge/gaps.js";
 
 /**
  * Measures the two thresholds that depend on the embedding space, so changing
@@ -119,6 +120,11 @@ function recommend(label: string, high: Band | null, low: Band | null) {
 async function main() {
   const model = env.AI_PROVIDER === "cloud" ? env.OPENAI_EMBEDDING_MODEL : env.OLLAMA_EMBEDDING_MODEL;
   console.log(`\nProvider: ${env.AI_PROVIDER} · model: ${model} · dimensions: ${EMBEDDING_DIMENSIONS}`);
+  const configured = activeThresholds;
+  console.log(
+    `Currently configured for this provider: clustering ${configured.similarity} · coverage ${configured.coverage}`,
+  );
+  console.log(`Compare each suggestion below against those before changing anything.`);
 
   const org = await prisma.organization.findFirst({ where: { name: DEMO_WORKSPACE } });
   if (!org) throw new Error(`"${DEMO_WORKSPACE}" not found. Run: npm run db:seed:demo`);

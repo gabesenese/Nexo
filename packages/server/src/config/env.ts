@@ -73,6 +73,25 @@ const envSchema = z.object({
   /** Model spend is real money, and /api/chat is the one public endpoint that spends it. */
   RATE_LIMIT_CHAT_MAX: z.coerce.number().int().positive().default(30),
 
+  /**
+   * Below this combined confidence, the answer goes to a human instead of the
+   * customer. Bounded on both sides, which is why the window is narrow.
+   *
+   * Above 0.60 it escalates answers that are actually good: measured against
+   * claude-haiku-4-5 on ten covered and ten uncovered support questions,
+   * self-assessed confidence ran 0.60-0.95 when the context held the answer and
+   * 0.05-0.10 when it did not. The floor of the covered band is the ceiling here.
+   *
+   * Nothing bounds it from below any more: a question that retrieved no context
+   * escalates on its own rule in `orchestrator/confidence.ts`, rather than relying
+   * on this number staying above 0.5 to do it.
+   *
+   * 0.55 leaves comfortable room under that ceiling. It was first chosen against
+   * llama3.1:8b, whose self-assessment turns out not to separate the two bands at
+   * any threshold (covered saturates at 1.0, uncovered scatters 0-1.0), so local
+   * escalation behaviour on Ollama is not evidence of anything. Re-measure both
+   * bands before moving this; do not nudge it.
+   */
   CONFIDENCE_THRESHOLD: z.coerce.number().min(0).max(1).default(0.55),
   /**
    * How many prior messages travel with each question. Every turn resends the

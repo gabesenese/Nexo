@@ -81,9 +81,10 @@ section[id] {
   scroll-margin-top: 88px;
 }
 
+/** Ink rather than teal: focus is emphasis, not a warning. Follows the theme, so it inverts in dark. */
 a:focus-visible,
 button:focus-visible {
-  outline: 2px solid var(--teal);
+  outline: 2px solid var(--ink);
   outline-offset: 2px;
   border-radius: 4px;
 }

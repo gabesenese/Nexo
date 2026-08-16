@@ -63,10 +63,34 @@
   --content-max: 1440px;
 }
 
-:where(a, button, input, select, textarea, [tabindex]):focus-visible {
-  outline: 2px solid var(--teal);
-  outline-offset: 2px;
-  border-radius: var(--r-sm);
+/**
+ * Nothing in the console draws a focus ring. A ring around a field reads as a
+ * second border, and in teal it read as an error on a field that is merely
+ * focused. Fields indicate focus by nudging their own border one step darker,
+ * which is the rule further down; buttons and links indicate it by their
+ * existing hover treatment.
+ *
+ * `outline: none` is spelled out rather than left unset because the browser
+ * draws its own ring otherwise, and these need real specificity to beat it:
+ * `:where()` contributes zero and loses to the UA `:focus-visible` rule.
+ */
+input:focus,
+input:focus-visible,
+select:focus,
+select:focus-visible,
+textarea:focus,
+textarea:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+a:focus,
+a:focus-visible,
+button:focus,
+button:focus-visible,
+[tabindex]:focus,
+[tabindex]:focus-visible {
+  outline: none;
 }
 
 * {
@@ -340,8 +364,8 @@ h4 {
     transform 160ms var(--ease-out);
 }
 
+/** Hover is carried by the fill alone. Darkening the border too drew a ring around the button. */
 .btn-small:hover:not(:disabled) {
-  border-color: var(--ink);
   background: var(--paper);
 }
 
@@ -399,7 +423,7 @@ h4 {
 }
 
 .select-trigger:hover:not(:disabled) {
-  border-color: var(--ink);
+  border-color: var(--slate-soft);
 }
 
 .select-trigger:disabled {
@@ -409,7 +433,7 @@ h4 {
 
 /** Open state reads from the list being on screen and the chevron flipping, not from a coloured ring. */
 .select-trigger[aria-expanded="true"] {
-  border-color: var(--ink);
+  border-color: var(--slate-soft);
 }
 
 .select-value {
@@ -534,7 +558,7 @@ input[type="file"].dropzone-input {
 }
 
 .dropzone-input:focus-visible + .dropzone-icon {
-  outline: 2px solid var(--teal);
+  outline: 2px solid var(--ink);
   outline-offset: 2px;
 }
 
@@ -1000,6 +1024,14 @@ tbody tr[data-clickable]:hover {
   cursor: pointer;
 }
 
+/**
+ * `input:not([type])` matters more than it looks. An input with no type
+ * attribute is a text field, but it matches none of the typed selectors below,
+ * so it silently missed every one of these styles and fell back to the
+ * browser's own 3D inset border. Checkboxes and radios stay out on purpose:
+ * min-height and padding would wreck them.
+ */
+input:not([type]),
 input[type="text"],
 input[type="email"],
 input[type="password"],
@@ -1027,14 +1059,15 @@ textarea {
 }
 
 /**
- * Clicking into a field darkens its border and nothing more. The coloured glow
- * that used to sit here read as an error state and cluttered every form. A
- * visible ring is still drawn for keyboard users through :focus-visible.
+ * Clicking into a field nudges its border one step darker and nothing more. No
+ * ring, no glow, no black outline: at ink weight it read as a bar drawn around
+ * the field, and in teal it read as an error on a field that is merely focused.
+ * Soft slate is enough to see where you are typing without the field shouting.
  */
 input:focus,
 select:focus,
 textarea:focus {
-  border-color: var(--ink);
+  border-color: var(--slate-soft);
 }
 
 input::placeholder,
@@ -1275,7 +1308,6 @@ textarea::placeholder {
 }
 
 .btn-ghost:hover:not(:disabled) {
-  border-color: var(--ink);
   background: var(--paper);
 }
 
@@ -2137,7 +2169,7 @@ textarea::placeholder {
 }
 
 .onboard-option:hover {
-  border-color: var(--ink);
+  border-color: var(--slate-soft);
 }
 
 .onboard-option.selected {
@@ -2513,7 +2545,6 @@ textarea::placeholder {
 }
 
 .attention-more:hover {
-  border-color: var(--ink);
   color: var(--ink);
   background: var(--paper);
 }
@@ -2832,12 +2863,6 @@ textarea::placeholder {
   border-radius: 7px;
   background: var(--white);
   color: var(--ink);
-}
-
-.impact-form input:focus {
-  outline: 2px solid var(--teal);
-  outline-offset: -1px;
-  border-color: transparent;
 }
 
 .impact-form-actions {

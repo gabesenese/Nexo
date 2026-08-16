@@ -2995,3 +2995,25 @@ textarea::placeholder {
 .trial-banner .btn-small {
   flex-shrink: 0;
 }
+
+.usage-banner {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 13px 18px;
+  border-radius: 9px;
+  margin-bottom: 22px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  border: 1px solid #e3d3b4;
+  background: #f7efe1;
+  color: #6f4d19;
+}
+
+.usage-banner .ub-text {
+  flex: 1;
+}
+
+.usage-banner .btn-small {
+  flex-shrink: 0;
+}

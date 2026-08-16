@@ -6,6 +6,7 @@ import { AnalyticsPage } from "./pages/Analytics";
 import { KnowledgeGapsPage } from "./pages/KnowledgeGaps";
 import { ImpactPage } from "./pages/Impact";
 import { TrialBanner } from "./components/TrialBanner";
+import { UsageBanner } from "./components/UsageBanner";
 import { LeadsPage } from "./pages/Leads";
 import { LoginPage } from "./pages/Login";
 import { SignupPage } from "./pages/Signup";
@@ -151,6 +152,7 @@ function Dashboard() {
        */}
       <main className="content" key={location.pathname} ref={contentRef}>
         <TrialBanner />
+        <UsageBanner />
         <Routes>
           <Route path="/" element={<AnalyticsPage />} />
           <Route path="/sources" element={<SourcesPage />} />

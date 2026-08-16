@@ -15,8 +15,8 @@ export function PlanUsageCard() {
   if (!usage) return null;
 
   const { conversations, knowledgeSources, plan } = usage;
-  const overQuota = conversations.overage > 0;
-  const nearQuota = !overQuota && conversations.percentUsed >= 0.8;
+  const overQuota = conversations.state === "over";
+  const nearQuota = conversations.state === "approaching";
   const barWidth = Math.min(conversations.percentUsed, 1) * 100;
   const barState = overQuota ? "over" : nearQuota ? "near" : "";
 

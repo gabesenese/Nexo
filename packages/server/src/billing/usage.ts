@@ -1,6 +1,15 @@
 import { prisma } from "../db/client.js";
 import { planFor, type PlanDefinition } from "../config/plans.js";
 
+/**
+ * `approaching` exists so the first thing an operator hears about their
+ * allowance is not that they have already passed it. It is a warning, not a
+ * gate: nothing behaves differently at any of these states.
+ */
+export type ConversationUsageState = "ok" | "approaching" | "over";
+
+const APPROACHING_AT = 0.8;
+
 export interface UsageSummary {
   plan: PlanDefinition;
   periodStart: string;
@@ -10,6 +19,7 @@ export interface UsageSummary {
     remaining: number;
     overage: number;
     percentUsed: number;
+    state: ConversationUsageState;
   };
   knowledgeSources: {
     used: number;
@@ -17,6 +27,12 @@ export interface UsageSummary {
     remaining: number | null;
     atLimit: boolean;
   };
+}
+
+export function conversationUsageState(percentUsed: number): ConversationUsageState {
+  if (percentUsed > 1) return "over";
+  if (percentUsed >= APPROACHING_AT) return "approaching";
+  return "ok";
 }
 
 /** Usage resets on the first of the calendar month, which is what a customer expects a monthly allowance to mean. */
@@ -38,6 +54,7 @@ export async function usageFor(organizationId: string): Promise<UsageSummary> {
   const sources = await prisma.source.count({ where: { organizationId } });
 
   const limit = plan.conversationsPerMonth;
+  const percentUsed = limit ? conversations / limit : 0;
 
   return {
     plan,
@@ -47,7 +64,8 @@ export async function usageFor(organizationId: string): Promise<UsageSummary> {
       limit,
       remaining: Math.max(limit - conversations, 0),
       overage: Math.max(conversations - limit, 0),
-      percentUsed: limit ? conversations / limit : 0,
+      percentUsed,
+      state: conversationUsageState(percentUsed),
     },
     knowledgeSources: {
       used: sources,

@@ -239,7 +239,14 @@ export interface TrialStatus {
 export interface PlanUsage {
   plan: { id: string; name: string; conversationsPerMonth: number; knowledgeSources: number | null };
   periodStart: string;
-  conversations: { used: number; limit: number; remaining: number; overage: number; percentUsed: number };
+  conversations: {
+    used: number;
+    limit: number;
+    remaining: number;
+    overage: number;
+    percentUsed: number;
+    state: "ok" | "approaching" | "over";
+  };
   knowledgeSources: { used: number; limit: number | null; remaining: number | null; atLimit: boolean };
   trial: TrialStatus;
 }

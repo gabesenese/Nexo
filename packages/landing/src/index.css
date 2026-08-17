@@ -12,12 +12,34 @@
   --white: #ffffff;
   --nav-bg: rgba(246, 244, 238, 0.85);
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+
+  --paper-warm: #f1eee5;
+  --line-soft: #e6e1d6;
+  --teal-wash: rgba(47, 111, 94, 0.06);
+  --glow-teal: rgba(47, 111, 94, 0.16);
+  --glow-amber: rgba(201, 135, 58, 0.14);
+  --shadow-sm: 0 2px 8px -3px rgba(24, 27, 29, 0.1);
+  --shadow-md: 0 14px 40px -18px rgba(24, 27, 29, 0.2);
+  --shadow-lg: 0 34px 80px -30px rgba(24, 27, 29, 0.28);
+
+  /**
+   * Section content width. The nav deliberately does not use it: it spans the
+   * full viewport, which is the one place the page is meant to feel edge to edge.
+   */
+  --maxw: 1120px;
 }
 
 :root[data-theme="dark"] {
   --ink: #f3f1ea;
   --paper: #15171a;
   --paper-dim: #1b1e21;
+  --paper-warm: #191c1f;
+  --line-soft: #24272a;
+  --teal-wash: rgba(79, 156, 137, 0.07);
+  --glow-teal: rgba(79, 156, 137, 0.16);
+  --glow-amber: rgba(221, 154, 82, 0.1);
+  --shadow-md: 0 14px 40px -18px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 34px 80px -30px rgba(0, 0, 0, 0.6);
   --teal: #4f9c89;
   --teal-dark: #7bc3b0;
   --amber: #dd9a52;
@@ -32,8 +54,7 @@
 /* These two elements are faithful representations of the real, fixed-light-themed
    product UI (a hero mockup and real product screenshots). They stay legible and
    accurate to the product regardless of site theme, so their tokens are pinned. */
-.proof-card,
-.pricing-wrap {
+.proof-card {
   --ink: #181b1d;
   --paper: #f6f4ee;
   --paper-dim: #eeebe2;
@@ -844,114 +865,130 @@ button:focus-visible {
   margin: 28px 0 0;
 }
 
+/**
+ * A section on the page bed, not a dark panel. It used to be an --ink box with
+ * its own pinned light tokens, which made it the one surface that ignored the
+ * theme and sat on the page as a slab. The cards carry the structure instead.
+ */
 .pricing-wrap {
-  background: var(--ink);
-  border-radius: 16px;
-  padding: 48px 48px;
+  padding: 0;
 }
 .pricing-head {
   text-align: center;
-  color: var(--paper);
-  margin-bottom: 32px;
-}
-.pricing-head .l-eyebrow {
-  background: var(--line-dark);
-  border-color: var(--line-dark);
-  color: #e8dcc4;
+  max-width: 640px;
+  margin: 0 auto 52px;
 }
 .pricing-head h2 {
-  color: var(--paper);
-  font-size: 30px;
-  margin-top: 16px;
+  color: var(--ink);
+  font-size: clamp(28px, 3.8vw, 44px);
+  margin-top: 18px;
 }
 .pricing-currency {
-  color: #b7b0a2;
-  font-size: 13px;
-  margin-top: 10px;
+  font-family: "IBM Plex Mono", monospace;
+  color: var(--slate-soft);
+  font-size: 12.5px;
+  margin-top: 14px;
 }
 .pricing-included {
-  color: #b7b0a2;
-  font-size: 13.5px;
-  line-height: 1.65;
+  color: var(--slate-soft);
+  font-size: 14px;
+  line-height: 1.6;
   text-align: center;
-  max-width: 620px;
-  margin: 28px auto 0;
+  max-width: 640px;
+  margin: 34px auto 0;
 }
 .pgrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
+  gap: 18px;
+  max-width: 940px;
+  margin: 0 auto;
 }
 .ptier {
-  background: #1f2325;
-  border: 1px solid var(--line-dark);
-  border-radius: 12px;
-  padding: 28px;
-  color: var(--paper);
-  transition: transform 200ms var(--ease-out), border-color 200ms ease;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 30px 26px;
+  display: flex;
+  flex-direction: column;
+  color: var(--ink);
+  transition: transform 200ms var(--ease-out), box-shadow 200ms ease, border-color 200ms ease;
 }
 .ptier.hi {
   border-color: var(--teal);
-  background: #20302b;
+  box-shadow: var(--shadow-md);
+  position: relative;
+}
+/** The badge is drawn rather than marked up, so the tier data stays about the plan. */
+.ptier.hi::before {
+  content: "Most popular";
+  position: absolute;
+  top: -11px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--teal);
+  color: #ffffff;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 20px;
+  white-space: nowrap;
 }
 .ptier .pname {
-  font-family: "IBM Plex Mono", monospace;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #9aa0a3;
-  margin-bottom: 14px;
+  font-family: "Fraunces", serif;
+  font-size: 20px;
+  color: var(--ink);
+  margin-bottom: 12px;
+  text-transform: none;
+  letter-spacing: 0;
 }
 .ptier .pprice {
   font-family: "Fraunces", serif;
-  font-size: 34px;
-  margin-bottom: 4px;
+  font-size: 38px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1;
 }
 .ptier .pprice span {
-  font-size: 13px;
-  color: #9aa0a3;
   font-family: "IBM Plex Sans", sans-serif;
+  font-size: 14px;
+  color: var(--slate-soft);
+  font-weight: 400;
 }
 .ptier .pdesc {
-  font-size: 12.5px;
-  color: #9aa0a3;
-  margin-bottom: 22px;
+  font-size: 13.5px;
+  color: var(--slate-soft);
+  margin: 12px 0 22px;
+  line-height: 1.5;
+  min-height: 40px;
 }
 .ptier ul {
   list-style: none;
   padding: 0;
-  margin: 0;
+  margin: 0 0 26px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 11px;
+  flex: 1;
 }
 .ptier li {
-  font-size: 13px;
-  color: #d7d2c4;
   display: flex;
-  gap: 8px;
-}
-.ptier li::before {
-  content: "—";
-  color: var(--teal);
+  gap: 9px;
+  align-items: flex-start;
+  font-size: 14px;
+  color: var(--ink);
 }
 .ptier .btn {
   width: 100%;
   text-align: center;
-  margin-top: 22px;
-}
-.ptier .btn-ghost {
-  color: var(--paper);
-  border-color: #454b4e;
-}
-.ptier .btn-ghost:hover {
-  border-color: var(--paper);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .ptier:hover {
     transform: translateY(-3px);
-    border-color: var(--teal);
+    box-shadow: var(--shadow-md);
   }
 }
 

@@ -36,7 +36,7 @@ export function Pricing() {
       <div className="pricing-wrap">
         <div className="pricing-head">
           <span className="l-eyebrow">Simple pricing</span>
-          <h2>No demos. No hidden pricing. No enterprise sales calls.</h2>
+          <h2>No demos. No hidden pricing. No sales calls.</h2>
           <p className="pricing-currency">All prices in Canadian dollars, plus applicable taxes.</p>
         </div>
         <div className="pgrid">
@@ -50,7 +50,14 @@ export function Pricing() {
               <div className="pdesc">{tier.desc}</div>
               <ul>
                 {tier.features.map((f) => (
-                  <li key={f}>{f}</li>
+                  <li key={f}>
+                    <span className="chk" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                        <path d="M5 12l4 4L19 7" />
+                      </svg>
+                    </span>
+                    {f}
+                  </li>
                 ))}
               </ul>
               <a className={`btn ${tier.highlighted ? "btn-primary" : "btn-ghost"}`} href={ONBOARDING_URL}>

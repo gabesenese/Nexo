@@ -79,7 +79,9 @@ export function Nav({ onOpenTrial }: { onOpenTrial: () => void }) {
         <div className="l-logo">Nexo</div>
         <div className="l-nav-links">
           <a href="#product">Product</a>
+          <a href="#platform">Platform</a>
           <a href="#pricing">Pricing</a>
+          <a href="#faq">FAQ</a>
         </div>
         <div className="l-nav-cta">
           <button className="theme-toggle" aria-label={themeLabel} title={themeLabel} onClick={toggle}>
@@ -116,8 +118,14 @@ export function Nav({ onOpenTrial }: { onOpenTrial: () => void }) {
         <a href="#product" tabIndex={menuOpen ? 0 : -1} onClick={() => setMenuOpen(false)}>
           Product
         </a>
+        <a href="#platform" tabIndex={menuOpen ? 0 : -1} onClick={() => setMenuOpen(false)}>
+          Platform
+        </a>
         <a href="#pricing" tabIndex={menuOpen ? 0 : -1} onClick={() => setMenuOpen(false)}>
           Pricing
+        </a>
+        <a href="#faq" tabIndex={menuOpen ? 0 : -1} onClick={() => setMenuOpen(false)}>
+          FAQ
         </a>
         <div className="l-nav-cta">
           <button

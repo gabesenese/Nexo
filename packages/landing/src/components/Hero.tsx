@@ -3,28 +3,38 @@ import { ONBOARDING_URL } from "../config";
 export function Hero({ onOpenTrial }: { onOpenTrial: () => void }) {
   return (
     <div className="l-hero">
+      <div className="hero-glow" aria-hidden="true" />
+      <div className="hero-grid" aria-hidden="true" />
       {/**
        * Three levels and no more: who it is for, what it does, how to start.
        * This previously stacked six blocks in four typefaces before the visual,
        * including two grey monospace lines doing unrelated jobs, which read as
        * writing piled on writing rather than a hierarchy.
+       *
+       * The badge says where data lives, not that anything is running. The
+       * mockup's version read "Live in yyz", which would be a claim about
+       * production the moment someone read it, and there is no production yet.
        */}
-      <span className="l-eyebrow">For growing support teams</span>
+      <span className="hero-badge">
+        <span className="dot" aria-hidden="true" />
+        Canadian data residency by default
+      </span>
       <h1>
         Every answer has <span className="accent">an exit.</span>
       </h1>
-      <p>
+      <p className="hero-sub">
         AI support that knows when to answer, and when to bring in a person. Set it up yourself in
         minutes, with no sales call.
       </p>
       <div className="l-hero-ctas">
-        <a className="btn btn-primary" href={ONBOARDING_URL}>
+        <a className="btn btn-primary btn-lg" href={ONBOARDING_URL}>
           Start free trial
         </a>
-        <button className="btn btn-ghost" onClick={onOpenTrial}>
+        <button className="btn btn-ghost btn-lg" onClick={onOpenTrial}>
           Talk to us
         </button>
       </div>
+      <p className="hero-note">$0 minimum · from C$249/mo · cancel anytime</p>
 
       <div className="proof-card">
         <div className="proof-head">

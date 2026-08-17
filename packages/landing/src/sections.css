@@ -1,0 +1,661 @@
+/**
+ * Sections ported from mockups/nexo-landing-saas.html.
+ *
+ * Kept in its own file so the port is reviewable on its own, and so the nav,
+ * pricing, footer and dark theme in index.css stay visibly untouched. Tokens
+ * come from index.css; nothing here redefines a colour.
+ */
+
+.wrap {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 0 32px;
+}
+.section {
+  padding: clamp(80px, 10vw, 140px) 0;
+}
+.section-head {
+  max-width: 640px;
+  margin: 0 auto clamp(44px, 6vw, 68px);
+  text-align: center;
+}
+.section-head h2 {
+  font-size: clamp(30px, 4.2vw, 48px);
+  margin-top: 20px;
+  color: var(--ink);
+}
+.section-head p {
+  color: var(--slate);
+  margin-top: 18px;
+  font-size: 18px;
+}
+.accent {
+  color: var(--teal);
+  font-style: italic;
+}
+.btn-lg {
+  padding: 13px 26px;
+  font-size: 15px;
+}
+
+/* HERO ATMOSPHERE */
+.l-hero {
+  position: relative;
+  overflow: visible;
+}
+.l-hero > * {
+  position: relative;
+  z-index: 1;
+}
+.hero-glow {
+  position: absolute;
+  inset: -40px 0 auto;
+  height: 640px;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.hero-glow::before {
+  content: "";
+  position: absolute;
+  top: -120px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 820px;
+  height: 560px;
+  background: radial-gradient(ellipse at center, var(--glow-teal), transparent 62%);
+  filter: blur(26px);
+  animation: drift 18s var(--ease-out) infinite alternate;
+}
+.hero-glow::after {
+  content: "";
+  position: absolute;
+  top: -40px;
+  left: 34%;
+  width: 460px;
+  height: 400px;
+  background: radial-gradient(ellipse at center, var(--glow-amber), transparent 60%);
+  filter: blur(38px);
+  animation: drift2 22s var(--ease-out) infinite alternate;
+}
+.hero-grid {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.6;
+  background-image: linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse 68% 52% at 50% 30%, #000, transparent 76%);
+  -webkit-mask-image: radial-gradient(ellipse 68% 52% at 50% 30%, #000, transparent 76%);
+}
+@keyframes drift {
+  from {
+    transform: translateX(-50%);
+  }
+  to {
+    transform: translateX(-45%) translateY(22px);
+  }
+}
+@keyframes drift2 {
+  from {
+    transform: translate(0, 0);
+  }
+  to {
+    transform: translate(26px, -16px);
+  }
+}
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--slate);
+  border: 1px solid var(--line);
+  background: var(--white);
+  border-radius: 100px;
+  padding: 6px 14px;
+  margin-bottom: 22px;
+  box-shadow: var(--shadow-sm);
+}
+.hero-badge b {
+  color: var(--ink);
+  font-weight: 600;
+}
+.hero-badge .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--teal);
+  box-shadow: 0 0 8px var(--teal);
+}
+/**
+ * Scoped to `.l-hero` because index.css styles `.l-hero p` at 18px, which is
+ * specificity 0,1,1 and beats a bare class. Without the parent these two are
+ * silently ignored and the note renders at body size.
+ */
+.l-hero .hero-sub {
+  font-size: clamp(17px, 2vw, 19px);
+  color: var(--slate);
+  max-width: 580px;
+  margin: 0 auto 30px;
+  line-height: 1.6;
+}
+.l-hero-ctas {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+/** Smaller than the mockup's 12.5px. It is a footnote to the buttons, not a third CTA. */
+.l-hero .hero-note,
+.final .hero-note {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.01em;
+  color: var(--slate-soft);
+  margin-top: 16px;
+  margin-bottom: 0;
+}
+
+/* MARQUEE */
+/**
+ * No background and no band borders. The mockup tinted alternating sections and
+ * ruled them off, which put three slightly different beds down the page. Once
+ * the tints went so the page is one colour, the rules had nothing left to
+ * bound and read as stray lines drawn across the middle of it. Spacing does the
+ * separating now.
+ */
+.marquee-sec {
+  padding: 44px 0;
+}
+.marquee-label {
+  text-align: center;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 11.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--slate-soft);
+  margin-bottom: 24px;
+}
+.marquee {
+  position: relative;
+  overflow: hidden;
+  mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+}
+.marquee-track {
+  display: flex;
+  gap: 52px;
+  width: max-content;
+  animation: scroll 36s linear infinite;
+}
+/** Pausing on hover lets someone actually read an item they noticed. */
+.marquee:hover .marquee-track {
+  animation-play-state: paused;
+}
+.marquee-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--slate-soft);
+  font-size: 15.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: color 200ms ease;
+}
+.marquee-item:hover {
+  color: var(--ink);
+}
+.marquee-item svg {
+  width: 18px;
+  height: 18px;
+  opacity: 0.7;
+}
+@keyframes scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* PHILOSOPHY BAND */
+.why {
+  text-align: center;
+}
+.why h2 {
+  font-size: clamp(28px, 4vw, 46px);
+  max-width: 16ch;
+  margin: 0 auto;
+  line-height: 1.12;
+  color: var(--ink);
+}
+.why-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 38px 0 34px;
+}
+.why-line {
+  font-family: "Fraunces", serif;
+  font-size: clamp(20px, 2.6vw, 28px);
+  color: var(--ink);
+}
+.why-line.esc {
+  color: var(--teal);
+}
+.why-sig {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 14px;
+  color: var(--slate-soft);
+  line-height: 1.8;
+  max-width: 44ch;
+  margin: 0 auto;
+}
+
+/* FEATURE ZIGZAG */
+.feature {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(40px, 6vw, 84px);
+  align-items: center;
+  padding: clamp(64px, 8vw, 104px) 0;
+  border-bottom: 1px solid var(--line);
+}
+.feature.flip .feature-text {
+  order: 2;
+}
+.feature-text .l-eyebrow {
+  margin-bottom: 20px;
+}
+.feature-text h2 {
+  font-size: clamp(28px, 3.4vw, 40px);
+  margin-bottom: 18px;
+  line-height: 1.1;
+  color: var(--ink);
+}
+.feature-text > p {
+  color: var(--slate);
+  font-size: 17px;
+  margin-bottom: 24px;
+  max-width: 44ch;
+}
+.feature-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0 0 26px;
+  padding: 0;
+}
+.feature-list li {
+  display: flex;
+  gap: 11px;
+  align-items: flex-start;
+  font-size: 15px;
+  color: var(--ink);
+}
+.chk {
+  width: 19px;
+  height: 19px;
+  flex-shrink: 0;
+  margin-top: 1px;
+  border-radius: 50%;
+  background: var(--teal-wash);
+  color: var(--teal);
+  display: grid;
+  place-items: center;
+}
+.chk svg {
+  width: 12px;
+  height: 12px;
+}
+
+/**
+ * Browser chrome around a real screenshot. The frame is presentation; what sits
+ * inside it is a capture of the running product rather than a drawing of one,
+ * which is what `npm run showcase:capture` exists to keep true.
+ */
+.mock {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+.mock-bar {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 12px 15px;
+  border-bottom: 1px solid var(--paper-dim);
+  background: var(--paper);
+}
+.mock-bar i {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--line);
+  display: inline-block;
+}
+.mock-url {
+  margin-left: 12px;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 11px;
+  color: var(--slate-soft);
+}
+/** Captures are of the fixed-light product UI, so they keep a light bed in either theme. */
+.mock-shot {
+  background: #f6f4ee;
+}
+.mock-shot img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* STATS BAND */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.stat-cell {
+  background: var(--paper);
+  padding: 38px 22px;
+  text-align: center;
+}
+.stat-num {
+  font-family: "Fraunces", serif;
+  font-size: clamp(36px, 5vw, 54px);
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1;
+}
+.stat-num .pre,
+.stat-num .suf {
+  color: var(--teal);
+}
+.stat-label {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--slate-soft);
+  font-family: "IBM Plex Mono", monospace;
+}
+
+/* FAQ */
+.faq-wrap {
+  max-width: 760px;
+  margin: 0 auto;
+}
+.faq-item {
+  border-bottom: 1px solid var(--line);
+}
+.faq-q {
+  width: 100%;
+  background: none;
+  border: none;
+  color: var(--ink);
+  font-family: "Fraunces", serif;
+  font-size: 20px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  padding: 24px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  transition: color 200ms ease;
+}
+.faq-q:hover,
+.faq-item.open .faq-q {
+  color: var(--teal);
+}
+.faq-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  position: relative;
+}
+.faq-icon::before,
+.faq-icon::after {
+  content: "";
+  position: absolute;
+  background: var(--slate-soft);
+  border-radius: 2px;
+  top: 50%;
+  left: 50%;
+  transition: transform 300ms var(--ease-out);
+}
+.faq-icon::before {
+  width: 13px;
+  height: 1.5px;
+  transform: translate(-50%, -50%);
+}
+.faq-icon::after {
+  width: 1.5px;
+  height: 13px;
+  transform: translate(-50%, -50%);
+}
+.faq-item.open .faq-icon::after {
+  transform: translate(-50%, -50%) scaleY(0);
+}
+.faq-a {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 340ms var(--ease-out);
+}
+.faq-a-inner {
+  padding: 0 0 24px;
+  color: var(--slate);
+  font-size: 16px;
+  max-width: 64ch;
+  line-height: 1.65;
+}
+
+/* FINAL CTA */
+
+/**
+ * No background of its own. The mockup made this a dark band, which meant a
+ * hard seam against the section above it and an inversion in dark mode, where
+ * a band built from `--ink` turned cream. It now sits on the page bed in both
+ * themes and the glow alone carries the emphasis, so the page is one
+ * continuous colour from the nav to the footer.
+ */
+.final {
+  position: relative;
+  text-align: center;
+  padding: clamp(80px, 11vw, 140px) 0;
+  overflow: hidden;
+}
+.final-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 55% 75% at 50% 45%, rgba(47, 111, 94, 0.22), transparent 62%);
+  filter: blur(20px);
+  pointer-events: none;
+}
+:root[data-theme="dark"] .final-glow {
+  background: radial-gradient(ellipse 55% 75% at 50% 45%, rgba(79, 156, 137, 0.16), transparent 62%);
+}
+.final .wrap {
+  position: relative;
+  z-index: 1;
+}
+.final h2 {
+  font-family: "Fraunces", serif;
+  font-size: clamp(32px, 5vw, 58px);
+  color: var(--ink);
+  max-width: 15ch;
+  margin: 0 auto 18px;
+}
+.final h2 .em {
+  font-style: italic;
+  color: var(--teal);
+}
+/**
+ * Buttons and note deliberately carry no overrides here. On the dark band they
+ * needed inverting; on the page bed the ordinary `.btn-primary` / `.btn-ghost`
+ * are already correct in both themes, and overriding them was what made the
+ * note invisible when the background flipped.
+ */
+.final p {
+  color: var(--slate);
+  font-size: 18px;
+  max-width: 46ch;
+  margin: 0 auto 32px;
+}
+.final-ctas {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* REVEAL */
+.reveal {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity 700ms var(--ease-out), transform 700ms var(--ease-out);
+}
+.reveal.in {
+  opacity: 1;
+  transform: none;
+}
+
+@media (max-width: 760px) {
+  .feature {
+    grid-template-columns: 1fr;
+    gap: 34px;
+  }
+  .feature.flip .feature-text {
+    order: 0;
+  }
+  .stats-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-glow::before,
+  .hero-glow::after,
+  .marquee-track {
+    animation: none;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* FOOTER */
+.footer {
+  padding: 68px 0 36px;
+  border-top: 1px solid var(--line);
+}
+.footer-top {
+  display: grid;
+  grid-template-columns: 1.6fr repeat(2, 1fr);
+  gap: 40px;
+  padding-bottom: 48px;
+  border-bottom: 1px solid var(--line);
+}
+.footer-brand .l-logo {
+  margin-bottom: 14px;
+}
+.footer-brand p {
+  color: var(--slate-soft);
+  font-size: 14px;
+  max-width: 30ch;
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+.footer-col h4 {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--slate-soft);
+  margin: 0 0 15px;
+  font-weight: 500;
+}
+.footer-col a {
+  display: block;
+  color: var(--slate);
+  font-size: 14.5px;
+  padding: 5px 0;
+  transition: color 200ms ease;
+}
+.footer-col a:hover {
+  color: var(--ink);
+}
+.footer-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding-top: 26px;
+  flex-wrap: wrap;
+}
+.badges {
+  display: flex;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+.badge {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 11px;
+  color: var(--slate);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 6px 11px;
+  background: var(--white);
+}
+.badge svg {
+  width: 13px;
+  height: 13px;
+  color: var(--teal);
+}
+.copyright {
+  color: var(--slate-soft);
+  font-size: 13px;
+  font-family: "IBM Plex Mono", monospace;
+}
+.maple {
+  color: var(--teal-dark);
+}
+
+@media (max-width: 760px) {
+  .footer-top {
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+  }
+  .footer-brand {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 480px) {
+  .footer-top {
+    grid-template-columns: 1fr;
+  }
+  .footer-bottom {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

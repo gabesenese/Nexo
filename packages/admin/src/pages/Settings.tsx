@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { api, AUDIT_LABELS, can, ROLE_DESCRIPTIONS, ROLE_LABELS, type AuthUser, type InvitableRole, type MemberRole, type AuditEvent, type OrgDetails, type OrgInvite, type OrgMember } from "../api";
 import { PlanUsageCard } from "../components/PlanUsageCard";
+import { BillingCard } from "../components/BillingCard";
 import { WebhookCard } from "../components/WebhookCard";
 import { Select } from "../components/Select";
 
@@ -164,6 +165,12 @@ export function SettingsPage({ onWorkspaceRenamed }: { onWorkspaceRenamed?: (nam
   const tabs = [
     { id: "workspace", label: "Workspace", visible: true },
     { id: "widget", label: "Widget", visible: can(me, "settings:write") },
+    /**
+     * Its own tab rather than a card under Workspace, because this is where an
+     * expired trial sends people and it should not arrive halfway down a page
+     * about something else.
+     */
+    { id: "billing", label: "Billing", visible: can(me, "billing:manage") },
     { id: "team", label: "Team", visible: true },
     { id: "privacy", label: "Privacy", visible: can(me, "settings:write") },
   ].filter((t) => t.visible);
@@ -269,6 +276,8 @@ export function SettingsPage({ onWorkspaceRenamed }: { onWorkspaceRenamed?: (nam
       )}
 
       {tab === "workspace" && <PlanUsageCard />}
+      {tab === "billing" && <BillingCard />}
+      {tab === "billing" && <PlanUsageCard />}
 
       {tab === "workspace" && can(me, "settings:write") && (
       <div className="card">

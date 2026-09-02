@@ -61,6 +61,18 @@ enum Plan {
   growth
 }
 
+/// Narrower than Stripe's own vocabulary, which carries states this product has
+/// no distinct behaviour for. The mapping lives in `billing/subscription.ts` and
+/// is deliberately conservative: anything that does not clearly mean "paying"
+/// maps to a state that stops entitlement rather than to `active`.
+enum SubscriptionStatus {
+  none
+  trialing
+  active
+  past_due
+  canceled
+}
+
 enum WebhookDeliveryStatus {
   succeeded
   failed
@@ -103,6 +115,22 @@ model Organization {
 
   plan          Plan           @default(essentials)
   trialEndsAt   DateTime?
+
+  stripeCustomerId     String?             @unique
+  stripeSubscriptionId String?             @unique
+  subscriptionStatus   SubscriptionStatus  @default(none)
+  /// When the paid period runs out. Read only for display, never for
+  /// entitlement: Stripe is the authority on whether a subscription is live,
+  /// and a clock comparison here would disagree with it during any retry.
+  currentPeriodEnd     DateTime?
+  /// Set when the customer cancels but has already paid through the period, so
+  /// the console can say "ends on the 3rd" instead of showing an active plan
+  /// that is quietly about to stop.
+  cancelAtPeriodEnd    Boolean             @default(false)
+  /// Stripe's clock for the subscription state held here. Deliveries are not
+  /// ordered, so an event older than this is a stale snapshot and is discarded
+  /// rather than written over newer state. The guard is in `applySubscription`.
+  subscriptionEventAt  DateTime?
 
   /// How long conversation content is kept, in days. Null keeps it indefinitely,
   /// which is the existing behaviour and stays the default: a retention policy
@@ -337,4 +365,16 @@ model Lead {
   createdAt      DateTime      @default(now())
 
   @@index([organizationId])
+}
+
+/// Stripe retries any delivery it does not get a 2xx for, and can send the same
+/// event more than once even on success. The id is recorded so a redelivery is
+/// answered without reapplying the change, which matters because these events
+/// move a workspace between plans.
+model ProcessedStripeEvent {
+  id        String   @id
+  type      String
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
 }

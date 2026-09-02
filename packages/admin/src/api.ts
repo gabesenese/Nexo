@@ -5,6 +5,7 @@ export type Permission =
   | "conversations:write"
   | "knowledge:write"
   | "settings:write"
+  | "billing:manage"
   | "team:manage"
   | "security:manage";
 
@@ -249,6 +250,42 @@ export interface PlanUsage {
   };
   knowledgeSources: { used: number; limit: number | null; remaining: number | null; atLimit: boolean };
   trial: TrialStatus;
+  access: WorkspaceAccess;
+}
+
+export type AccessState =
+  | "subscribed"
+  | "grace"
+  | "trialing"
+  | "trial_expired"
+  | "canceled"
+  | "unlimited";
+
+export interface WorkspaceAccess {
+  state: AccessState;
+  canStartNewConversation: boolean;
+  trial: TrialStatus;
+  subscription: {
+    status: "none" | "trialing" | "active" | "past_due" | "canceled";
+    currentPeriodEnd: string | null;
+    cancelAtPeriodEnd: boolean;
+  };
+}
+
+export interface BillingSummary {
+  enabled: boolean;
+  plan: string;
+  access: WorkspaceAccess;
+  hasCustomer: boolean;
+  plans: {
+    id: string;
+    name: string;
+    conversationsPerMonth: number;
+    knowledgeSources: number | null;
+    purchasable: boolean;
+    /** Read from Stripe, so it is the amount the card is actually charged. */
+    price: { amount: number; currency: string; interval: string | null } | null;
+  }[];
 }
 
 export interface ImpactSummary {
@@ -428,6 +465,13 @@ export const api = {
       { method: "POST", body: JSON.stringify({}) },
     ),
   getPlan: () => request<PlanUsage>("/api/plan"),
+  getBilling: () => request<BillingSummary>("/api/billing"),
+  startCheckout: (plan: string) =>
+    request<{ url: string | null }>("/api/billing/checkout", {
+      method: "POST",
+      body: JSON.stringify({ plan }),
+    }),
+  openBillingPortal: () => request<{ url: string }>("/api/billing/portal", { method: "POST" }),
   getImpact: () => request<ImpactSummary>("/api/impact"),
   setImpactAssumptions: (body: { averageHandleMinutes: number | null; supportHourlyCostCad: number | null }) =>
     request<{ averageHandleMinutes: number | null; supportHourlyCostCad: number | null }>("/api/impact/assumptions", {

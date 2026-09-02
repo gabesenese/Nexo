@@ -2931,6 +2931,58 @@ textarea::placeholder {
   color: #8a3a2a;
 }
 
+.billing-plans {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.billing-plan {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.billing-plan .btn {
+  margin-top: auto;
+  width: 100%;
+  justify-content: center;
+}
+
+.billing-plan-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.billing-price {
+  font-variant-numeric: tabular-nums;
+  font-size: 15px;
+  color: var(--ink);
+}
+
+.billing-actions {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.btn-quiet {
+  background: none;
+  border: none;
+  color: var(--slate-soft);
+  text-decoration: underline;
+  padding: 4px 0;
+}
+
 .webhook-actions {
   display: flex;
   align-items: center;

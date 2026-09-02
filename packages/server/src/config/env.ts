@@ -34,6 +34,24 @@ const envSchema = z.object({
 
   TRIAL_DAYS: z.coerce.number().int().positive().default(14),
 
+  /**
+   * Billing is optional on purpose. With no secret key the product runs exactly
+   * as it does today, which keeps a fresh clone and any self-hosted deployment
+   * from needing a payment processor to answer a support question. Every caller
+   * has to handle billing being switched off rather than assume Stripe exists.
+   */
+  STRIPE_SECRET_KEY: z.string().optional(),
+  STRIPE_WEBHOOK_SECRET: z.string().optional(),
+  STRIPE_PRICE_ESSENTIALS: z.string().optional(),
+  STRIPE_PRICE_PROFESSIONAL: z.string().optional(),
+  STRIPE_PRICE_GROWTH: z.string().optional(),
+  /**
+   * Where Stripe sends the customer back to. Defaults to the console's billing
+   * settings, which is where they started, so a completed checkout lands on the
+   * page that now shows the plan they just bought.
+   */
+  BILLING_RETURN_URL: z.string().url().optional(),
+
   INGESTION_CONCURRENCY: z.coerce.number().int().positive().default(1),
   INGESTION_TIMEOUT_MS: z.coerce.number().int().positive().default(900_000),
   MAX_CHUNKS_PER_SOURCE: z.coerce.number().int().positive().default(1500),
@@ -137,6 +155,19 @@ if (process.env.NODE_ENV === "production") {
   }
 }
 
+/**
+ * Checkout without a webhook secret is the one billing misconfiguration that
+ * takes money and delivers nothing: Stripe charges the card, the success page
+ * loads, and no event is ever verified, so the workspace stays on the plan it
+ * was on and the customer has paid for an upgrade they did not receive. It is
+ * invisible from the console, so refuse to start instead.
+ */
+if (parsed.STRIPE_SECRET_KEY && !parsed.STRIPE_WEBHOOK_SECRET) {
+  throw new Error(
+    "STRIPE_WEBHOOK_SECRET is required when STRIPE_SECRET_KEY is set, otherwise a completed checkout never activates the plan the customer paid for.",
+  );
+}
+
 if (parsed.AI_PROVIDER === "cloud") {
   if (!parsed.ANTHROPIC_API_KEY) {
     throw new Error("ANTHROPIC_API_KEY is required when AI_PROVIDER=cloud");
@@ -147,6 +178,9 @@ if (parsed.AI_PROVIDER === "cloud") {
 }
 
 export const env = parsed;
+
+/** Falls back to the console's settings page, which is where checkout is started from. */
+export const BILLING_RETURN_URL = parsed.BILLING_RETURN_URL ?? `${parsed.APP_URL}/settings`;
 
 /**
  * Must match the pgvector column dimension on Chunk.embedding. Defaults to

@@ -21,6 +21,12 @@ export type Permission =
   | "knowledge:write"
   /** Workspace name, widget appearance, handoff webhook, impact assumptions. */
   | "settings:write"
+  /**
+   * Starting a subscription, changing plan, opening the payment portal. Held
+   * separately from `settings:write` because that permission is about how the
+   * product behaves and this one spends the customer's money.
+   */
+  | "billing:manage"
   /** Inviting and revoking teammates. */
   | "team:manage"
   /**
@@ -31,8 +37,8 @@ export type Permission =
   | "security:manage";
 
 const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
-  owner: ["workspace:read", "conversations:write", "knowledge:write", "settings:write", "team:manage", "security:manage"],
-  admin: ["workspace:read", "conversations:write", "knowledge:write", "settings:write", "team:manage", "security:manage"],
+  owner: ["workspace:read", "conversations:write", "knowledge:write", "settings:write", "billing:manage", "team:manage", "security:manage"],
+  admin: ["workspace:read", "conversations:write", "knowledge:write", "settings:write", "billing:manage", "team:manage", "security:manage"],
   /** The support agent's role: they run the inbox, and do not reshape the workspace around it. */
   agent: ["workspace:read", "conversations:write"],
   /** Read-only. For the manager who wants the numbers without the ability to answer a customer. */
@@ -58,6 +64,7 @@ export function deniedMessage(role: Role | null, permission: Permission): string
     "conversations:write": "reply to or resolve conversations",
     "knowledge:write": "change knowledge sources",
     "settings:write": "change workspace settings",
+    "billing:manage": "change the plan or payment method",
     "team:manage": "invite or remove teammates",
     "security:manage": "rotate the widget key",
   };

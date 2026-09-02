@@ -26,7 +26,14 @@ export type AuditAction =
   | "password.reset_completed"
   | "retention.policy_changed"
   | "retention.applied"
-  | "data.exported";
+  | "data.exported"
+  | "billing.checkout_started"
+  /**
+   * Recorded from the Stripe webhook, so it has no actor. That is accurate
+   * rather than a gap: the plan moved because Stripe said it did, and the
+   * person who caused it is on the checkout event just before.
+   */
+  | "billing.subscription_changed";
 
 export interface AuditEntry {
   organizationId: string;
@@ -92,4 +99,6 @@ export const AUDIT_LABELS: Record<AuditAction, string> = {
   "retention.policy_changed": "changed the retention policy",
   "retention.applied": "applied the retention policy",
   "data.exported": "exported the workspace data",
+  "billing.checkout_started": "started a plan checkout",
+  "billing.subscription_changed": "subscription changed",
 };

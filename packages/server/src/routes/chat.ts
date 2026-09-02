@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { prisma } from "../db/client.js";
 import { handleUserMessage } from "../orchestrator/stateMachine.js";
-import { canStartNewConversation } from "../billing/trial.js";
+import { accessForOrganization } from "../billing/entitlement.js";
 
 interface ChatBody {
   sessionId: string;
@@ -80,7 +80,7 @@ export async function chatRoutes(app: FastifyInstance) {
     }
 
     /**
-     * An expired trial stops new conversations, never one already underway.
+     * An unpaid workspace stops new conversations, never one already underway.
      * Cutting someone off mid-question to collect payment would punish the
      * customer's customer for a decision they had no part in.
      */
@@ -88,11 +88,17 @@ export async function chatRoutes(app: FastifyInstance) {
       where: { sessionId, organizationId: org.id, status: { in: ["active", "escalated"] } },
       select: { id: true },
     });
-    if (!existing && !(await canStartNewConversation(org.id))) {
-      return reply.status(402).send({
-        error: "trial_expired",
-        message: "This workspace's trial has ended.",
-      });
+    if (!existing) {
+      const access = await accessForOrganization(org.id);
+      if (!access.canStartNewConversation) {
+        return reply.status(402).send({
+          error: access.state === "canceled" ? "subscription_canceled" : "trial_expired",
+          message:
+            access.state === "canceled"
+              ? "This workspace's subscription has ended."
+              : "This workspace's trial has ended.",
+        });
+      }
     }
 
     try {

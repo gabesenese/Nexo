@@ -1,4 +1,3 @@
-import { prisma } from "../db/client.js";
 import { env } from "../config/env.js";
 
 export type TrialState = "none" | "active" | "expired";
@@ -32,23 +31,10 @@ export function trialStatusFor(trialEndsAt: Date | null): TrialStatus {
   };
 }
 
-export async function trialStatusForOrganization(organizationId: string): Promise<TrialStatus> {
-  const org = await prisma.organization.findUnique({
-    where: { id: organizationId },
-    select: { trialEndsAt: true },
-  });
-  return trialStatusFor(org?.trialEndsAt ?? null);
-}
-
 /**
- * An expired trial stops new conversations from starting. It deliberately does
- * not touch conversations already open: abandoning someone mid-question to
- * collect payment would punish the customer's customer for a billing decision
- * they had no part in, which is the same reason conversation quotas are not
- * enforced either. Operators keep full access to finish what is already in
- * flight, and to pay.
+ * Deliberately no `trialStatusForOrganization` here any more. Loading a
+ * workspace and reading its trial state on its own is what locked paying
+ * customers out on day 15: a subscriber's `trialEndsAt` stays in the past
+ * forever. `entitlement.ts` is the only place that decides what a trial means,
+ * because it is the only place that also looks at the subscription.
  */
-export async function canStartNewConversation(organizationId: string) {
-  const trial = await trialStatusForOrganization(organizationId);
-  return trial.state !== "expired";
-}

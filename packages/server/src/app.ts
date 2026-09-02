@@ -28,6 +28,8 @@ import { leadsRoutes } from "./routes/leads.js";
 import { knowledgeGapsRoutes } from "./routes/knowledgeGaps.js";
 import { impactRoutes } from "./routes/impact.js";
 import { planRoutes } from "./routes/plan.js";
+import { billingRoutes } from "./routes/billing.js";
+import { stripeWebhookRoutes } from "./routes/stripeWebhook.js";
 import { webhookRoutes } from "./routes/webhooks.js";
 import { eventsRoutes } from "./routes/events.js";
 import { overviewRoutes } from "./routes/overview.js";
@@ -128,6 +130,8 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   await app.register(knowledgeGapsRoutes);
   await app.register(impactRoutes);
   await app.register(planRoutes);
+  await app.register(billingRoutes);
+  await app.register(stripeWebhookRoutes);
   await app.register(webhookRoutes);
   await app.register(eventsRoutes);
   await app.register(overviewRoutes);

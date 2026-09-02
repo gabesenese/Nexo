@@ -29,14 +29,17 @@ function fakeSubscription(
   id: string,
   status: Stripe.Subscription.Status,
   organizationId: string,
+  extra: Record<string, unknown> = {},
 ): Stripe.Subscription {
   return {
     id,
     status,
     customer: "cus_ordering",
     cancel_at_period_end: false,
+    cancel_at: null,
     metadata: { organizationId },
     items: { data: [] },
+    ...extra,
   } as unknown as Stripe.Subscription;
 }
 
@@ -265,6 +268,26 @@ suite("billing routes", () => {
       select: { subscriptionStatus: true },
     });
     expect(org.subscriptionStatus).toBe("active");
+  });
+
+  /**
+   * Found by the first real portal round trip: cancelling there sets `cancel_at`
+   * to the period end and leaves `cancel_at_period_end` false, so a workspace
+   * whose plan was ending looked, in the console, like nothing had changed.
+   */
+  it("treats a cancel_at scheduled by the portal as a cancellation at period end", async () => {
+    const at = new Date("2026-09-01T12:01:30.000Z");
+    const periodEnd = Math.floor(new Date("2026-10-01T12:01:30.000Z").getTime() / 1000);
+    await applySubscription(
+      fakeSubscription("sub_portal_cancel", "active", orderingOrgId, { cancel_at: periodEnd, cancel_at_period_end: false }),
+      at,
+    );
+    const org = await prisma.organization.findUniqueOrThrow({
+      where: { id: orderingOrgId },
+      select: { subscriptionStatus: true, cancelAtPeriodEnd: true },
+    });
+    expect(org.subscriptionStatus).toBe("active");
+    expect(org.cancelAtPeriodEnd).toBe(true);
   });
 
   /**

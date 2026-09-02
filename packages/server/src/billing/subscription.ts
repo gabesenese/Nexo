@@ -98,6 +98,14 @@ export async function applySubscription(
 
   const periodEnd = item?.current_period_end;
 
+  /**
+   * The Customer Portal schedules a cancellation by setting `cancel_at` to the
+   * period end and leaves `cancel_at_period_end` false, so reading the boolean
+   * alone never shows the operator that their plan is ending. Either signal
+   * means the same thing here.
+   */
+  const cancelScheduled = Boolean(subscription.cancel_at_period_end) || subscription.cancel_at != null;
+
   const written = await prisma.organization.updateMany({
     where: {
       id: organizationId,
@@ -107,7 +115,7 @@ export async function applySubscription(
       ...(plan ? { plan } : {}),
       subscriptionStatus: status,
       stripeSubscriptionId: subscription.id,
-      cancelAtPeriodEnd: subscription.cancel_at_period_end ?? false,
+      cancelAtPeriodEnd: cancelScheduled,
       currentPeriodEnd: periodEnd ? new Date(periodEnd * 1000) : null,
       subscriptionEventAt: observedAt,
     },

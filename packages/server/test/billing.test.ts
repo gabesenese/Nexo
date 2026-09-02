@@ -142,7 +142,9 @@ suite("billing routes", () => {
    *
    * What must hold either way: a deployment that reports it cannot take
    * payments must refuse checkout, and one that reports it can must not refuse
-   * for that reason.
+   * for that reason. With keys present the answer is either a Checkout URL or
+   * the route's deliberate 502 for an account Stripe rejects (no head office
+   * address yet, for instance). A bare 500 is a bug and fails here.
    */
   it("keeps the advertised billing availability consistent with what checkout does", async () => {
     const summary = await app.inject({
@@ -160,7 +162,12 @@ suite("billing routes", () => {
     });
 
     if (enabled) {
-      expect(res.statusCode).not.toBe(503);
+      expect([200, 502]).toContain(res.statusCode);
+      if (res.statusCode === 200) {
+        expect(res.json().url).toMatch(/^https:\/\/checkout\.stripe\.com\//);
+      } else {
+        expect(res.json().error).toMatch(/^Stripe could not start checkout: /);
+      }
     } else {
       expect(res.statusCode).toBe(503);
     }

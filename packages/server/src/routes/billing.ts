@@ -123,7 +123,11 @@ export async function billingRoutes(app: FastifyInstance) {
           client_reference_id: org.id,
           subscription_data: { metadata: { organizationId: org.id, plan } },
           automatic_tax: { enabled: true },
-          customer_update: { address: "auto" },
+          /**
+           * `name` is required alongside `address` once tax IDs are collected
+           * for an existing customer; without it Stripe refuses the session.
+           */
+          customer_update: { address: "auto", name: "auto" },
           tax_id_collection: { enabled: true },
           success_url: `${BILLING_RETURN_URL}?billing=done`,
           cancel_url: `${BILLING_RETURN_URL}?billing=cancelled`,

@@ -73,6 +73,11 @@ const envSchema = z.object({
   CORS_ORIGIN: z.string().default("http://localhost:5173,http://localhost:5174"),
   WIDGET_BUNDLE_PATH: z.string().optional(),
   /**
+   * The built admin console, served from this origin when present. See the
+   * note in app.ts for why that is the default rather than a separate host.
+   */
+  ADMIN_BUNDLE_PATH: z.string().optional(),
+  /**
    * Requests per minute per IP. The ceiling is generous because a single
    * operator working the inbox is legitimately chatty; the limits that protect
    * something specific are declared per route.
@@ -179,13 +184,19 @@ if (parsed.AI_PROVIDER === "cloud") {
 
 export const env = parsed;
 
-/** Falls back to the console's settings page, which is where checkout is started from. */
-export const BILLING_RETURN_URL = parsed.BILLING_RETURN_URL ?? `${parsed.APP_URL}/settings`;
+/**
+ * Falls back to the console's Billing tab, which is where checkout is started
+ * from and the only screen that can show what was just bought. Without the tab
+ * the customer landed on Workspace and had to go looking.
+ */
+export const BILLING_RETURN_URL = parsed.BILLING_RETURN_URL ?? `${parsed.APP_URL}/settings?tab=billing`;
 
 /**
- * Must match the pgvector column dimension on Chunk.embedding. Defaults to
- * 768 for the local nomic-embed-text model. Switching AI_PROVIDER to "cloud"
- * (OpenAI text-embedding-3-small = 1536) requires setting EMBEDDING_DIMENSIONS
- * to 1536 and migrating the column to match.
+ * Must match the pgvector column dimension on Chunk.embedding, which is 768.
+ * This does not change with AI_PROVIDER: ingestion/embeddings.ts asks OpenAI
+ * for 768 dimensions explicitly, because the text-embedding-3 family keeps its
+ * useful properties when shortened. Raising this to 1536 for the cloud
+ * provider, as this comment used to advise, makes every embedding write fail
+ * against a vector(768) column.
  */
 export const EMBEDDING_DIMENSIONS = parsed.EMBEDDING_DIMENSIONS;

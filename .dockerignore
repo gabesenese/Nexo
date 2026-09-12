@@ -5,6 +5,9 @@ node_modules
 .github
 mockups
 *.md
-.env
-.env.*
-!.env.example
+# The unprefixed forms only match the context root, which left
+# packages/server/.env (live provider keys and JWT_SECRET) being uploaded to
+# the builder and baked into a layer.
+**/.env
+**/.env.*
+!**/.env.example

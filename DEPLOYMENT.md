@@ -191,6 +191,27 @@ than a change.
 4. Provision, deploy, re-embed on the live database, then re-measure the
    thresholds. Never nudge the measured constants.
 
+### Phase 0: the landing page, now, for nothing
+
+The page holds no customer data, sets no cookies and talks to no database, so it
+can go on free static hosting today. Cloudflare Pages is the recommendation: the
+free tier needs an account but no card, and it gives a custom domain later
+without changing anything here.
+
+```bash
+# One of these two is required, or the build refuses: the request form has to
+# have somewhere to send what it collects.
+VITE_CONTACT_EMAIL=hello@yourdomain.ca   npm run build --workspace=@nexo/landing
+
+npx wrangler pages deploy packages/landing/dist --project-name nexo-landing
+```
+
+`VITE_SIGNUP_OPEN` stays unset until phase 1 is live. With it unset every start
+button opens the interest form, no sign-in link is rendered, and nothing on the
+page promises a trial that cannot be started yet. The day the console is
+deployed, the same build with `VITE_SIGNUP_OPEN=true`, `VITE_APP_URL` and
+`VITE_API_URL` turns the page back into a signup funnel.
+
 ### The deploy itself, when phase 1 arrives
 
 ```bash

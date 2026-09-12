@@ -8,8 +8,16 @@
 app = "nexo-api"
 primary_region = "yyz"
 
+# The server allows itself ten seconds to end open SSE streams and finish
+# in-flight requests. Fly's default is five, which would SIGKILL halfway through
+# that and drop every operator's stream on each deploy, exactly what the
+# graceful shutdown exists to prevent. Top level on purpose: under a table
+# header TOML would read it as that table's key.
+kill_timeout = "15s"
+
 [build]
   dockerfile = "Dockerfile"
+
 
 # Runs once per deploy, before the new machines take traffic. A failed migration
 # fails the deploy rather than leaving a released version talking to a schema it

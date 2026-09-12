@@ -9,8 +9,11 @@
 # Debian slim rather than Alpine on purpose. Prisma ships a different query
 # engine for musl, and a mismatch there fails at the first query rather than at
 # build time, which is the worst place to find out.
+#
+# Node 22 because Node 20 left maintenance on 2026-04-30, and a production
+# runtime that no longer receives security updates is not one to deploy on.
 
-FROM node:20-slim AS builder
+FROM node:22-slim AS builder
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends openssl \
@@ -40,7 +43,7 @@ ARG VITE_API_URL=same-origin
 RUN VITE_API_URL="$VITE_API_URL" npm run build --workspace=@nexo/admin
 
 
-FROM node:20-slim AS runtime
+FROM node:22-slim AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 

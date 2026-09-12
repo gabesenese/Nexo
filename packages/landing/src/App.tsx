@@ -12,6 +12,7 @@ import { FinalCta } from "./components/FinalCta";
 import { Footer } from "./components/Footer";
 import { MobileCta } from "./components/MobileCta";
 import { TrialModal } from "./components/TrialModal";
+import { TrialProvider } from "./TrialContext";
 import { useSupportWidget } from "./useSupportWidget";
 import { useMotion } from "./useMotion";
 
@@ -23,7 +24,7 @@ export default function App() {
   const openTrial = () => setTrialOpen(true);
 
   return (
-    <>
+    <TrialProvider value={openTrial}>
       <div className="mesh" aria-hidden="true" />
       <svg className="grain" aria-hidden="true">
         <filter id="landing-grain">
@@ -48,6 +49,6 @@ export default function App() {
 
       <MobileCta />
       <TrialModal open={trialOpen} onClose={() => setTrialOpen(false)} />
-    </>
+    </TrialProvider>
   );
 }

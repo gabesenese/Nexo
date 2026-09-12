@@ -1,4 +1,5 @@
-import { ONBOARDING_URL, TRIAL_DAYS } from "../config";
+import { SIGNUP_OPEN, TRIAL_DAYS } from "../config";
+import { StartCta } from "./StartCta";
 
 /**
  * The nav collapses on a phone, which previously left the whole page below
@@ -8,12 +9,10 @@ export function MobileCta() {
   return (
     <div className="mobile-cta" id="mobile-cta">
       <div className="mc-copy">
-        <strong>{TRIAL_DAYS} days free</strong>
-        <span>No credit card. Cancel anytime.</span>
+        <strong>{SIGNUP_OPEN ? `${TRIAL_DAYS} days free` : "Early access"}</strong>
+        <span>{SIGNUP_OPEN ? "No credit card. Cancel anytime." : "We will email you the moment it opens."}</span>
       </div>
-      <a className="btn btn-primary btn-sm" href={ONBOARDING_URL}>
-        Start free trial
-      </a>
+      <StartCta className="btn btn-primary btn-sm" label="Start free trial" closedLabel="Request access" />
     </div>
   );
 }

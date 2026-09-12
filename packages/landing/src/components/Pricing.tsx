@@ -1,4 +1,4 @@
-import { ONBOARDING_URL } from "../config";
+import { StartCta } from "./StartCta";
 import { PLAN_ROWS, formatCad } from "../pricing";
 
 /**
@@ -41,9 +41,11 @@ export function Pricing() {
                   <li key={feature}>{feature}</li>
                 ))}
               </ul>
-              <a className={`btn ${pick ? "btn-primary" : "btn-outline"}`} href={ONBOARDING_URL}>
-                Start free trial
-              </a>
+              <StartCta
+                className={`btn ${pick ? "btn-primary" : "btn-outline"}`}
+                label="Start free trial"
+                closedLabel="Request access"
+              />
             </article>
           );
         })}

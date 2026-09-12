@@ -1,4 +1,5 @@
-import { ONBOARDING_URL, TRIAL_DAYS } from "../config";
+import { SIGNUP_OPEN, TRIAL_DAYS } from "../config";
+import { StartCta } from "./StartCta";
 
 export function FinalCta({ onOpenTrial }: { onOpenTrial: () => void }) {
   return (
@@ -12,14 +13,14 @@ export function FinalCta({ onOpenTrial }: { onOpenTrial: () => void }) {
           that actually need them.
         </p>
         <div className="hero-cta">
-          <a className="btn btn-primary" href={ONBOARDING_URL}>
-            Start free trial
-          </a>
+          <StartCta className="btn btn-primary" label="Start free trial" />
           <button className="btn btn-ghost" type="button" onClick={onOpenTrial}>
             Talk to us
           </button>
         </div>
-        <p className="terms">{TRIAL_DAYS} DAYS &middot; NO CARD &middot; NO SALES CALL</p>
+        <p className="terms">
+          {SIGNUP_OPEN ? `${TRIAL_DAYS} DAYS` : "EARLY ACCESS"} &middot; NO CARD &middot; NO SALES CALL
+        </p>
       </div>
     </section>
   );

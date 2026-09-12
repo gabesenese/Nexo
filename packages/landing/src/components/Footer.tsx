@@ -1,4 +1,4 @@
-import { ONBOARDING_URL } from "../config";
+import { StartCta } from "./StartCta";
 import { Mark } from "./Mark";
 
 /**
@@ -43,9 +43,7 @@ export function Footer() {
             <p>
               The resolution system for SaaS support teams of two to twenty. AI answers, human handoff, one product.
             </p>
-            <a className="btn btn-outline" href={ONBOARDING_URL}>
-              Start free trial
-            </a>
+            <StartCta className="btn btn-outline" label="Start free trial" />
           </div>
           <div className="fcols">
             {COLUMNS.map((column) => (

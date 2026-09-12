@@ -1,4 +1,4 @@
-import { API_URL } from "./config";
+import { LEAD_ENDPOINT } from "./config";
 
 export interface LeadInput {
   name: string;
@@ -7,7 +7,7 @@ export interface LeadInput {
 }
 
 export async function submitLead(input: LeadInput): Promise<void> {
-  const res = await fetch(`${API_URL}/api/leads`, {
+  const res = await fetch(LEAD_ENDPOINT, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ ...input, source: "landing" }),

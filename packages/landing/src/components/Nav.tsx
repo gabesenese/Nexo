@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { ONBOARDING_URL, SIGN_IN_URL } from "../config";
+import { SIGNUP_OPEN, SIGN_IN_URL } from "../config";
+import { StartCta } from "./StartCta";
 import { Mark } from "./Mark";
 
 function currentTheme() {
@@ -81,12 +82,13 @@ export function Nav({ onOpenTrial }: { onOpenTrial: () => void }) {
             <button className="nav-talk" type="button" onClick={onOpenTrial}>
               Talk to us
             </button>
-            <a className="nav-signin" href={SIGN_IN_URL}>
-              Sign in
-            </a>
-            <a className="btn btn-primary btn-sm" href={ONBOARDING_URL}>
-              Start free
-            </a>
+            {/** Nothing to sign in to until the console is deployed. */}
+            {SIGNUP_OPEN && (
+              <a className="nav-signin" href={SIGN_IN_URL}>
+                Sign in
+              </a>
+            )}
+            <StartCta className="btn btn-primary btn-sm" label="Start free" closedLabel="Early access" />
           </div>
         </nav>
       </div>

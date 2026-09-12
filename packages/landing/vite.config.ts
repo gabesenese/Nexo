@@ -9,8 +9,15 @@ import react from "@vitejs/plugin-react";
  * production build refuses to run rather than let that reach real traffic.
  */
 function assertProductionUrls(env: Record<string, string>) {
-  /** VITE_API_URL is unconditional: the "Talk to us" form posts leads to it. */
-  const required = ["VITE_APP_URL", "VITE_API_URL"];
+  const signupOpen = env.VITE_SIGNUP_OPEN === "true";
+
+  /**
+   * With signup open, every start button links at the console, so the console
+   * and the API both have to exist. With it closed the page only collects
+   * interest, and the one thing it cannot ship without is somewhere for that
+   * interest to land.
+   */
+  const required = signupOpen ? ["VITE_APP_URL", "VITE_API_URL"] : [];
   if (env.VITE_WIDGET_ORG_KEY) {
     required.push("VITE_WIDGET_SCRIPT_URL");
   }
@@ -18,13 +25,21 @@ function assertProductionUrls(env: Record<string, string>) {
   const missing = required.filter((key) => !env[key]);
   if (missing.length > 0) {
     throw new Error(
-      `A production landing build needs ${missing.join(", ")}. ` +
+      `A production landing build with signup open needs ${missing.join(", ")}. ` +
         `Without them the build inlines localhost URLs and every call to action breaks. ` +
         `See the landing environment table in README.md.`,
     );
   }
 
-  const localhost = required.filter((key) => env[key]?.includes("localhost"));
+  if (!signupOpen && !env.VITE_LEAD_ENDPOINT && !env.VITE_CONTACT_EMAIL && !env.VITE_API_URL) {
+    throw new Error(
+      "A production landing build with signup closed needs VITE_LEAD_ENDPOINT or VITE_CONTACT_EMAIL. " +
+        "Without one the request form has nowhere to send anything, which is worse than not shipping the page.",
+    );
+  }
+
+  const urlKeys = ["VITE_APP_URL", "VITE_API_URL", "VITE_WIDGET_SCRIPT_URL", "VITE_LEAD_ENDPOINT"];
+  const localhost = urlKeys.filter((key) => env[key]?.includes("localhost"));
   if (localhost.length > 0) {
     throw new Error(
       `A production landing build was given localhost URLs in ${localhost.join(", ")}. ` +

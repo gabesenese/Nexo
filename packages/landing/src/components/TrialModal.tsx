@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { submitLead } from "../api";
+import { CONTACT_EMAIL, LEAD_ENDPOINT, SIGNUP_OPEN } from "../config";
 
 interface FieldInvalid {
   name?: boolean;
@@ -111,12 +112,34 @@ export function TrialModal({ open, onClose }: { open: boolean; onClose: () => vo
           ×
         </button>
 
-        {!success && (
-          <form id="trial-form" onSubmit={handleSubmit} noValidate>
-            <h2 id="trial-modal-title">Talk to us</h2>
+        {/**
+         * With no endpoint to post to, the form would be a button that throws.
+         * A mail link is the honest version of the same request, and it needs
+         * no service and no account behind it.
+         */}
+        {!success && !LEAD_ENDPOINT && CONTACT_EMAIL && (
+          <div className="modal-mail">
+            <h2 id="trial-modal-title">Request early access</h2>
             <div className="modal-sub">
-              Prefer a hand getting set up? Tell us who you are and we'll reach out. You can also start on your own
-              anytime.
+              Send us a line with your name and company and we'll get in touch as soon as we can take you on.
+            </div>
+            <a
+              className="btn btn-primary modal-submit"
+              tabIndex={open ? 0 : -1}
+              href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("Nexo early access")}`}
+            >
+              Email {CONTACT_EMAIL}
+            </a>
+          </div>
+        )}
+
+        {!success && LEAD_ENDPOINT && (
+          <form id="trial-form" onSubmit={handleSubmit} noValidate>
+            <h2 id="trial-modal-title">{SIGNUP_OPEN ? "Talk to us" : "Request early access"}</h2>
+            <div className="modal-sub">
+              {SIGNUP_OPEN
+                ? "Prefer a hand getting set up? Tell us who you are and we'll reach out. You can also start on your own anytime."
+                : "Tell us who you are and we'll get in touch as soon as we can take you on. No sales call, no card."}
             </div>
 
             <div className="field">

@@ -61,14 +61,22 @@ whatever is set when `vite build` runs is what ships:
 
 | Variable | Dev default | Required in production | Purpose |
 | --- | --- | --- | --- |
-| `VITE_APP_URL` | `http://localhost:5173` | yes | Admin app, behind every sign-in and onboarding CTA. |
+| `VITE_SIGNUP_OPEN` | unset (closed) | no | `true` once the console is deployed. Closed, every start button opens the interest form instead of linking at onboarding, and no sign-in link is rendered. |
+| `VITE_APP_URL` | `http://localhost:5173` | only with signup open | Admin app, behind every sign-in and onboarding CTA. |
+| `VITE_API_URL` | `http://localhost:4000` | only with signup open | API the lead form posts to, and the widget calls. |
+| `VITE_LEAD_ENDPOINT` | `${VITE_API_URL}/api/leads` | one of these two | Where the interest form posts. Any form endpoint works before our own API exists. |
+| `VITE_CONTACT_EMAIL` | unset | one of these two | With no endpoint, the form becomes a mail link to this address. |
 | `VITE_WIDGET_ORG_KEY` | unset | no | Widget key of the workspace the landing page should chat with. Without it, no widget is loaded at all. |
 | `VITE_WIDGET_SCRIPT_URL` | `http://localhost:5174/dist/widget.js` | only with a widget key | Where `widget.js` is served from. |
-| `VITE_API_URL` | `http://localhost:4000` | yes | API the "Talk to us" lead form posts to, and the widget calls. |
 
 A production build (`npm run build --workspace=@nexo/landing`) **fails** if a required variable is
 missing or still points at localhost. Without that guard the build would succeed and every call to
-action on the page would silently link to the visitor's own machine.
+action on the page would silently link to the visitor's own machine, or the interest form would
+have nowhere to send anything.
+
+The landing page ships before the app does. With signup closed it is a marketing page that
+collects interest and nothing else: no auth, no cookies, no customer data, and no database, which
+is why it can go up on free static hosting while the platform waits for its first customer.
 
 To try the widget the way an actual customer would embed it (a single `<script>` tag):
 
@@ -121,8 +129,9 @@ Required secrets beyond `.env.example`: `DATABASE_URL`, `JWT_SECRET`, `APP_URL`
 provider keys.
 
 The browser bundles need their own, at build time rather than at runtime, because
-Vite inlines them: the landing build needs `VITE_APP_URL` and `VITE_API_URL`, and
-the admin build needs `VITE_API_URL`. Both refuse to build for production without
+Vite inlines them: the landing build needs a way to capture interest (and, once
+signup is open, `VITE_APP_URL` and `VITE_API_URL`), and the admin build needs
+`VITE_API_URL`. Both refuse to build for production without
 them, rather than shipping a bundle that points at localhost and fails silently.
 CI builds both and asserts no `localhost` survives into either.
 

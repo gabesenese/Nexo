@@ -59,18 +59,24 @@ export function KnowledgeGapsPage() {
         </div>
       ) : (
         <>
-          <div className="kpis">
+          <div className="kpis reveal">
             <div className="kpi">
               <div className="kl">Distinct gaps</div>
-              <div className="kv">{gaps.length}</div>
+              <div className="kv" data-count={gaps.length}>
+                {gaps.length}
+              </div>
             </div>
             <div className="kpi">
               <div className="kl">Conversations lost to them</div>
-              <div className="kv">{totalAsks}</div>
+              <div className="kv" data-count={totalAsks}>
+                {totalAsks}
+              </div>
             </div>
             <div className="kpi">
               <div className="kl">Still waiting on a human</div>
-              <div className="kv">{stillWaiting}</div>
+              <div className="kv" data-count={stillWaiting}>
+                {stillWaiting}
+              </div>
             </div>
           </div>
 
@@ -95,7 +101,7 @@ export function KnowledgeGapsPage() {
                       <div className="li-sub gap-meta">
                         {occurrenceLabel(gap.occurrences)} · last {since(gap.lastSeen)}
                         {gap.averageConfidence !== null && (
-                          <> · confidence {gap.averageConfidence.toFixed(2)}</>
+                          <> · {Math.round(gap.averageConfidence * 100)}% confident on average</>
                         )}
                         {gap.unanswered > 0 && (
                           <span className="gap-waiting"> · {gap.unanswered} still waiting</span>

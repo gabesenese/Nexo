@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { api, can, type AuthUser, type Conversation, type Escalation, type Message, type OrgMember } from "../api";
 import { subscribeToUpdates } from "../realtime";
 import { Select } from "../components/Select";
+import { useSegmented } from "../useSegmented";
 
 /** The realtime stream drives updates; this only covers a stream that never connected. */
 const FALLBACK_REFRESH_MS = 30000;
@@ -140,6 +141,7 @@ export function ConversationsPage() {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<Filter>("open");
+  useSegmented(filter);
   const [query, setQuery] = useState("");
   const [me, setMe] = useState<AuthUser | null>(null);
   const canReply = can(me, "conversations:write");
@@ -578,7 +580,7 @@ export function ConversationsPage() {
                       </div>
                     )}
                     {m.confidence != null && (
-                      <div className="msg-confidence">confidence {m.confidence.toFixed(2)}</div>
+                      <div className="msg-confidence">{Math.round(m.confidence * 100)}% confident</div>
                     )}
                   </div>
                 </Fragment>

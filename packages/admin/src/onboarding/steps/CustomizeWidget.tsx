@@ -2,7 +2,7 @@ import { useState } from "react";
 import { api } from "../../api";
 import { WizardShell } from "../WizardShell";
 
-const COLORS = ["#204c40", "#2f6f5e", "#c9873a", "#181b1d", "#2b3f8a"];
+const COLORS = ["#0e3d28", "#23282e", "#1e3a5f", "#5b2c3e", "#7a4a1e"];
 
 export function CustomizeWidgetStep({
   onNext,
@@ -62,7 +62,10 @@ export function CustomizeWidgetStep({
           <div className="owp-mark">N</div>
           Support
         </div>
-        <div className="owp-body">{welcomeMessage}</div>
+        <div className="owp-body">
+          <div className="owp-bubble">{welcomeMessage}</div>
+          <div className="owp-composer">Ask a question…</div>
+        </div>
       </div>
 
       {error && <p className="error-text">{error}</p>}

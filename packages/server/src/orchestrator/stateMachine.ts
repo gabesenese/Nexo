@@ -262,6 +262,18 @@ async function escalate(params: {
       ? "User explicitly requested a human agent."
       : `Low-confidence AI answer (confidence ${confidence?.toFixed(2)}); escalated instead of guessing.`;
 
+  /**
+   * The handoff summary keeps the confidence figure, which is what a support
+   * engineer reading the ticket wants. The console notification is read by an
+   * operator choosing what to pick up next, so it leads with the question
+   * instead.
+   */
+  const asked = question.length > 110 ? `${question.slice(0, 107)}…` : question;
+  const notificationMessage =
+    reason === "user_requested"
+      ? `Asked for a person: “${asked}”`
+      : `Nexo could not answer: “${asked}”`;
+
   const handoffResult = await handoffAdapter.createTicket({
     conversationId,
     organizationId,
@@ -283,7 +295,7 @@ async function escalate(params: {
       },
     }),
     prisma.notification.create({
-      data: { organizationId, conversationId, type: "escalation", message: summary },
+      data: { organizationId, conversationId, type: "escalation", message: notificationMessage },
     }),
   ]);
 

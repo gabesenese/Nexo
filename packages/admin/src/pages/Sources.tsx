@@ -186,11 +186,11 @@ export function SourcesPage() {
             <svg width="24" height="24" viewBox="0 0 20 20" fill="none">
               <path
                 d="M4 3.5h9a2 2 0 0 1 2 2V16l-3.5-2H4a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1Z"
-                stroke="#2f6f5e"
+                stroke="var(--ok)"
                 strokeWidth="1.4"
                 strokeLinejoin="round"
               />
-              <path d="M6 7.5h6M6 10.5h4" stroke="#181b1d" strokeWidth="1.4" strokeLinecap="round" />
+              <path d="M6 7.5h6M6 10.5h4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
             </svg>
           </div>
           <h2>Teach Nexo what it knows</h2>

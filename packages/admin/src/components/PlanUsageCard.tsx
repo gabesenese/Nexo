@@ -19,6 +19,10 @@ export function PlanUsageCard() {
   const nearQuota = conversations.state === "approaching";
   const barWidth = Math.min(conversations.percentUsed, 1) * 100;
   const barState = overQuota ? "over" : nearQuota ? "near" : "";
+  const sourcesWidth =
+    knowledgeSources.limit === null
+      ? 0
+      : Math.min(knowledgeSources.used / Math.max(knowledgeSources.limit, 1), 1) * 100;
 
   return (
     <div className="card">
@@ -35,7 +39,10 @@ export function PlanUsageCard() {
           </span>
         </div>
         <div className="usage-bar">
-          <div className={`usage-fill ${barState}`} style={{ width: `${barWidth}%` }} />
+          <div
+            className={`usage-fill ${barState}`}
+            style={{ "--w": `${barWidth}%`, width: `${barWidth}%` } as React.CSSProperties}
+          />
         </div>
         {overQuota ? (
           <p className="usage-note over">
@@ -59,6 +66,14 @@ export function PlanUsageCard() {
               : `${knowledgeSources.used} of ${knowledgeSources.limit}`}
           </span>
         </div>
+        {knowledgeSources.limit !== null && (
+          <div className="usage-bar">
+            <div
+              className={`usage-fill ${knowledgeSources.atLimit ? "over" : ""}`}
+              style={{ width: `${sourcesWidth}%` }}
+            />
+          </div>
+        )}
         {knowledgeSources.atLimit && (
           <p className="usage-note over">
             You have used every source on {plan.name}. Remove one to add another, or move to a plan

@@ -16,22 +16,11 @@ import { ForgotPasswordPage } from "./pages/ForgotPassword";
 import { ResetPasswordPage } from "./pages/ResetPassword";
 import { OnboardingWizard } from "./onboarding/OnboardingWizard";
 import { NotificationBell } from "./components/NotificationBell";
-import { api, type AuthUser } from "./api";
+import { api, type AuthUser, type OverviewSummary } from "./api";
+import { Mark } from "./components/Mark";
+import { ThemeToggle } from "./components/ThemeToggle";
+import { useMotion } from "./useMotion";
 
-function LogoMark() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-      <circle cx="10" cy="10" r="9" stroke="#2f6f5e" strokeWidth="1.4" />
-      <path
-        d="M6 13V7l8 6V7"
-        stroke="#f6f4ee"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
 
 function AuthScreen({ mode }: { mode: "login" | "signup" }) {
   const navigate = useNavigate();
@@ -45,11 +34,35 @@ function Dashboard() {
   const navigate = useNavigate();
   const location = useLocation();
   const contentRef = useRef<HTMLElement>(null);
+  const [summary, setSummary] = useState<OverviewSummary | null>(null);
 
   useEffect(() => {
     contentRef.current?.scrollTo({ top: 0 });
     window.scrollTo({ top: 0 });
   }, [location.pathname]);
+
+  /**
+   * The counts beside the nav come from the same summary the Overview reads, so
+   * the sidebar can never disagree with the page. Re-fetched on navigation
+   * because working through the inbox is what changes them.
+   */
+  useEffect(() => {
+    if (authState !== "authed") return;
+    let live = true;
+    api.getOverview().then((result) => {
+      if (live) setSummary(result);
+    });
+    return () => {
+      live = false;
+    };
+  }, [authState, location.pathname]);
+
+  /**
+   * Keyed on the path alone. Switching a tab within a page is not an arrival,
+   * and re-running the reveal there made the whole screen restart behind a pill
+   * that was only meant to slide.
+   */
+  useMotion(location.pathname);
 
   useEffect(() => {
     api.me().then((result) => {
@@ -83,13 +96,27 @@ function Dashboard() {
   return (
     <div className="app">
       <nav className="sidebar">
-        <div className="brand">
-          <LogoMark />
-          Nexo
+        <div className="sidebar-head">
+          <div className="brand">
+            <span className="brand-badge" aria-hidden="true">
+              <Mark size={16} stroke="var(--on-nav-accent)" />
+            </span>
+            <span className="brand-id">
+              <span className="brand-name">Nexo</span>
+            </span>
+          </div>
+          <div className="sidebar-topbar">
+            <ThemeToggle />
+            <NotificationBell />
+          </div>
         </div>
-        <div className="sidebar-topbar">
-          <div className="workspace-name">{user?.organization.name}</div>
-          <NotificationBell />
+        {/**
+         * The workspace name gets its own row: squeezed beside the controls it
+         * was the first thing to truncate, and it is the one label that tells
+         * an operator whose data they are looking at.
+         */}
+        <div className="workspace-name" title={user?.organization.name}>
+          {user?.organization.name}
         </div>
         {/**
          * Grouped by what the operator is doing, and the Inbox sits second
@@ -105,7 +132,10 @@ function Dashboard() {
             </NavLink>
             <NavLink to="/conversations">
               <span className="dot" />
-              Inbox
+              <span>Inbox</span>
+              {!!summary?.counts.waitingOnHuman && (
+                <span className="nav-count waiting">{summary.counts.waitingOnHuman}</span>
+              )}
             </NavLink>
           </div>
 
@@ -113,11 +143,17 @@ function Dashboard() {
             <span className="nav-group-label">Knowledge</span>
             <NavLink to="/sources">
               <span className="dot" />
-              Sources
+              <span>Sources</span>
+              {!!summary?.sourceHealth.total && (
+                <span className="nav-count">{summary.sourceHealth.total}</span>
+              )}
             </NavLink>
             <NavLink to="/knowledge-gaps">
               <span className="dot" />
-              Knowledge gaps
+              <span>Knowledge gaps</span>
+              {!!summary?.knowledgeHealth.total && (
+                <span className="nav-count">{summary.knowledgeHealth.total}</span>
+              )}
             </NavLink>
           </div>
 
@@ -139,10 +175,20 @@ function Dashboard() {
           </div>
         </nav>
         <div className="sidebar-spacer" />
-        <div className="sidebar-email">{user?.email}</div>
-        <button className="sidebar-logout" onClick={handleLogout}>
-          Log out
-        </button>
+        <div className="sidebar-foot">
+          <span className="sidebar-avatar" aria-hidden="true">
+            {(user?.name || user?.email || "?").trim().charAt(0).toUpperCase()}
+          </span>
+          <span className="sidebar-id">
+            <span className="sidebar-who" title={user?.email}>
+              {user?.name || user?.email}
+            </span>
+            <span className="sidebar-role">{user?.role}</span>
+          </span>
+          <button className="sidebar-logout" onClick={handleLogout}>
+            Log out
+          </button>
+        </div>
       </nav>
       {/**
        * Keyed on the path so each page fades in rather than snapping into

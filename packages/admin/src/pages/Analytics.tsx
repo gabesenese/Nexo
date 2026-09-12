@@ -32,6 +32,11 @@ function percent(rate: number | null): string {
   return rate === null ? "—" : `${Math.round(rate * 100)}%`;
 }
 
+/** Only a rate with a real reading counts up; a missing one stays an em rule. */
+function countRate(rate: number | null) {
+  return rate === null ? {} : { "data-count": Math.round(rate * 100), "data-suf": "%" };
+}
+
 export function AnalyticsPage() {
   const [overview, setOverview] = useState<OverviewSummary | null>(null);
   const [sources, setSources] = useState<SourceSummary[] | null>(null);
@@ -116,10 +121,10 @@ export function AnalyticsPage() {
         <div className="empty-hero">
           <div className="eh-mark">
             <svg width="24" height="24" viewBox="0 0 20 20" fill="none">
-              <circle cx="10" cy="10" r="9" stroke="#2f6f5e" strokeWidth="1.4" />
+              <circle cx="10" cy="10" r="9" stroke="var(--ok)" strokeWidth="1.4" />
               <path
                 d="M6 13V7l8 6V7"
-                stroke="#181b1d"
+                stroke="currentColor"
                 strokeWidth="1.4"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -163,28 +168,42 @@ export function AnalyticsPage() {
       {header}
 
       {/** What is on the floor right now, rather than lifetime totals. */}
-      <div className="status-strip">
+      <div className="status-strip reveal">
         <div className="status-cell">
           <div className="kl">Open</div>
-          <div className="kv">{overview.counts.open}</div>
+          <div className="kv" data-count={overview.counts.open}>
+            {overview.counts.open}
+          </div>
         </div>
         <div className="status-cell">
           <div className="kl">Waiting on a human</div>
-          <div className={`kv${overview.counts.waitingOnHuman > 0 ? " urgent" : ""}`}>
+          <div
+            className={`kv${overview.counts.waitingOnHuman > 0 ? " urgent" : ""}`}
+            data-count={overview.counts.waitingOnHuman}
+          >
             {overview.counts.waitingOnHuman}
           </div>
         </div>
         <div className="status-cell">
           <div className="kl">Resolved today</div>
-          <div className="kv">{overview.counts.resolvedToday}</div>
+          <div
+            className={`kv${overview.counts.resolvedToday > 0 ? " good" : ""}`}
+            data-count={overview.counts.resolvedToday}
+          >
+            {overview.counts.resolvedToday}
+          </div>
         </div>
         <div className="status-cell">
           <div className="kl">Resolution rate</div>
-          <div className="kv">{percent(overview.rates.resolution)}</div>
+          <div className="kv" {...countRate(overview.rates.resolution)}>
+            {percent(overview.rates.resolution)}
+          </div>
         </div>
         <div className="status-cell">
           <div className="kl">Escalation rate</div>
-          <div className="kv">{percent(overview.rates.escalation)}</div>
+          <div className="kv" {...countRate(overview.rates.escalation)}>
+            {percent(overview.rates.escalation)}
+          </div>
         </div>
       </div>
 

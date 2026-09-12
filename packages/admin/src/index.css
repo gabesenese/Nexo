@@ -1,28 +1,62 @@
+/**
+ * Tokens carry one role each. The previous set overloaded three of them:
+ * --ink was text in 31 rules and a surface fill in 6, --paper was text on a
+ * dark ground as often as it was a light surface, and --white was both. That
+ * is why a dark theme could not be a token swap. Roles are separated below,
+ * the old names remain as aliases so the rest of the sheet keeps working, and
+ * the six inverted call sites now name the surface they actually paint.
+ *
+ * Brand and meaning are also separate. --accent is the brand and moves freely;
+ * --ok, --warn and --danger carry meaning and must not.
+ */
 :root {
-  --ink: #181b1d;
-  --paper: #f6f4ee;
-  --paper-dim: #eeebe2;
-  --teal: #2f6f5e;
-  --teal-dark: #204c40;
-  --amber: #c9873a;
-  --slate: #3d4145;
-  --slate-soft: #6b7075;
-  --line: #dcd7c9;
-  --line-dark: #33383b;
-  --white: #ffffff;
-  --red: #b3452f;
+  --ground: #f4f5f6;
+  --surface: #ffffff;
+  --surface-sunken: #f4f5f6;
+  --surface-inverse: #0f1113;
+  --on-inverse: #f5f7f7;
+  --on-fill: #ffffff;
 
-  --sky: #e4e8f3;
-  --sky-ink: #2b3f8a;
-  --mist: #e3ede9;
-  --sand: #f3e7d6;
-  --sand-ink: #8a5a1f;
+  --text: #0b0d10;
+  --text-2: #2f3a41;
+  --text-3: #4b555d;
+  --text-4: #7b858c;
 
-  /**
-   * Only colour was tokenised before, so every section picked its own spacing,
-   * type size and radius by hand. That drift is what reads as unfinished, so
-   * the scales below are the single source for the whole console.
-   */
+  --hair: rgba(11, 13, 16, 0.1);
+  --hair-strong: rgba(11, 13, 16, 0.18);
+
+  --accent: #0b0d10;
+  --on-accent: #ffffff;
+
+  --ok: #157a55;
+  --ok-fill: #3ecf8e;
+  --ok-tint: rgba(62, 207, 142, 0.16);
+  --warn: #b5651d;
+  --warn-tint: rgba(255, 178, 92, 0.2);
+  --danger: #c0492c;
+  --danger-tint: rgba(192, 73, 44, 0.12);
+  --info: #2b3f8a;
+  --info-tint: rgba(43, 63, 138, 0.1);
+
+  /* Names the rest of the sheet still uses, pointed at their real role. */
+  --ink: var(--text);
+  --paper: var(--surface-sunken);
+  --paper-dim: var(--ground);
+  --white: var(--surface);
+  --slate: var(--text-2);
+  --slate-soft: var(--text-3);
+  --line: var(--hair);
+  --line-dark: var(--hair-strong);
+  --teal: var(--ok);
+  --teal-dark: var(--ok);
+  --amber: var(--warn);
+  --red: var(--danger);
+  --mist: var(--ok-tint);
+  --sand: var(--warn-tint);
+  --sand-ink: var(--warn);
+  --sky: var(--info-tint);
+  --sky-ink: var(--info);
+
   --s1: 4px;
   --s2: 8px;
   --s3: 12px;
@@ -49,18 +83,89 @@
   --ctl-h: 34px;
   --ctl-h-sm: 28px;
 
-  --sans: "IBM Plex Sans", system-ui, sans-serif;
-  --mono: "IBM Plex Mono", ui-monospace, monospace;
-  --serif: "Fraunces", Georgia, serif;
+  --sans: "Schibsted Grotesk", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, monospace;
 
-  --shadow-1: 0 1px 2px rgba(24, 27, 29, 0.04);
-  --shadow-2: 0 8px 24px -8px rgba(24, 27, 29, 0.18);
-  --shadow-3: 0 20px 48px -16px rgba(24, 27, 29, 0.28);
+  --accent-hover: #22262c;
+  --shadow-1: 0 1px 2px rgba(11, 13, 16, 0.04);
+  --shadow-2: 0 8px 24px -8px rgba(11, 13, 16, 0.18);
+  --shadow-3: 0 20px 48px -16px rgba(11, 13, 16, 0.28);
 
-  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
 
+  --dur-fast: 140ms;
+  --dur-base: 200ms;
+  --dur-slow: 300ms;
+
+
+  --film: #ffffff;
+  --film-2: rgba(11, 13, 16, 0.045);
+  --warn-line: rgba(181, 101, 29, 0.32);
+  --danger-line: rgba(192, 73, 44, 0.3);
+
+  /* The sidebar and code blocks sit on the inverse surface in both themes, so
+     these hold still while everything around them swaps. */
+  --nav-accent: #ede9e1;
+  --nav-ink: #98a1a8;
+  --nav-film: rgba(255, 255, 255, 0.055);
+  --nav-hair: rgba(255, 255, 255, 0.08);
+  --nav-hair-strong: rgba(255, 255, 255, 0.14);
+  --nav-ink-dim: #6d757b;
+  --ok-grad: linear-gradient(90deg, #0f6647 0%, #157a55 58%, #3ecf8e 100%);
+  --warn-grad: linear-gradient(90deg, #8a4a12 0%, #b5651d 58%, #e09040 100%);
+  --danger-grad: linear-gradient(90deg, #8f3220 0%, #c0492c 58%, #e07254 100%);
+  --nav-warn: #ffb25c;
+  --on-nav-warn: #0b0d10;
+  --on-nav-accent: #0b0d10;
+  --on-inverse-2: #c9d1d6;
+  --on-inverse-film: rgba(255, 255, 255, 0.07);
+  --on-inverse-film-2: rgba(255, 255, 255, 0.12);
+
   --content-max: 1440px;
+}
+
+:root[data-theme="dark"] {
+  --ground: #06070a;
+  --surface: #0c0e12;
+  --surface-sunken: rgba(255, 255, 255, 0.05);
+  --surface-inverse: #0f1113;
+  --on-inverse: #f5f7f7;
+  --on-fill: #ffffff;
+
+  --text: #f5f7f7;
+  --text-2: #c9d1d6;
+  --text-3: #98a1a8;
+  --text-4: #6d757b;
+
+  --hair: rgba(255, 255, 255, 0.08);
+  --hair-strong: rgba(255, 255, 255, 0.14);
+
+  --accent: #ede9e1;
+  --on-accent: #0b0d10;
+
+  --ok: #3ecf8e;
+  --ok-fill: #3ecf8e;
+  --ok-tint: rgba(62, 207, 142, 0.14);
+  --warn: #ffb25c;
+  --warn-tint: rgba(255, 178, 92, 0.14);
+  --danger: #ff8f6b;
+  --danger-tint: rgba(255, 143, 107, 0.14);
+  --info: #93a4dd;
+  --info-tint: rgba(147, 164, 221, 0.14);
+
+  --accent-hover: #ffffff;
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-2: 0 8px 24px -8px rgba(0, 0, 0, 0.6);
+  --shadow-3: 0 20px 48px -16px rgba(0, 0, 0, 0.7);
+
+  --film: rgba(255, 255, 255, 0.035);
+  --film-2: rgba(255, 255, 255, 0.055);
+  --warn-line: rgba(255, 178, 92, 0.28);
+  --danger-line: rgba(255, 143, 107, 0.28);
+  --ok-grad: linear-gradient(90deg, #1f9c68 0%, #3ecf8e 58%, #6fe0ac 100%);
+  --warn-grad: linear-gradient(90deg, #d98a3a 0%, #ffb25c 58%, #ffd0a0 100%);
+  --danger-grad: linear-gradient(90deg, #d96a4a 0%, #ff8f6b 58%, #ffb59c 100%);
 }
 
 /**
@@ -99,7 +204,7 @@ button:focus-visible,
 
 body {
   margin: 0;
-  font-family: "IBM Plex Sans", sans-serif;
+  font-family: var(--sans);
   color: var(--slate);
   background: var(--paper-dim);
   /**
@@ -123,7 +228,7 @@ h1,
 h2,
 h3,
 h4 {
-  font-family: "Fraunces", serif;
+  font-family: var(--sans);
   font-weight: 600;
   margin: 0;
   letter-spacing: -0.01em;
@@ -131,7 +236,7 @@ h4 {
 }
 
 .mono {
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--mono);
 }
 
 .app {
@@ -141,48 +246,79 @@ h4 {
 
 .sidebar {
   width: 220px;
-  background: var(--ink);
-  color: var(--paper);
+  background: var(--surface-inverse);
+  color: var(--on-inverse);
+  border-right: 1px solid var(--nav-hair);
   display: flex;
   flex-direction: column;
-  padding: 24px 16px;
+  gap: 16px;
+  padding: 18px 14px;
   flex-shrink: 0;
+}
+
+.sidebar-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 4px 0 6px;
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-family: "Fraunces", serif;
-  font-size: 17px;
-  font-weight: 600;
-  padding: 0 10px 26px;
-  color: var(--paper);
+  gap: 10px;
+  min-width: 0;
+}
+
+.brand-badge {
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  background: var(--nav-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.brand-id {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.brand-name {
+  font-size: 14.5px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: var(--on-inverse);
 }
 
 .sidebar .nav-links {
   display: flex;
   flex-direction: column;
-  gap: var(--s5);
+  gap: 16px;
 }
 
 .nav-group {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 5px;
 }
 
 .nav-group-label {
   font-family: var(--mono);
-  font-size: 9.5px;
+  font-size: 10.5px;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #6f7679;
-  padding: 0 10px var(--s2);
+  letter-spacing: 0.12em;
+  color: var(--nav-accent);
+  padding: 0 10px 4px;
 }
 
 .sidebar a {
-  color: #a9adaf;
+  color: var(--nav-ink);
   text-decoration: none;
   font-size: 13.5px;
   padding: 9px 10px;
@@ -197,21 +333,41 @@ h4 {
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: var(--slate-soft);
+  background: var(--nav-hair-strong);
   flex-shrink: 0;
 }
 
 .sidebar a:hover {
-  color: var(--paper);
+  color: var(--on-inverse);
 }
 
 .sidebar a.active {
-  background: #232729;
-  color: var(--paper);
+  background: var(--nav-film);
+  color: var(--on-inverse);
 }
 
 .sidebar a.active .dot {
-  background: var(--teal);
+  background: var(--nav-accent);
+}
+
+/** A count sits at the end of the row: amber only where it means people waiting. */
+.nav-count {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--nav-ink-dim);
+  flex-shrink: 0;
+}
+
+.nav-count.waiting {
+  color: var(--nav-warn);
+}
+
+.sidebar a > span:not(.dot):not(.nav-count) {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .sidebar-spacer {
@@ -221,16 +377,20 @@ h4 {
 .sidebar-topbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  padding-bottom: 6px;
+  gap: 2px;
+  flex-shrink: 0;
 }
 
 .workspace-name {
-  padding: 2px 10px 12px;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--paper);
+  display: block;
+  padding: 2px 6px 0 44px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: var(--nav-ink-dim);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -244,80 +404,160 @@ h4 {
 .notif-trigger {
   position: relative;
   background: transparent;
-  border: none;
-  color: #a9adaf;
-  padding: 6px;
+  border: 1px solid var(--nav-hair-strong);
+  color: var(--nav-ink);
+  width: 27px;
+  height: 27px;
   border-radius: 7px;
   display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  transition: color 150ms ease, background 150ms ease;
+  transition: color 150ms ease, border-color 150ms ease;
 }
 
 .notif-trigger:hover {
-  color: var(--paper);
-  background: #232729;
+  color: var(--on-inverse);
+  border-color: var(--nav-ink);
 }
 
 .notif-count {
   position: absolute;
-  top: 1px;
-  right: 1px;
+  top: -6px;
+  right: -6px;
   min-width: 14px;
   height: 14px;
   padding: 0 3px;
   border-radius: 7px;
-  background: var(--amber);
-  color: var(--white);
-  font-family: "IBM Plex Mono", monospace;
+  background: var(--nav-warn);
+  color: var(--on-nav-warn);
+  font-family: var(--mono);
   font-size: 9.5px;
   line-height: 14px;
   text-align: center;
 }
 
+/**
+ * Flown out beside the sidebar rather than down from the bell: anchored under
+ * it, a panel wide enough to hold a question covered the nav it was drawing
+ * attention away from.
+ */
 .notif-dropdown {
   position: absolute;
-  top: calc(100% + 8px);
-  left: 0;
-  width: 280px;
-  max-height: 340px;
-  overflow-y: auto;
-  background: var(--white);
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
-  padding: 8px;
+  top: -6px;
+  left: calc(100% + 18px);
+  width: 320px;
+  max-height: min(70vh, 460px);
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--hair);
+  border-radius: 14px;
+  box-shadow: var(--shadow-3);
+  padding: var(--s2);
   z-index: 20;
 }
 
+.notif-dropdown-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s2);
+  padding: 6px 8px 8px;
+}
+
 .notif-dropdown-title {
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--mono);
   font-size: 10.5px;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--slate-soft);
-  padding: 6px 8px;
+}
+
+.notif-dropdown-count {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--text-3);
+}
+
+.notif-list {
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .notif-item {
-  padding: 8px;
+  position: relative;
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
   border-radius: 8px;
+  padding: 9px 8px 9px 18px;
+  font-family: var(--sans);
   cursor: pointer;
   transition: background 150ms ease;
+}
+
+.notif-item + .notif-item {
+  border-top: 1px solid var(--hair);
 }
 
 .notif-item:hover {
   background: var(--paper-dim);
 }
 
+/** A dot for what was still unread when the panel opened, since opening clears them. */
+.notif-item.fresh::before {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: 15px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--warn);
+}
+
 .notif-message {
+  display: block;
   font-size: 12.5px;
   color: var(--ink);
-  line-height: 1.4;
+  line-height: 1.45;
 }
 
 .notif-time {
+  display: block;
   font-size: 11px;
   color: var(--slate-soft);
-  margin-top: 3px;
+  margin-top: 4px;
+}
+
+.notif-empty {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--slate-soft);
+  margin: 0;
+  padding: 4px 8px 10px;
+}
+
+.notif-all {
+  margin-top: 0;
+  padding: 10px 9px 9px;
+  background: transparent;
+  border: none;
+  border-top: 1px solid var(--hair);
+  border-radius: 0 0 8px 8px;
+  font-family: var(--sans);
+  font-size: 12px;
+  color: var(--slate);
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease;
+}
+
+.notif-all:hover {
+  background: var(--film-2);
+  color: var(--ink);
 }
 
 .auth-alt {
@@ -328,7 +568,7 @@ h4 {
 }
 
 .auth-alt a {
-  color: var(--pine, #2f6f5e);
+  color: var(--accent);
   font-weight: 600;
   text-decoration: none;
 }
@@ -380,12 +620,12 @@ h4 {
 
 /** Used when re-indexing is the fix for a problem the page is reporting. */
 .btn-small.suggested {
-  border-color: var(--teal);
-  color: var(--teal-dark);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .btn-small.suggested:hover:not(:disabled) {
-  border-color: var(--teal-dark);
+  border-color: var(--accent);
   background: var(--mist);
 }
 
@@ -500,7 +740,7 @@ h4 {
 }
 
 .select-option svg {
-  color: var(--teal);
+  color: var(--accent);
   flex-shrink: 0;
 }
 
@@ -523,12 +763,12 @@ h4 {
 }
 
 .dropzone:hover:not(.busy) {
-  border-color: var(--teal);
+  border-color: var(--accent);
   background: rgba(47, 111, 94, 0.05);
 }
 
 .dropzone.dragging {
-  border-color: var(--teal);
+  border-color: var(--accent);
   border-style: solid;
   background: rgba(47, 111, 94, 0.09);
 }
@@ -568,7 +808,7 @@ input[type="file"].dropzone-input {
   border-radius: var(--r-sm);
   background: var(--white);
   border: 1px solid var(--line);
-  color: var(--teal-dark);
+  color: var(--accent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -600,11 +840,50 @@ input[type="file"].dropzone-input {
 }
 
 .segmented {
+  position: relative;
   display: inline-flex;
-  background: var(--paper-dim);
+  background: var(--film-2);
   border-radius: var(--r-sm);
   padding: 2px;
   gap: 2px;
+}
+
+/**
+ * One pill that travels between segments. It is only painted once a width has
+ * been measured, so it never flashes at the origin on first render.
+ */
+.segmented::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--seg-w, 0);
+  height: var(--seg-h, 0);
+  transform: translate(var(--seg-x, 0), var(--seg-y, 0));
+  background: var(--surface);
+  border-radius: var(--r-sm);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.segmented[data-measured="true"]::before {
+  opacity: 1;
+  transition:
+    transform 420ms var(--ease-out),
+    width 420ms var(--ease-out),
+    height 420ms var(--ease-out),
+    opacity 200ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .segmented[data-measured="true"]::before {
+    transition: opacity 200ms ease;
+  }
+}
+
+.segmented button {
+  position: relative;
+  z-index: 1;
 }
 
 .segmented button {
@@ -626,9 +905,8 @@ input[type="file"].dropzone-input {
 }
 
 .segmented button.on {
-  background: var(--white);
-  color: var(--ink);
-  box-shadow: var(--shadow-1);
+  background: transparent;
+  color: var(--text);
 }
 
 .segmented .seg-count {
@@ -638,29 +916,66 @@ input[type="file"].dropzone-input {
   margin-left: var(--s1);
 }
 
-.sidebar-email {
-  padding: 0 10px 4px;
+.sidebar-foot {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 6px 0;
+  border-top: 1px solid var(--nav-hair);
+}
+
+.sidebar-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--nav-accent);
+  color: var(--on-nav-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 11.5px;
-  color: var(--slate-soft);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.sidebar-id {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sidebar-who {
+  font-size: 13px;
+  color: var(--on-inverse-2);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.sidebar-role {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--nav-ink-dim);
+}
+
 .sidebar-logout {
   background: transparent;
-  border: 1px solid var(--line-dark);
-  color: #a9adaf;
+  border: 1px solid var(--nav-hair-strong);
+  color: var(--nav-ink);
   border-radius: 7px;
-  padding: 8px 10px;
-  font-size: 12.5px;
+  padding: 0 8px;
+  height: 27px;
+  font-size: 11.5px;
+  flex-shrink: 0;
   cursor: pointer;
   transition: border-color 150ms ease, color 150ms ease;
 }
 
 .sidebar-logout:hover {
-  border-color: var(--paper);
-  color: var(--paper);
+  border-color: var(--on-inverse);
+  color: var(--on-inverse);
 }
 
 /**
@@ -673,7 +988,7 @@ input[type="file"].dropzone-input {
   flex: 1;
   min-width: 0;
   width: 100%;
-  padding: var(--s7) var(--s8) var(--s9);
+  padding: 30px 34px 56px;
   max-width: var(--content-max);
   margin-inline: auto;
 }
@@ -688,13 +1003,14 @@ input[type="file"].dropzone-input {
 }
 
 .page-top h1 {
-  font-size: var(--t-xl);
+  font-size: 30px;
+  line-height: 1.1;
 }
 
 .page-top .sub {
-  font-size: var(--t-base);
-  color: var(--slate-soft);
-  margin-top: var(--s1);
+  font-size: 14.5px;
+  color: var(--text-3);
+  margin-top: 9px;
   max-width: 62ch;
 }
 
@@ -705,23 +1021,22 @@ input[type="file"].dropzone-input {
 }
 
 .card {
-  background: var(--white);
-  border: 1px solid var(--line);
-  border-radius: var(--r-lg);
-  padding: var(--s6);
+  background: var(--film);
+  border: 1px solid var(--hair);
+  border-radius: 20px;
+  padding: 28px;
   margin-bottom: var(--s4);
-  box-shadow: var(--shadow-1);
 }
 
 .card h3 {
-  font-size: var(--t-md);
+  font-size: 18px;
   margin-bottom: 2px;
 }
 
 .card .card-sub {
-  font-size: var(--t-sm);
-  color: var(--slate-soft);
-  margin-bottom: var(--s5);
+  font-size: 12.5px;
+  color: var(--text-4);
+  margin-bottom: 18px;
 }
 
 /** A header that carries its own controls, used by every card that has actions. */
@@ -781,44 +1096,51 @@ input[type="file"].dropzone-input {
   }
 }
 
+/**
+ * Separate tiles rather than one segmented bar. The figures are read at a
+ * glance from across a desk, and colour is doing the work a divider used to:
+ * amber where people are waiting, green where the day is going well.
+ */
 .status-strip {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  background: var(--white);
-  border: 1px solid var(--line);
-  border-radius: var(--r-lg);
-  box-shadow: var(--shadow-1);
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--s4);
   margin-bottom: var(--s4);
-  overflow: hidden;
 }
 
 .status-cell {
-  padding: var(--s4) var(--s5);
-  border-left: 1px solid var(--paper-dim);
-}
-
-.status-cell:first-child {
-  border-left: none;
+  background: var(--surface);
+  border: 1px solid var(--hair);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .status-cell .kl {
-  font-size: var(--t-xs);
-  color: var(--slate-soft);
+  font-size: 10.5px;
+  color: var(--accent);
   font-family: var(--mono);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: var(--s2);
+  letter-spacing: 0.12em;
 }
 
 .status-cell .kv {
-  font-family: var(--serif);
-  font-size: var(--t-xl);
-  line-height: 1.1;
-  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 42px;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: var(--text);
 }
 
 .status-cell .kv.urgent {
-  color: var(--red);
+  color: var(--warn);
+}
+
+.status-cell .kv.good {
+  color: var(--ok);
 }
 
 .activity-dot {
@@ -857,43 +1179,80 @@ input[type="file"].dropzone-input {
 
 .kpis {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: var(--s3);
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--s4);
   margin-bottom: var(--s4);
 }
 
 .kpi {
-  background: var(--white);
-  border: 1px solid var(--line);
-  border-radius: var(--r-lg);
-  padding: var(--s4) var(--s5);
-  box-shadow: var(--shadow-1);
+  background: var(--surface);
+  border: 1px solid var(--hair);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .kpi .kl {
-  font-size: var(--t-xs);
-  color: var(--slate-soft);
+  font-size: 10.5px;
+  color: var(--accent);
   font-family: var(--mono);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: var(--s2);
+  letter-spacing: 0.12em;
 }
 
+/** The figure is the point of the tile, so it gets the display size. */
 .kpi .kv {
-  font-family: var(--serif);
-  font-size: var(--t-2xl);
-  line-height: 1.1;
-  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 42px;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: var(--text);
+}
+
+.kpi .kv.warn {
+  color: var(--warn);
+}
+
+.kpi .kv.ok {
+  color: var(--ok);
 }
 
 .kpi .kd {
-  font-size: var(--t-sm);
-  margin-top: var(--s1);
-  color: var(--slate-soft);
+  font-size: 12.5px;
+  color: var(--text-4);
 }
 
 .kpi .kd.warn {
-  color: var(--amber);
+  color: var(--warn);
+}
+
+/** A chip beside the figure names what the number is, in its own colour. */
+.kpi-chip {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  border-radius: 999px;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+
+.kpi-chip.warn {
+  color: var(--warn);
+  background: var(--warn-tint);
+}
+
+.kpi-chip.ok {
+  color: var(--ok);
+  background: var(--ok-tint);
+}
+
+.kpi-figure {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .list-item {
@@ -925,6 +1284,14 @@ input[type="file"].dropzone-input {
   background: var(--paper-dim);
 }
 
+/**
+ * Every member row reserves the height of a control, so the owner's static
+ * badge does not sit on a shorter row than the teammates below it.
+ */
+.member-row {
+  min-height: calc(var(--ctl-h) + var(--s5) + var(--s1));
+}
+
 .avatar {
   width: 30px;
   height: 30px;
@@ -934,7 +1301,7 @@ input[type="file"].dropzone-input {
   align-items: center;
   justify-content: center;
   font-size: 12px;
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--mono);
   color: var(--slate-soft);
   flex-shrink: 0;
 }
@@ -957,29 +1324,35 @@ input[type="file"].dropzone-input {
   text-overflow: ellipsis;
 }
 
+.lead-when {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--slate-soft);
+}
+
 .badge {
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--mono);
   font-size: 10.5px;
-  padding: 3px 9px;
-  border-radius: 10px;
+  padding: 2px 8px;
+  border-radius: 999px;
   white-space: nowrap;
   flex-shrink: 0;
 }
 
 .badge.resolved,
 .badge.healthy {
-  background: #e3ede9;
+  background: var(--ok-tint);
   color: var(--teal-dark);
 }
 
 .badge.escalated {
-  background: #f3e7d6;
-  color: #8a5a1f;
+  background: var(--warn-tint);
+  color: var(--warn);
 }
 
 .badge.active {
-  background: #e4e8f3;
-  color: #2b3f8a;
+  background: var(--info-tint);
+  color: var(--info);
 }
 
 .badge.neutral {
@@ -1014,7 +1387,7 @@ th {
   color: var(--slate-soft);
   font-weight: 600;
   font-size: 11px;
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--mono);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -1072,7 +1445,7 @@ textarea:focus {
 
 input::placeholder,
 textarea::placeholder {
-  color: #9aa0a3;
+  color: var(--text-4);
 }
 
 /**
@@ -1200,7 +1573,7 @@ textarea::placeholder {
 .login-card .field label {
   display: block;
   font-size: 11.5px;
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--mono);
   color: var(--slate-soft);
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -1226,13 +1599,13 @@ textarea::placeholder {
 .field-hint-link {
   font-size: 11.5px;
   font-family: var(--mono);
-  color: var(--teal);
+  color: var(--accent);
   text-decoration: none;
   margin-bottom: 6px;
 }
 
 .field-hint-link:hover {
-  color: var(--teal-dark);
+  color: var(--accent);
   text-decoration: underline;
 }
 
@@ -1259,6 +1632,11 @@ textarea::placeholder {
  * same class. An anchor carries the browser's underline unless told otherwise,
  * so without this a link-button reads as underlined body text.
  */
+/**
+ * A button with no modifier is the neutral one. It used to inherit the browser
+ * default, which is where the flat grey plan buttons came from, and a UA
+ * background has no hover state at all.
+ */
 .btn {
   font-family: var(--sans);
   font-size: var(--t-base);
@@ -1267,7 +1645,9 @@ textarea::placeholder {
   padding: 0 var(--s4);
   border-radius: var(--r-sm);
   cursor: pointer;
-  border: 1px solid transparent;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--hair-strong);
   text-decoration: none;
   display: inline-flex;
   align-items: center;
@@ -1278,17 +1658,29 @@ textarea::placeholder {
     transform 160ms var(--ease-out);
 }
 
+.btn:hover:not(:disabled) {
+  background: var(--film-2);
+  border-color: var(--slate-soft);
+  transform: translateY(-1px);
+}
+
 .btn:active:not(:disabled) {
-  transform: scale(0.97);
+  transform: translateY(0) scale(0.97);
 }
 
 .btn-primary {
-  background: var(--ink);
-  color: var(--paper);
+  background: var(--accent);
+  color: var(--on-accent);
+  border-radius: var(--r-pill);
+  font-weight: 600;
+  padding: 0 18px;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: var(--teal-dark);
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-2);
 }
 
 /**
@@ -1302,24 +1694,31 @@ textarea::placeholder {
 }
 
 .btn-ghost {
-  color: var(--ink);
-  border-color: var(--line);
-  background: var(--white);
+  color: var(--text);
+  border-color: var(--hair-strong);
+  background: transparent;
 }
 
 .btn-ghost:hover:not(:disabled) {
-  background: var(--paper);
+  background: var(--film-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn:hover:not(:disabled),
+  .btn-primary:hover:not(:disabled) {
+    transform: none;
+  }
 }
 
 .btn-danger {
-  color: var(--red);
-  border-color: rgba(179, 69, 47, 0.4);
-  background: var(--white);
+  color: var(--danger);
+  border-color: var(--danger-line);
+  background: transparent;
 }
 
 .btn-danger:hover:not(:disabled) {
-  background: rgba(179, 69, 47, 0.08);
-  border-color: var(--red);
+  background: var(--danger-tint);
+  border-color: var(--danger);
 }
 
 .error-text {
@@ -1369,7 +1768,7 @@ textarea::placeholder {
   flex-shrink: 0;
   border-radius: 50%;
   border: 2px solid var(--line);
-  border-top-color: var(--teal);
+  border-top-color: var(--accent);
   animation: onboardSpin 0.7s linear infinite;
 }
 
@@ -1438,7 +1837,7 @@ textarea::placeholder {
   border-radius: 50%;
   background: var(--paper-dim);
   color: var(--slate-soft);
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--mono);
   font-size: 10px;
   display: flex;
   align-items: center;
@@ -1451,8 +1850,8 @@ textarea::placeholder {
 }
 
 .setup-step.done .ss-num {
-  background: var(--teal);
-  color: var(--white);
+  background: var(--ok-fill);
+  color: var(--on-fill);
 }
 
 /* ---- transcript ---- */
@@ -1472,25 +1871,31 @@ textarea::placeholder {
   border-bottom-left-radius: 3px;
 }
 
+/**
+ * Three voices, three fills. The customer used to take the inverse surface,
+ * which read as a dark bubble on the old white page and as no bubble at all on
+ * a dark ground. It now takes the brand accent, which inverts with the theme
+ * and keeps the customer visually distinct from both Nexo and your own team.
+ */
 .msg.user {
-  background: var(--ink);
-  color: var(--paper);
+  background: var(--accent);
+  color: var(--on-accent);
   margin-left: auto;
   border-bottom-right-radius: 3px;
 }
 
 .msg.agent {
-  background: #e7efec;
-  border: 1px solid var(--teal);
-  color: var(--ink);
+  background: var(--ok-tint);
+  border: 1px solid var(--ok);
+  color: var(--text);
   margin-left: auto;
   border-bottom-right-radius: 3px;
 }
 
 .msg .msg-author {
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--mono);
   font-size: 10px;
-  color: var(--teal-dark);
+  color: var(--text-3);
   margin-bottom: 4px;
 }
 
@@ -1553,12 +1958,12 @@ textarea::placeholder {
  * widths, so a short last row reads as deliberate rather than broken, and the
  * selected one is filled rather than floating inside a slab.
  */
-.conv-toolbar /** Sits between the page title and the sections it switches between. */
+/** Sits between the page title and the sections it switches between. */
 .settings-tabs {
   margin-bottom: var(--s5);
 }
 
-.segmented {
+.conv-toolbar .segmented {
   width: 100%;
   display: flex;
   flex-wrap: wrap;
@@ -1582,8 +1987,8 @@ textarea::placeholder {
 
 .conv-toolbar .segmented button.on,
 .conv-toolbar .segmented button.on:hover {
-  background: var(--ink);
-  color: var(--paper);
+  background: var(--surface-inverse);
+  color: var(--on-inverse);
   box-shadow: none;
 }
 
@@ -1715,10 +2120,16 @@ textarea::placeholder {
   display: flex;
   align-items: center;
   gap: var(--s2);
-  background: var(--ink);
+  background: var(--surface-inverse);
   border-radius: var(--r-sm);
   padding: var(--s2) var(--s2) var(--s2) var(--s3);
   overflow: hidden;
+}
+
+/** Faded at the right edge so a clipped snippet reads as scrollable, not broken. */
+.install-snippet code,
+.onboard-code-text {
+  mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent 100%);
 }
 
 .install-snippet code {
@@ -1726,7 +2137,7 @@ textarea::placeholder {
   min-width: 0;
   font-family: var(--mono);
   font-size: var(--t-sm);
-  color: var(--paper);
+  color: var(--on-inverse);
   overflow-x: auto;
   white-space: nowrap;
   -webkit-user-select: text;
@@ -1756,7 +2167,7 @@ textarea::placeholder {
   flex-shrink: 0;
   padding: var(--s3) var(--s6) var(--s4);
   border-bottom: 1px solid var(--paper-dim);
-  background: #fbf9f3;
+  background: var(--film-2);
 }
 
 .conv-notes-head {
@@ -1968,7 +2379,7 @@ textarea::placeholder {
 .reply-input {
   width: 100%;
   resize: vertical;
-  font-family: "IBM Plex Sans", sans-serif;
+  font-family: var(--sans);
   font-size: 13px;
   padding: 10px 12px;
   border: 1px solid var(--line);
@@ -1979,7 +2390,7 @@ textarea::placeholder {
 
 .reply-input:focus {
   outline: none;
-  border-color: var(--teal);
+  border-color: var(--accent);
 }
 
 .reply-actions {
@@ -1996,10 +2407,10 @@ textarea::placeholder {
 }
 
 .cite {
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--mono);
   font-size: 10px;
-  color: var(--teal-dark);
-  background: #e3ede9;
+  color: var(--accent);
+  background: var(--ok-tint);
   padding: 2px 6px;
   border-radius: 8px;
   display: inline-block;
@@ -2009,8 +2420,8 @@ textarea::placeholder {
 
 .escalation-note {
   font-size: 12px;
-  color: #8a5a1f;
-  background: #f3e7d6;
+  color: var(--warn);
+  background: var(--warn-tint);
   border-radius: 8px;
   padding: 8px 12px;
   margin-bottom: 10px;
@@ -2052,7 +2463,7 @@ textarea::placeholder {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-family: "Fraunces", serif;
+  font-family: var(--sans);
   font-size: 15px;
   font-weight: 600;
   color: var(--ink);
@@ -2075,11 +2486,11 @@ textarea::placeholder {
 
 .onboard-dot.done,
 .onboard-dot.active {
-  background: var(--teal);
+  background: var(--accent);
 }
 
 .onboard-step-label {
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--mono);
   font-size: 11px;
   color: var(--slate-soft);
   text-transform: uppercase;
@@ -2109,10 +2520,14 @@ textarea::placeholder {
   margin-bottom: 0;
 }
 
+.onboard-card .field .select {
+  display: block;
+}
+
 .onboard-card .field label {
   display: block;
   font-size: 11.5px;
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--mono);
   color: var(--slate-soft);
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -2173,8 +2588,8 @@ textarea::placeholder {
 }
 
 .onboard-option.selected {
-  border-color: var(--teal);
-  background: #f0f5f3;
+  border-color: var(--accent);
+  background: var(--ok-tint);
 }
 
 .onboard-option .oo-icon {
@@ -2182,11 +2597,11 @@ textarea::placeholder {
   height: 32px;
   border-radius: 8px;
   background: var(--paper-dim);
+  color: var(--slate);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  font-size: 14px;
 }
 
 .onboard-option .oo-title {
@@ -2224,8 +2639,8 @@ textarea::placeholder {
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  background: var(--teal);
-  color: var(--white);
+  background: var(--ok-fill);
+  color: var(--on-fill);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2247,7 +2662,7 @@ textarea::placeholder {
 .onboard-chat {
   border: 1px solid var(--line);
   border-radius: 12px;
-  background: var(--paper);
+  background: var(--surface);
   padding: 16px;
   display: flex;
   flex-direction: column;
@@ -2282,32 +2697,48 @@ textarea::placeholder {
   gap: 10px;
 }
 
+/**
+ * Two rings, because a swatch can be darker or lighter than the card behind it.
+ * The inner one outlines a near-black against a dark ground, the outer one
+ * outlines a pale colour against a light one.
+ */
 .onboard-swatch {
   width: 32px;
   height: 32px;
   border-radius: 50%;
   cursor: pointer;
   border: 2px solid transparent;
-  transition: border-color 150ms ease, transform 150ms ease;
+  box-shadow:
+    inset 0 0 0 1.5px rgba(255, 255, 255, 0.34),
+    0 0 0 1px var(--hair-strong);
+  transition: transform 150ms ease, box-shadow 150ms ease;
 }
 
 /** A ring outside the swatch, since an inset border vanishes against the darker colours. */
 .onboard-swatch.selected {
-  border-color: var(--white);
-  box-shadow: 0 0 0 2px var(--ink);
+  border-color: var(--ground);
+  box-shadow:
+    inset 0 0 0 1.5px rgba(255, 255, 255, 0.34),
+    0 0 0 2px var(--accent);
   transform: scale(1.08);
 }
 
+/**
+ * Painted on the widget's own fixed dark surface rather than the console's.
+ * Choosing an accent against a white preview and then shipping a dark widget
+ * is a preview that lies.
+ */
 .onboard-widget-preview {
   border: 1px solid var(--line);
   border-radius: 12px;
   overflow: hidden;
-  background: var(--white);
+  background: var(--surface-inverse);
+  max-width: 340px;
 }
 
 .onboard-widget-preview .owp-head {
   padding: 12px 14px;
-  color: var(--white);
+  color: var(--on-fill);
   font-size: 13px;
   font-weight: 500;
   display: flex;
@@ -2323,27 +2754,51 @@ textarea::placeholder {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: "Fraunces", serif;
+  font-family: var(--sans);
   font-size: 11px;
   flex-shrink: 0;
 }
 
 .onboard-widget-preview .owp-body {
   padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 130px;
+}
+
+.onboard-widget-preview .owp-bubble {
+  align-self: flex-start;
+  max-width: 85%;
+  padding: 10px 13px;
+  background: var(--on-inverse-film);
+  border: 1px solid var(--nav-hair);
+  border-radius: 12px;
+  border-bottom-left-radius: 3px;
   font-size: 12.5px;
-  color: var(--slate-soft);
+  line-height: 1.5;
+  color: var(--on-inverse-2);
+}
+
+.onboard-widget-preview .owp-composer {
+  margin-top: auto;
+  padding: 8px 14px;
+  border: 1px solid var(--nav-hair-strong);
+  border-radius: var(--r-pill);
+  font-size: 12px;
+  color: var(--nav-ink-dim);
 }
 
 .onboard-code {
-  background: var(--ink);
+  background: var(--surface-inverse);
   border-radius: 10px;
   padding: 14px 76px 14px 16px;
   position: relative;
 }
 
 .onboard-code-text {
-  color: #d7d2c4;
-  font-family: "IBM Plex Mono", monospace;
+  color: var(--on-inverse-2);
+  font-family: var(--mono);
   font-size: 12px;
   line-height: 1.6;
   overflow-x: auto;
@@ -2354,19 +2809,19 @@ textarea::placeholder {
   position: absolute;
   top: 10px;
   right: 10px;
-  background: #2f353a;
+  background: var(--on-inverse-film);
   border: 1px solid rgba(255, 255, 255, 0.15);
-  color: var(--paper);
+  color: var(--on-inverse);
   font-size: 11px;
   padding: 5px 10px;
   border-radius: 6px;
   cursor: pointer;
-  font-family: "IBM Plex Sans", sans-serif;
+  font-family: var(--sans);
   transition: background 150ms ease;
 }
 
 .onboard-copy:hover {
-  background: #3a4147;
+  background: var(--on-inverse-film-2);
 }
 
 .onboard-verify {
@@ -2382,7 +2837,7 @@ textarea::placeholder {
   height: 14px;
   border-radius: 50%;
   border: 2px solid var(--paper-dim);
-  border-top-color: var(--teal);
+  border-top-color: var(--accent);
   animation: onboardSpin 0.8s linear infinite;
 }
 
@@ -2396,7 +2851,7 @@ textarea::placeholder {
   width: 52px;
   height: 52px;
   border-radius: 50%;
-  background: #e3ede9;
+  background: var(--ok-tint);
   color: var(--teal-dark);
   display: flex;
   align-items: center;
@@ -2525,7 +2980,7 @@ textarea::placeholder {
 
 .attention-action {
   font-size: var(--t-sm);
-  color: var(--teal);
+  color: var(--accent);
   white-space: nowrap;
   align-self: center;
 }
@@ -2623,7 +3078,7 @@ textarea::placeholder {
 
 .filter-count {
   margin-left: 5px;
-  color: var(--teal);
+  color: var(--text-4);
 }
 
 .owner-none {
@@ -2664,11 +3119,11 @@ textarea::placeholder {
 }
 
 .gap-count {
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--mono);
   font-size: 15px;
   font-weight: 600;
-  color: var(--teal-dark);
-  background: #e3ede9;
+  color: var(--text);
+  background: var(--ok-tint);
   min-width: 34px;
   height: 34px;
   border-radius: 8px;
@@ -2745,7 +3200,7 @@ textarea::placeholder {
 }
 
 .gap-waiting {
-  color: #8a5a1f;
+  color: var(--warn);
 }
 
 .gap-variants {
@@ -2767,7 +3222,7 @@ textarea::placeholder {
 }
 
 .gap-variant:hover {
-  background: #e6e2d7;
+  background: var(--film-2);
 }
 
 .gap-variant-q {
@@ -2776,7 +3231,7 @@ textarea::placeholder {
 }
 
 .gap-variant-date {
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--mono);
   font-size: 11px;
   color: var(--slate-soft);
   flex-shrink: 0;
@@ -2794,7 +3249,7 @@ textarea::placeholder {
 }
 
 .impact-statement p {
-  font-family: "Fraunces", serif;
+  font-family: var(--sans);
   font-size: 19px;
   line-height: 1.65;
   color: var(--ink);
@@ -2802,8 +3257,13 @@ textarea::placeholder {
 }
 
 .impact-statement strong {
-  color: var(--teal-dark);
+  color: var(--text);
   font-weight: 600;
+}
+
+/** Only the figure Nexo resolved alone is a result; the rest are just counts. */
+.impact-statement strong.resolved {
+  color: var(--ok);
 }
 
 .impact-economics {
@@ -2819,7 +3279,7 @@ textarea::placeholder {
 }
 
 .ie-value {
-  font-family: "Fraunces", serif;
+  font-family: var(--sans);
   font-size: 34px;
   font-weight: 600;
   color: var(--ink);
@@ -2856,7 +3316,7 @@ textarea::placeholder {
 }
 
 .impact-form input {
-  font-family: "IBM Plex Sans", sans-serif;
+  font-family: var(--sans);
   font-size: 14px;
   padding: 9px 12px;
   border: 1px solid var(--line);
@@ -2889,7 +3349,7 @@ textarea::placeholder {
 }
 
 .usage-figures {
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--mono);
   font-size: 12.5px;
   color: var(--slate-soft);
 }
@@ -2897,23 +3357,39 @@ textarea::placeholder {
 .usage-bar {
   height: 6px;
   border-radius: 3px;
-  background: var(--paper-dim);
+  background: var(--hair);
   overflow: hidden;
 }
 
+/** Gradients run from the darker end of the hue into the brighter one, so a
+    long bar reads as travelling rather than as a flat block of colour. */
 .usage-fill {
   height: 100%;
-  background: var(--teal);
+  background: var(--ok-grad);
   border-radius: 3px;
   transition: width 300ms ease;
 }
 
 .usage-fill.near {
-  background: #c9873a;
+  background: var(--warn-grad);
 }
 
 .usage-fill.over {
-  background: #a8503a;
+  background: var(--danger-grad);
+}
+
+.meter {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--film-2);
+  overflow: hidden;
+}
+
+.meter i {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--ok-grad);
 }
 
 .usage-note {
@@ -2924,11 +3400,11 @@ textarea::placeholder {
 }
 
 .usage-note.near {
-  color: #8a5a1f;
+  color: var(--warn);
 }
 
 .usage-note.over {
-  color: #8a3a2a;
+  color: var(--danger);
 }
 
 .billing-plans {
@@ -2962,7 +3438,6 @@ textarea::placeholder {
 }
 
 .billing-price {
-  font-variant-numeric: tabular-nums;
   font-size: 15px;
   color: var(--ink);
 }
@@ -2981,6 +3456,14 @@ textarea::placeholder {
   color: var(--slate-soft);
   text-decoration: underline;
   padding: 4px 0;
+}
+
+/** Reads as a link, so it brightens rather than growing a box. */
+.btn-quiet:hover:not(:disabled) {
+  background: none;
+  border-color: transparent;
+  color: var(--ink);
+  transform: none;
 }
 
 .webhook-actions {
@@ -3054,15 +3537,15 @@ textarea::placeholder {
 }
 
 .trial-banner.ending {
-  background: #f7efe1;
-  border-color: #e3d3b4;
-  color: #6f4d19;
+  background: var(--warn-tint);
+  border-color: var(--warn-line);
+  color: var(--warn);
 }
 
 .trial-banner.expired {
-  background: #f6e5e0;
-  border-color: #e0c4bb;
-  color: #7a3324;
+  background: var(--danger-tint);
+  border-color: var(--danger-line);
+  color: var(--danger);
 }
 
 .trial-banner .tb-text {
@@ -3082,9 +3565,9 @@ textarea::placeholder {
   margin-bottom: 22px;
   font-size: 13.5px;
   line-height: 1.5;
-  border: 1px solid #e3d3b4;
-  background: #f7efe1;
-  color: #6f4d19;
+  border: 1px solid var(--warn-line);
+  background: var(--warn-tint);
+  color: var(--warn);
 }
 
 .usage-banner .ub-text {
@@ -3093,4 +3576,169 @@ textarea::placeholder {
 
 .usage-banner .btn-small {
   flex-shrink: 0;
+}
+
+/**
+ * Motion, carried over from the landing so the two surfaces read as one
+ * product. Content is authored at its final value: the hidden state only
+ * applies once `js-motion` confirms scripting is on and reduced motion is off.
+ */
+.reveal > * {
+  opacity: 1;
+}
+
+.js-motion .reveal > * {
+  opacity: 0;
+  transform: translateY(14px);
+  filter: blur(5px);
+}
+
+.js-motion .reveal.in > * {
+  opacity: 1;
+  transform: none;
+  filter: none;
+  transition:
+    opacity 620ms var(--ease-out),
+    transform 620ms var(--ease-out),
+    filter 620ms var(--ease-out);
+  transition-delay: calc(var(--i, 0) * 75ms);
+}
+
+.js-motion .reveal.solo {
+  opacity: 0;
+  transform: translateY(14px);
+  filter: blur(5px);
+}
+
+.js-motion .reveal.solo.in {
+  opacity: 1;
+  transform: none;
+  filter: none;
+  transition:
+    opacity 620ms var(--ease-out),
+    transform 620ms var(--ease-out),
+    filter 620ms var(--ease-out);
+  transition-delay: calc(var(--i, 0) * 60ms);
+}
+
+.js-motion .reveal.solo > * {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+
+/** Bars grow from nothing once their panel arrives, on the landing's curve. */
+.js-motion .reveal .usage-fill,
+.js-motion .reveal .meter i {
+  width: 0;
+}
+
+.js-motion .reveal.in .usage-fill,
+.js-motion .reveal.in .meter i {
+  width: var(--w, 0%);
+  transition: width 1150ms var(--ease-out) 220ms;
+}
+
+/**
+ * Switching theme repaints everything. Rather than pay for a permanent
+ * transition on every element, the toggle turns one on for the length of the
+ * change and takes it off again, so hover and scroll stay untouched.
+ */
+:root.theme-shifting * {
+  transition:
+    background-color 400ms var(--ease-out),
+    border-color 400ms var(--ease-out),
+    color 400ms var(--ease-out),
+    fill 400ms var(--ease-out),
+    stroke 400ms var(--ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .js-motion .reveal > *,
+  .js-motion .reveal.solo {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+
+  .js-motion .reveal .usage-fill,
+  .js-motion .reveal .meter i {
+    width: var(--w, 0%);
+  }
+
+  :root.theme-shifting * {
+    transition: none;
+  }
+}
+
+.theme-toggle {
+  background: transparent;
+  border: 1px solid var(--nav-hair-strong);
+  color: var(--nav-ink);
+  border-radius: 7px;
+  width: 27px;
+  height: 27px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: color var(--dur-fast) ease, border-color var(--dur-fast) ease;
+}
+
+.theme-toggle:hover {
+  color: var(--on-inverse);
+  border-color: var(--nav-ink);
+}
+
+/**
+ * Our own scrollbars. The platform default is a heavy light-grey bar that
+ * ignores the theme entirely, which on a dark panel reads as a piece of the
+ * operating system sitting inside the product.
+ */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--hair-strong) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--hair-strong);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-4);
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/**
+ * Code blocks keep a fixed dark ground in both themes, so their bar has to be
+ * fixed too or it disappears against them in the light theme.
+ */
+.install-snippet,
+.onboard-code {
+  scrollbar-color: var(--nav-hair-strong) transparent;
+}
+
+.install-snippet ::-webkit-scrollbar-thumb,
+.onboard-code ::-webkit-scrollbar-thumb,
+.install-snippet::-webkit-scrollbar-thumb,
+.onboard-code::-webkit-scrollbar-thumb {
+  background: var(--nav-hair-strong);
+  background-clip: content-box;
 }

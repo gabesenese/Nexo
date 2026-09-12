@@ -38,7 +38,7 @@ const INITIAL_DATA: WizardData = {
   industry: "",
   website: "",
   supportEmail: "",
-  widgetColor: "#204c40",
+  widgetColor: "#0e3d28",
   welcomeMessage: "",
 };
 

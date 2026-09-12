@@ -47,10 +47,18 @@ export function NotificationBell() {
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
+  /**
+   * Opening the panel marks everything read, so the ids are kept here to keep
+   * the dots visible while the operator is still looking at them.
+   */
+  const [unreadOnOpen, setUnreadOnOpen] = useState<string[]>([]);
+
   async function handleToggle() {
     const next = !open;
     setOpen(next);
-    if (next && unreadCount > 0) {
+    if (!next) return;
+    setUnreadOnOpen(notifications.filter((n) => !n.read).map((n) => n.id));
+    if (unreadCount > 0) {
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
       await api.markNotificationsRead().catch(() => {});
     }
@@ -77,14 +85,35 @@ export function NotificationBell() {
       </button>
       {open && (
         <div className="notif-dropdown">
-          <div className="notif-dropdown-title">Escalations</div>
-          {notifications.length === 0 && <p className="empty-note">No notifications yet.</p>}
-          {notifications.map((n) => (
-            <div key={n.id} className="notif-item" data-clickable onClick={() => handleSelect(n.conversationId)}>
-              <div className="notif-message">{n.message}</div>
-              <div className="notif-time">{timeAgo(n.createdAt)}</div>
-            </div>
-          ))}
+          <div className="notif-dropdown-head">
+            <span className="notif-dropdown-title">Escalations</span>
+            {unreadOnOpen.length > 0 && (
+              <span className="notif-dropdown-count">{unreadOnOpen.length} new</span>
+            )}
+          </div>
+          <div className="notif-list">
+            {notifications.length === 0 && (
+              <p className="notif-empty">
+                Nothing waiting. Nexo tells you here the moment it hands a conversation over.
+              </p>
+            )}
+            {notifications.map((n) => (
+              <button
+                key={n.id}
+                type="button"
+                className={`notif-item ${unreadOnOpen.includes(n.id) ? "fresh" : ""}`}
+                onClick={() => handleSelect(n.conversationId)}
+              >
+                <span className="notif-message">{n.message}</span>
+                <span className="notif-time">{timeAgo(n.createdAt)}</span>
+              </button>
+            ))}
+          </div>
+          {notifications.length > 0 && (
+            <button type="button" className="notif-all" onClick={() => { setOpen(false); navigate("/conversations"); }}>
+              Open the Inbox
+            </button>
+          )}
         </div>
       )}
     </div>

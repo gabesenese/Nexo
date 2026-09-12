@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api, type AttentionItem, type AuthUser } from "../api";
 import { subscribeToUpdates } from "../realtime";
+import { useSegmented } from "../useSegmented";
 
 /** The realtime stream drives updates; this only covers a stream that never connected. */
 const FALLBACK_REFRESH_MS = 60000;
@@ -50,6 +51,7 @@ export function NeedsAttention() {
   const [items, setItems] = useState<AttentionItem[] | null>(null);
   const [me, setMe] = useState<AuthUser | null>(null);
   const [mineOnly, setMineOnly] = useState(false);
+  useSegmented(String(mineOnly));
   const [expanded, setExpanded] = useState(false);
   const navigate = useNavigate();
 

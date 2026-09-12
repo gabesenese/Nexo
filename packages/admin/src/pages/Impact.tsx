@@ -85,30 +85,38 @@ export function ImpactPage() {
             <p>
               Over the last {data.windowDays} days your customers started{" "}
               <strong>{data.conversations.toLocaleString()}</strong> conversations.{" "}
-              <strong>{data.resolvedAutomatically.toLocaleString()}</strong> were resolved without a
-              person ever stepping in. <strong>{data.resolvedWithHuman.toLocaleString()}</strong>{" "}
-              needed one of your team.{" "}
+              <strong className="resolved">{data.resolvedAutomatically.toLocaleString()}</strong>{" "}
+              were resolved without a person ever stepping in.{" "}
+              <strong>{data.resolvedWithHuman.toLocaleString()}</strong> needed one of your team.{" "}
               {data.stillOpen > 0 && <>{data.stillOpen.toLocaleString()} are still open.</>}
             </p>
           </div>
 
-          <div className="kpis">
+          <div className="kpis reveal">
             <div className="kpi">
               <div className="kl">Resolved by Nexo alone</div>
-              <div className="kv">{percent(data.automationRate)}</div>
+              <div className="kv ok" data-count={Math.round(data.automationRate * 100)} data-suf="%">
+                {percent(data.automationRate)}
+              </div>
               <div className="kpi-note">{data.resolvedAutomatically.toLocaleString()} conversations</div>
             </div>
             <div className="kpi">
               <div className="kl">Needed a person</div>
-              <div className="kv">{data.resolvedWithHuman.toLocaleString()}</div>
+              <div className="kv" data-count={data.resolvedWithHuman}>
+                {data.resolvedWithHuman.toLocaleString()}
+              </div>
             </div>
             <div className="kpi">
               <div className="kl">Handed off at least once</div>
-              <div className="kv">{data.escalated.toLocaleString()}</div>
+              <div className="kv" data-count={data.escalated}>
+                {data.escalated.toLocaleString()}
+              </div>
             </div>
             <div className="kpi">
               <div className="kl">Still open</div>
-              <div className="kv">{data.stillOpen.toLocaleString()}</div>
+              <div className={`kv${data.stillOpen > 0 ? " warn" : ""}`} data-count={data.stillOpen}>
+                {data.stillOpen.toLocaleString()}
+              </div>
             </div>
           </div>
 
@@ -120,9 +128,11 @@ export function ImpactPage() {
             </div>
 
             {data.estimated && !editing && (
-              <div className="impact-economics">
+              <div className="impact-economics reveal">
                 <div className="ie-figure">
-                  <div className="ie-value">{data.estimated.hoursAvoided.toLocaleString()}</div>
+                  <div className="ie-value" data-count={data.estimated.hoursAvoided}>
+                    {data.estimated.hoursAvoided.toLocaleString()}
+                  </div>
                   <div className="ie-label">hours your team did not spend</div>
                 </div>
                 <div className="ie-figure">

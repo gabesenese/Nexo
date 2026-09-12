@@ -5,6 +5,7 @@ import { PlanUsageCard } from "../components/PlanUsageCard";
 import { BillingCard } from "../components/BillingCard";
 import { WebhookCard } from "../components/WebhookCard";
 import { Select } from "../components/Select";
+import { useSegmented } from "../useSegmented";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
 const WIDGET_SRC = import.meta.env.VITE_WIDGET_URL ?? `${API_URL}/widget.js`;
@@ -14,11 +15,19 @@ function initials(name: string) {
   return ((parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "")).toUpperCase() || "?";
 }
 
+/**
+ * Billing rows arrive from the Stripe webhook and genuinely have no actor, so
+ * naming Stripe is accurate where "Nexo" would be a guess.
+ */
+function auditActor(action: string) {
+  return action.startsWith("billing.") ? "Stripe" : "Nexo";
+}
+
 function inviteLink(token: string) {
   return `${window.location.origin}/invite/${token}`;
 }
 
-const WIDGET_COLORS = ["#204c40", "#2f6f5e", "#c9873a", "#181b1d", "#2b3f8a"];
+const WIDGET_COLORS = ["#0e3d28", "#23282e", "#1e3a5f", "#5b2c3e", "#7a4a1e"];
 
 export function SettingsPage({ onWorkspaceRenamed }: { onWorkspaceRenamed?: (name: string) => void }) {
   const [params, setParams] = useSearchParams();
@@ -40,7 +49,7 @@ export function SettingsPage({ onWorkspaceRenamed }: { onWorkspaceRenamed?: (nam
   const [inviting, setInviting] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
 
-  const [widget, setWidget] = useState({ accentColor: "#204c40", welcomeMessage: "" });
+  const [widget, setWidget] = useState({ accentColor: "#0e3d28", welcomeMessage: "" });
   const [savingWidget, setSavingWidget] = useState(false);
   const [widgetSaved, setWidgetSaved] = useState(false);
   const [widgetError, setWidgetError] = useState<string | null>(null);
@@ -178,6 +187,8 @@ export function SettingsPage({ onWorkspaceRenamed }: { onWorkspaceRenamed?: (nam
   const requested = params.get("tab") ?? "";
   /** An unknown or now-forbidden tab falls back rather than rendering nothing. */
   const tab = tabs.some((t) => t.id === requested) ? requested : "workspace";
+
+  useSegmented(tab);
 
   async function changeRole(member: OrgMember, role: MemberRole) {
     setMemberError(null);
@@ -410,7 +421,7 @@ export function SettingsPage({ onWorkspaceRenamed }: { onWorkspaceRenamed?: (nam
             can(me, "team:manage") && !isLastOwner && (m.role !== "owner" || me?.role === "owner");
 
           return (
-            <div className="list-item" key={m.email}>
+            <div className="list-item member-row" key={m.email}>
               <div className="avatar mono">{initials(m.name)}</div>
               <div className="list-info">
                 <div className="li-title">
@@ -506,7 +517,8 @@ export function SettingsPage({ onWorkspaceRenamed }: { onWorkspaceRenamed?: (nam
               <div className="list-item" key={e.id}>
                 <div className="list-info">
                   <div className="li-title">
-                    {e.actor?.name ?? e.actor?.email ?? "Nexo"} {AUDIT_LABELS[e.action] ?? e.action}
+                    {e.actor?.name ?? e.actor?.email ?? auditActor(e.action)}{" "}
+                    {AUDIT_LABELS[e.action] ?? e.action}
                     {e.targetLabel && <span className="audit-target"> {e.targetLabel}</span>}
                   </div>
                   <div className="attention-meta">{new Date(e.at).toLocaleString()}</div>

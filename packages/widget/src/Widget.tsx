@@ -50,8 +50,9 @@ function getSessionId(): string {
 
 /** Stands in for a logo until organisations can upload one. */
 function initialsOf(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  const letters = (parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "");
+  /** Split on anything that is not a letter or digit, so "Meridian (demo)" is MD rather than M(. */
+  const words = name.split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+  const letters = words.slice(0, 2).map((word) => word[0]).join("");
   return letters.toUpperCase() || "S";
 }
 
@@ -75,7 +76,7 @@ export function Widget({ apiUrl, orgKey }: { apiUrl: string; orgKey: string }) {
     welcomeMessage: string;
   }>({
     organizationName: "Support",
-    accentColor: "#204c40",
+    accentColor: "#0e3d28",
     welcomeMessage: GREETING,
   });
   const sessionId = useRef(getSessionId());
@@ -252,7 +253,7 @@ export function Widget({ apiUrl, orgKey }: { apiUrl: string; orgKey: string }) {
               <span
                 style={{
                   ...styles.statusDot,
-                  background: escalated ? "#f0c274" : resolved ? "rgba(255,255,255,0.4)" : "#7fd4a8",
+                  background: escalated ? colors.warn : resolved ? "rgba(255,255,255,0.4)" : colors.ok,
                 }}
                 aria-hidden="true"
               />
@@ -287,6 +288,13 @@ export function Widget({ apiUrl, orgKey }: { apiUrl: string; orgKey: string }) {
         </div>
 
         <div style={styles.messages} ref={scrollRef}>
+          {/**
+           * Holds a short thread against the composer instead of leaving a
+           * column of empty panel under the greeting. It shrinks away as soon
+           * as the conversation is long enough to fill the panel, so scrolling
+           * behaves exactly as before.
+           */}
+          <div style={styles.messagesTop} />
           <div className="nexo-msg-enter" style={styles.assistantBubble}>
             <div>{config.welcomeMessage}</div>
           </div>
@@ -320,7 +328,12 @@ export function Widget({ apiUrl, orgKey }: { apiUrl: string; orgKey: string }) {
               </Fragment>
             );
           })}
-          {pending && (
+          {/**
+           * The echo is dropped the moment the stored message arrives. The
+           * stream can deliver it while the POST is still open, and rendering
+           * both showed the visitor their own question twice.
+           */}
+          {pending && !messages.some((m) => m.role === "user" && m.content === pending) && (
             <div className="nexo-msg-enter" style={styles.userBubble}>
               <div>{pending}</div>
             </div>
@@ -425,22 +438,34 @@ export function Widget({ apiUrl, orgKey }: { apiUrl: string; orgKey: string }) {
   );
 }
 
+/**
+ * The panel is dark in every host page, so it reads as Nexo rather than as a
+ * washed-out copy of whatever site it sits on. Only the chrome (header,
+ * launcher, send button) takes the workspace accent colour.
+ *
+ * The face is declared but deliberately not fetched: this renders inside
+ * someone else page, and pulling a font from a third party on every visit is
+ * not a request we should make for their visitors.
+ */
 const colors = {
-  ink: "#181b1d",
-  paper: "#f6f4ee",
-  paperDim: "#eeebe2",
-  teal: "#2f6f5e",
-  tealDark: "#204c40",
-  amber: "#c9873a",
-  slate: "#3d4145",
-  slateSoft: "#6b7075",
-  line: "#dcd7c9",
-  white: "#ffffff",
+  surface: "#0c0e12",
+  raised: "rgba(255,255,255,0.035)",
+  raised2: "rgba(255,255,255,0.055)",
+  hair: "rgba(255,255,255,0.08)",
+  hairStrong: "rgba(255,255,255,0.13)",
+  ink: "#f5f7f7",
+  ink2: "#c9d1d6",
+  ink3: "#98a1a8",
+  ink4: "#6d757b",
+  accent: "#ede9e1",
+  onAccent: "#0b0d10",
+  onChrome: "#ffffff",
+  ok: "#3ecf8e",
+  warn: "#ffb25c",
 };
 
-const sans = "'IBM Plex Sans', system-ui, -apple-system, sans-serif";
-const mono = "'IBM Plex Mono', ui-monospace, monospace";
-const serif = "'Fraunces', Georgia, serif";
+const sans = "'Schibsted Grotesk', system-ui, -apple-system, sans-serif";
+const mono = "'JetBrains Mono', ui-monospace, monospace";
 const easeOut = "cubic-bezier(0.23, 1, 0.32, 1)";
 
 const css = `
@@ -461,7 +486,7 @@ const css = `
   .nexo-launcher-close { opacity: 0; transform: scale(0.8) rotate(25deg); }
   .nexo-launcher-close.is-open { opacity: 1; transform: scale(1) rotate(0deg); }
   .nexo-launcher:focus-visible, .nexo-icon-btn:focus-visible, .nexo-send-btn:focus-visible, .nexo-human-chip:focus-visible {
-    outline: 2px solid ${colors.white};
+    outline: 2px solid ${colors.accent};
     outline-offset: 2px;
   }
   .nexo-input:focus-visible { outline: none; }
@@ -470,19 +495,39 @@ const css = `
   .nexo-icon-btn:hover { opacity: 0.7; }
   .nexo-icon-btn:active { transform: scale(0.88); }
   .nexo-send-btn { transition: background 150ms ease, transform 150ms ease-out; }
-  .nexo-send-btn:hover:not(:disabled) { background: ${colors.tealDark}; }
+  .nexo-send-btn:hover:not(:disabled) { filter: brightness(1.14); }
   .nexo-send-btn:active:not(:disabled) { transform: scale(0.92); }
   .nexo-human-chip { transition: background 150ms ease, border-color 150ms ease, color 150ms ease; }
-  .nexo-human-chip:hover:not(:disabled) { border-color: ${colors.slateSoft}; color: ${colors.ink}; }
+  .nexo-human-chip:hover:not(:disabled) { border-color: ${colors.ink3}; color: ${colors.ink}; }
   .nexo-input { transition: border-color 150ms ease; }
-  .nexo-input:focus { border-color: ${colors.teal}; }
+  .nexo-input:focus { border-color: ${colors.accent}; }
   .nexo-msg-enter { animation: nexoMsgIn 240ms ${easeOut} both; }
   @keyframes nexoMsgIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
   .nexo-typing { display: inline-flex; gap: 3px; align-items: center; height: 14px; }
-  .nexo-typing span { width: 5px; height: 5px; border-radius: 50%; background: ${colors.slateSoft}; animation: nexoTyping 1s ease-in-out infinite; }
+  .nexo-typing span { width: 5px; height: 5px; border-radius: 50%; background: ${colors.ink3}; animation: nexoTyping 1s ease-in-out infinite; }
   .nexo-typing span:nth-child(2) { animation-delay: 0.15s; }
   .nexo-typing span:nth-child(3) { animation-delay: 0.3s; }
   @keyframes nexoTyping { 0%, 60%, 100% { transform: translateY(0); opacity: 0.5; } 30% { transform: translateY(-3px); opacity: 1; } }
+  /**
+   * On a phone the panel takes the screen rather than sitting in a 360px box
+   * that hangs off the edge, and a short window (a landscape phone) gets the
+   * height it actually has. dvh follows the browser chrome as it collapses.
+   */
+  @media (max-width: 460px) {
+    .nexo-panel {
+      --nexo-panel-w: calc(100vw - 40px);
+      --nexo-panel-h: calc(100vh - 100px);
+      --nexo-panel-h: calc(100dvh - 100px);
+    }
+  }
+
+  @media (max-height: 720px) {
+    .nexo-panel {
+      --nexo-panel-h: calc(100vh - 100px);
+      --nexo-panel-h: calc(100dvh - 100px);
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .nexo-panel, .nexo-launcher, .nexo-icon-btn, .nexo-send-btn, .nexo-human-chip, .nexo-input,
     .nexo-launcher-icon, .nexo-launcher-close { transition-duration: 1ms !important; }
@@ -507,12 +552,12 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 999,
     width: 54,
     height: 54,
-    background: colors.ink,
-    color: colors.paper,
+    background: colors.surface,
+    color: colors.onChrome,
     border: "none",
     fontFamily: sans,
     cursor: "pointer",
-    boxShadow: "0 6px 18px rgba(0,0,0,0.22)",
+    boxShadow: "0 6px 18px rgba(0,0,0,0.35)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -521,19 +566,20 @@ const styles: Record<string, React.CSSProperties> = {
     position: "absolute",
     bottom: 68,
     right: 0,
-    width: 360,
-    height: 560,
-    background: colors.white,
-    border: `1px solid ${colors.line}`,
+    /** Sized through variables so the stylesheet below can shrink it on a phone. */
+    width: "var(--nexo-panel-w, 360px)",
+    height: "var(--nexo-panel-h, 560px)",
+    background: colors.surface,
+    border: `1px solid ${colors.hair}`,
     borderRadius: 16,
-    boxShadow: "0 20px 50px -10px rgba(0,0,0,0.3)",
+    boxShadow: "0 20px 50px -10px rgba(0,0,0,0.55)",
     display: "flex",
     flexDirection: "column",
     overflow: "hidden",
   },
   header: {
-    background: colors.ink,
-    color: colors.paper,
+    background: colors.surface,
+    color: colors.onChrome,
     padding: "16px 18px",
     display: "flex",
     alignItems: "center",
@@ -542,19 +588,19 @@ const styles: Record<string, React.CSSProperties> = {
   mark: {
     width: 22,
     height: 22,
-    background: colors.teal,
+    background: "rgba(255,255,255,0.18)",
     borderRadius: 6,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    fontFamily: serif,
+    fontFamily: sans,
     fontSize: 12,
     flexShrink: 0,
   },
   headTitle: { fontSize: 13.5, fontWeight: 500 },
   headSub: {
     fontSize: 11,
-    color: "rgba(246,244,238,0.72)",
+    color: "rgba(255,255,255,0.8)",
     display: "flex",
     alignItems: "center",
     gap: 5,
@@ -572,11 +618,11 @@ const styles: Record<string, React.CSSProperties> = {
     whiteSpace: "nowrap",
     border: 0,
   },
-  footer: { background: colors.white, borderTop: `1px solid ${colors.line}` },
+  footer: { background: colors.surface, borderTop: `1px solid ${colors.hair}` },
   poweredBy: {
     fontFamily: mono,
     fontSize: 9,
-    color: "#9aa0a3",
+    color: colors.ink4,
     textAlign: "center",
     padding: "0 0 10px",
     letterSpacing: "0.04em",
@@ -584,7 +630,7 @@ const styles: Record<string, React.CSSProperties> = {
   iconButton: {
     background: "transparent",
     border: "none",
-    color: colors.paper,
+    color: colors.onChrome,
     fontSize: 18,
     cursor: "pointer",
     lineHeight: 1,
@@ -597,12 +643,13 @@ const styles: Record<string, React.CSSProperties> = {
     display: "flex",
     flexDirection: "column",
     gap: 12,
-    background: colors.paper,
+    background: colors.surface,
   },
+  messagesTop: { flex: "1 1 auto", minHeight: 0 },
   userBubble: {
     alignSelf: "flex-end",
-    background: colors.ink,
-    color: colors.paper,
+    background: colors.accent,
+    color: colors.onAccent,
     padding: "10px 13px",
     borderRadius: 12,
     borderBottomRightRadius: 3,
@@ -612,9 +659,9 @@ const styles: Record<string, React.CSSProperties> = {
   },
   assistantBubble: {
     alignSelf: "flex-start",
-    background: colors.white,
-    border: `1px solid ${colors.line}`,
-    color: colors.slate,
+    background: colors.raised,
+    border: `1px solid ${colors.hair}`,
+    color: colors.ink2,
     padding: "10px 13px",
     borderRadius: 12,
     borderBottomLeftRadius: 3,
@@ -624,9 +671,9 @@ const styles: Record<string, React.CSSProperties> = {
   },
   agentBubble: {
     alignSelf: "flex-start",
-    background: "#eef3f1",
-    border: `1px solid ${colors.teal}`,
-    color: colors.slate,
+    background: colors.raised2,
+    border: `1px solid ${colors.hairStrong}`,
+    color: colors.ink2,
     padding: "10px 13px",
     borderRadius: 12,
     borderBottomLeftRadius: 3,
@@ -637,22 +684,22 @@ const styles: Record<string, React.CSSProperties> = {
   agentLabel: {
     fontFamily: mono,
     fontSize: 10,
-    color: colors.tealDark,
+    color: colors.accent,
     marginBottom: 5,
   },
   joinNote: {
     alignSelf: "center",
     textAlign: "center",
     fontSize: 11,
-    color: colors.slateSoft,
+    color: colors.ink4,
     margin: "4px 0 8px",
   },
   citations: { marginTop: 7, display: "flex", flexWrap: "wrap", gap: 4 },
   citationBadge: {
     fontFamily: mono,
     fontSize: 10,
-    background: "#e3ede9",
-    color: colors.tealDark,
+    background: colors.raised2,
+    color: colors.ink2,
     padding: "2px 6px",
     borderRadius: 8,
   },
@@ -660,41 +707,43 @@ const styles: Record<string, React.CSSProperties> = {
     alignSelf: "center",
     width: "100%",
     boxSizing: "border-box",
-    background: colors.paperDim,
+    background: colors.raised,
+    borderLeft: `2px solid ${colors.warn}`,
     borderRadius: 10,
     padding: "12px 14px",
     fontSize: 11.5,
-    color: colors.slateSoft,
+    color: colors.ink3,
     lineHeight: 1.6,
   },
   handoffLabel: {
     fontFamily: mono,
     fontSize: 9.5,
-    color: colors.tealDark,
+    color: colors.warn,
     textTransform: "uppercase",
     letterSpacing: "0.05em",
     marginBottom: 6,
     display: "block",
   },
-  inputRow: { display: "flex", gap: 8, padding: "10px 14px 8px", background: colors.white },
+  inputRow: { display: "flex", gap: 8, padding: "10px 14px 8px", background: colors.surface },
   input: {
     flex: 1,
     minWidth: 0,
-    border: `1px solid ${colors.line}`,
+    border: `1px solid ${colors.hairStrong}`,
     borderRadius: 20,
     padding: "9px 14px",
     fontSize: 12.5,
     fontFamily: sans,
     outline: "none",
-    color: colors.slate,
+    background: colors.raised,
+    color: colors.ink,
   },
   sendButton: {
     width: 34,
     height: 34,
     borderRadius: "50%",
     border: "none",
-    background: colors.ink,
-    color: colors.paper,
+    background: colors.surface,
+    color: colors.onChrome,
     cursor: "pointer",
     flexShrink: 0,
     display: "flex",
@@ -707,9 +756,9 @@ const styles: Record<string, React.CSSProperties> = {
     margin: "10px 14px 0",
     fontFamily: sans,
     fontSize: 11.5,
-    color: colors.slateSoft,
-    background: colors.paper,
-    border: `1px solid ${colors.line}`,
+    color: colors.ink3,
+    background: colors.raised,
+    border: `1px solid ${colors.hairStrong}`,
     padding: "7px 12px",
     borderRadius: 8,
     cursor: "pointer",

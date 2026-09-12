@@ -14,3 +14,12 @@ export const WIDGET_SCRIPT_URL =
   import.meta.env.VITE_WIDGET_SCRIPT_URL ??
   (import.meta.env.DEV ? "http://localhost:5174/dist/widget.js" : "");
 export const WIDGET_ORG_KEY = import.meta.env.VITE_WIDGET_ORG_KEY ?? "";
+
+/**
+ * Mirrors TRIAL_DAYS in packages/server/src/config/env.ts, which the page
+ * states as fact. If the server default moves, this moves with it.
+ */
+export const TRIAL_DAYS = Number(import.meta.env.VITE_TRIAL_DAYS ?? 14);
+
+/** CONFIDENCE_THRESHOLD in packages/server/src/config/env.ts. */
+export const CONFIDENCE_THRESHOLD = 0.55;

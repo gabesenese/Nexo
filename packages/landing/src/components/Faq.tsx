@@ -1,5 +1,3 @@
-import { useState } from "react";
-
 /**
  * Every answer here is checkable against the product or the pricing page. An
  * FAQ is the easiest place on a marketing site to drift into claims nobody
@@ -13,7 +11,7 @@ const ITEMS = [
   },
   {
     q: "Do I have to talk to sales?",
-    a: "No. Pricing is public, plans start at C$249/mo, there is no enterprise floor, and you start a trial yourself. Every plan includes the whole product; the price only reflects volume.",
+    a: "No. Pricing is public, plans start at C$249 a month, there is no enterprise floor, and you start a trial yourself. Every plan includes the whole product; the price only reflects volume.",
   },
   {
     q: "What does Nexo answer from?",
@@ -30,39 +28,24 @@ const ITEMS = [
 ];
 
 export function Faq() {
-  const [open, setOpen] = useState<number | null>(0);
-
   return (
-    <section className="section" id="faq">
-      <div className="wrap">
-        <div className="section-head">
-          <span className="l-eyebrow">FAQ</span>
-          <h2>Questions, before you ask.</h2>
-        </div>
-        <div className="faq-wrap">
-          {ITEMS.map((item, i) => {
-            const isOpen = open === i;
-            return (
-              <div className={`faq-item${isOpen ? " open" : ""}`} key={item.q}>
-                <button
-                  className="faq-q"
-                  aria-expanded={isOpen}
-                  onClick={() => setOpen(isOpen ? null : i)}
-                >
-                  {item.q}
-                  <span className="faq-icon" aria-hidden="true" />
-                </button>
-                {/**
-                 * Height is set inline because the open transition needs a real
-                 * pixel value to animate to, and the answers differ in length.
-                 */}
-                <div className="faq-a" style={{ maxHeight: isOpen ? 320 : 0 }}>
-                  <div className="faq-a-inner">{item.a}</div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+    <section className="wrap faq reveal" id="faq">
+      <div className="faq-head" style={{ "--i": 0 } as React.CSSProperties}>
+        <p className="eyebrow">FAQ</p>
+        <h2>Questions, before you ask.</h2>
+      </div>
+      <div style={{ "--i": 1 } as React.CSSProperties}>
+        {ITEMS.map((item, i) => (
+          <details key={item.q} open={i === 0}>
+            <summary>
+              {item.q}
+              <svg width="14" height="14" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                <path d="M2 4.5 6 8.5l4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </summary>
+            <p>{item.a}</p>
+          </details>
+        ))}
       </div>
     </section>
   );

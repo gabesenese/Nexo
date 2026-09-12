@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { WizardShell } from "../WizardShell";
-
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
-const WIDGET_SRC = import.meta.env.VITE_WIDGET_URL ?? `${API_URL}/widget.js`;
+import { embedSnippet } from "../../config";
 
 export function InstallStep({
   orgKey,
@@ -14,7 +12,7 @@ export function InstallStep({
   onFinish: () => void;
 }) {
   const [copied, setCopied] = useState(false);
-  const snippet = `<script src="${WIDGET_SRC}" data-api-url="${API_URL}" data-org-key="${orgKey}"></script>`;
+  const snippet = embedSnippet(orgKey);
 
   async function handleCopy() {
     await navigator.clipboard.writeText(snippet);

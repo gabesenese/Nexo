@@ -6,9 +6,7 @@ import { BillingCard } from "../components/BillingCard";
 import { WebhookCard } from "../components/WebhookCard";
 import { Select } from "../components/Select";
 import { useSegmented } from "../useSegmented";
-
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
-const WIDGET_SRC = import.meta.env.VITE_WIDGET_URL ?? `${API_URL}/widget.js`;
+import { embedSnippet } from "../config";
 
 function initials(name: string) {
   const parts = name.trim().split(/\s+/);
@@ -57,10 +55,8 @@ export function SettingsPage({ onWorkspaceRenamed }: { onWorkspaceRenamed?: (nam
   const [keyCopied, setKeyCopied] = useState(false);
   const [snippetCopied, setSnippetCopied] = useState(false);
 
-  /** Matches the snippet the onboarding wizard hands out, from the same env vars. */
-  const snippet = org
-    ? `<script src="${WIDGET_SRC}" data-api-url="${API_URL}" data-org-key="${org.widgetKey}"></script>`
-    : "";
+  /** The same snippet the onboarding wizard hands out, built in one place. */
+  const snippet = org ? embedSnippet(org.widgetKey) : "";
 
   async function copySnippet() {
     if (!snippet) return;

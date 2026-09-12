@@ -56,9 +56,21 @@ export interface BuildAppOptions {
   retentionSweeps?: boolean;
 }
 
+const isProduction = process.env.NODE_ENV === "production";
+
 export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyInstance> {
   const app = Fastify({
-    logger: options.logger === false ? false : { transport: { target: "pino-pretty" } },
+    /**
+     * Behind Fly's proxy every request arrives from the proxy's address, so
+     * without this the three rate-limit buckets collapse into one global
+     * counter and every audit row records the same IP.
+     */
+    trustProxy: isProduction,
+    /**
+     * pino-pretty is for a terminal. A production log drain wants the JSON,
+     * not ANSI colour codes wrapped around it.
+     */
+    logger: options.logger === false ? false : isProduction ? true : { transport: { target: "pino-pretty" } },
   });
 
   /**

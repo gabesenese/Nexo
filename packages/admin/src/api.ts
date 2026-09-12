@@ -49,6 +49,8 @@ export const AUDIT_LABELS: Record<string, string> = {
   "retention.policy_changed": "changed the retention policy",
   "retention.applied": "applied the retention policy",
   "data.exported": "exported the workspace data",
+  "billing.checkout_started": "started a checkout",
+  "billing.subscription_changed": "changed the plan",
 };
 
 export function can(user: AuthUser | null, permission: Permission): boolean {

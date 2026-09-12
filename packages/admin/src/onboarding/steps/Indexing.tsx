@@ -123,7 +123,18 @@ export function IndexingStep({
       {!skipped && status === "error" && <p className="error-text">{errorMsg}</p>}
 
       <div className="onboard-actions">
-        <span />
+        {/** A source that will not read must not trap anyone in the wizard. */}
+        {status === "error" ? (
+          <button
+            type="button"
+            className="onboard-back"
+            onClick={() => onDone({ sourceName: "", chunkCount: 0 })}
+          >
+            Skip for now
+          </button>
+        ) : (
+          <span />
+        )}
         {status === "error" ? (
           <button type="button" className="btn btn-primary" onClick={run}>
             Try again

@@ -1,15 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { api } from "../api";
+import { Mark } from "../components/Mark";
 
-function LogoMark() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-      <circle cx="10" cy="10" r="9" stroke="#2f6f5e" strokeWidth="1.4" />
-      <path d="M6 13V7l8 6V7" stroke="#181b1d" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
 
 export function ResetPasswordPage() {
   const { token = "" } = useParams();
@@ -52,7 +45,7 @@ export function ResetPasswordPage() {
     <div className="login-screen">
       <div className="login-card">
         <div className="brand">
-          <LogoMark />
+          <Mark />
           Nexo
         </div>
 

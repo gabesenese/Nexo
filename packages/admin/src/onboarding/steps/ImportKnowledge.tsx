@@ -37,7 +37,17 @@ export function ImportKnowledgeStep({
           className={`onboard-option${method === "help_center" ? " selected" : ""}`}
           onClick={() => setMethod("help_center")}
         >
-          <div className="oo-icon">📚</div>
+          <div className="oo-icon">
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <path
+                d="M4 3.5h9a2 2 0 0 1 2 2V16l-3.5-2H4a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1Z"
+                stroke="var(--ok)"
+                strokeWidth="1.4"
+                strokeLinejoin="round"
+              />
+              <path d="M6 7.5h6M6 10.5h4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+            </svg>
+          </div>
           <div>
             <div className="oo-title">Help Center</div>
             <div className="oo-sub">Point us at your existing articles</div>
@@ -57,7 +67,17 @@ export function ImportKnowledgeStep({
           className={`onboard-option${method === "pdf" ? " selected" : ""}`}
           onClick={() => setMethod("pdf")}
         >
-          <div className="oo-icon">📄</div>
+          <div className="oo-icon">
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <path
+                d="M5 2.5h6l4 4V17a.5.5 0 0 1-.5.5h-9A.5.5 0 0 1 5 17V3a.5.5 0 0 1 .5-.5Z"
+                stroke="var(--ok)"
+                strokeWidth="1.4"
+                strokeLinejoin="round"
+              />
+              <path d="M11 2.5V7h4M7.5 11h5M7.5 13.5h3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+            </svg>
+          </div>
           <div>
             <div className="oo-title">PDF documentation</div>
             <div className="oo-sub">Return policies, guides, anything written</div>
@@ -76,7 +96,12 @@ export function ImportKnowledgeStep({
           className={`onboard-option${method === "skip" ? " selected" : ""}`}
           onClick={() => setMethod("skip")}
         >
-          <div className="oo-icon">→</div>
+          <div className="oo-icon">
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <path d="M3.5 10h12" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+              <path d="m11.5 6 4 4-4 4" stroke="var(--ok)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
           <div>
             <div className="oo-title">Skip for now</div>
             <div className="oo-sub">Add knowledge later from the dashboard</div>

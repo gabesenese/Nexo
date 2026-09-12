@@ -1,4 +1,6 @@
 import { readFile } from "node:fs/promises";
+import { existsSync, readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import Fastify, { type FastifyInstance, type FastifyRequest } from "fastify";
@@ -7,9 +9,12 @@ import multipart from "@fastify/multipart";
 import jwt from "@fastify/jwt";
 import cookie from "@fastify/cookie";
 import rateLimit from "@fastify/rate-limit";
+import fastifyStatic from "@fastify/static";
 import { env } from "./config/env.js";
 import {
-  applySecurityHeaders,
+  adminOrigins,
+  consoleCsp,
+  securityHeaders,
   bucketFor,
   corsFor,
   isEventStream,
@@ -58,7 +63,47 @@ export interface BuildAppOptions {
 
 const isProduction = process.env.NODE_ENV === "production";
 
+/**
+ * The console's shell carries one inline script, the theme bootstrap that runs
+ * before first paint. Hashing whatever is actually in the shipped file keeps
+ * the policy strict without pinning a hash that a later edit would invalidate,
+ * which would blank the console with no failing request to explain it.
+ */
+function inlineScriptHashes(html: string): string[] {
+  const inlineScript = /<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi;
+  return [...html.matchAll(inlineScript)]
+    .map((match) => match[1])
+    .filter((body) => body.trim().length > 0)
+    /**
+     * The HTML parser normalises newlines before the browser hashes the script,
+     * so a file written with CRLF hashes to something the browser never sees.
+     * That difference is a blank console with nothing in the network tab to
+     * explain it.
+     */
+    .map((body) => body.replace(/\r\n?/g, "\n"))
+    .map((body) => `sha256-${createHash("sha256").update(body, "utf8").digest("base64")}`);
+}
+
 export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyInstance> {
+  /**
+   * The built console, served from this same origin. `routes/auth.ts` sets the
+   * session cookie `SameSite=lax` deliberately, so a console on a different
+   * registrable domain signs in and then 401s on every request after it, and
+   * `fly.dev` is on the Public Suffix List, which means two `*.fly.dev` names
+   * can never share a site. Serving the bundle here removes the domain
+   * requirement, the CORS configuration and the separate static host together.
+   *
+   * Absent in development and in tests, where the console runs on Vite.
+   */
+  const adminBundlePath = env.ADMIN_BUNDLE_PATH
+    ? path.resolve(env.ADMIN_BUNDLE_PATH)
+    : fileURLToPath(new URL("../../admin/dist", import.meta.url));
+  const adminIndexPath = path.join(adminBundlePath, "index.html");
+  const servesConsole = existsSync(adminIndexPath);
+  const consolePolicy = servesConsole
+    ? consoleCsp(inlineScriptHashes(readFileSync(adminIndexPath, "utf8")))
+    : undefined;
+
   const app = Fastify({
     /**
      * Behind Fly's proxy every request arrives from the proxy's address, so
@@ -88,7 +133,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   await app.register(jwt, { secret: env.JWT_SECRET });
   await app.register(cookie);
 
-  app.addHook("onSend", applySecurityHeaders);
+  app.addHook("onSend", securityHeaders({ consolePolicy }));
 
   const limits = options.rateLimits ?? DEFAULT_RATE_LIMITS;
   if (limits !== false) {
@@ -126,6 +171,37 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
         .send("// Nexo widget bundle not built. Run: npm run build --workspace=@nexo/widget");
     }
   });
+
+  if (servesConsole) {
+    await app.register(fastifyStatic, { root: adminBundlePath, index: false, wildcard: false });
+
+    /**
+     * A single-page app owns every path that is not the API, so a deep link has
+     * to answer with the shell rather than a 404: the checkout return, a
+     * password reset link and an invite link are all deep links into it. API
+     * misses stay JSON, because a client parsing HTML as an error is worse than
+     * the 404 itself.
+     */
+    app.setNotFoundHandler((req, reply) => {
+      const pathname = (req.url ?? "/").split("?")[0];
+      const isApi = pathname.startsWith("/api/") || pathname === "/health" || pathname === "/widget.js";
+      if (req.method === "GET" && !isApi) {
+        return reply.type("text/html; charset=utf-8").sendFile("index.html");
+      }
+      return reply.status(404).send({ error: "not found" });
+    });
+  } else if (isProduction && adminOrigins.some((origin) => origin.includes("localhost"))) {
+    /**
+     * Without a bundle to serve, the console is on another origin and has to be
+     * named here. Unlike APP_URL and SMTP_URL, CORS_ORIGIN keeps its localhost
+     * default silently: the server boots healthy and every console request is
+     * blocked, which reads as an outage rather than a misconfiguration.
+     */
+    throw new Error(
+      "CORS_ORIGIN still points at localhost, and no console bundle is being served. " +
+        "Either ship the console with the image or set CORS_ORIGIN to the console's real origin.",
+    );
+  }
 
   await app.register(authRoutes);
   await app.register(passwordResetRoutes);

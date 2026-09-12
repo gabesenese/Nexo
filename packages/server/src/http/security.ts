@@ -129,6 +129,70 @@ export function isEventStream(url: string): boolean {
  * sites loading `/widget.js`, the one thing that must be loadable everywhere.
  * Every header below is here for a stated reason instead.
  */
+const API_CSP = "default-src 'none'; frame-ancestors 'none'";
+
+/**
+ * The console is served from this origin, so the API's own policy would block
+ * the app it hands out: `default-src 'none'` refuses its bundle, its stylesheet
+ * and its fonts, and the browser renders a blank page with no failed request to
+ * explain it. This is the policy for those responses instead.
+ *
+ * The inline hashes are computed from the shipped index.html at boot rather
+ * than written down, so editing the theme bootstrap cannot silently break the
+ * console. `unsafe-inline` for styles is the one concession: React sets style
+ * attributes, and a nonce cannot cover those.
+ */
+export function consoleCsp(inlineScriptHashes: readonly string[]): string {
+  const scriptSrc = ["'self'", ...inlineScriptHashes.map((hash) => `'${hash}'`)].join(" ");
+  return [
+    "default-src 'none'",
+    `script-src ${scriptSrc}`,
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src https://fonts.gstatic.com",
+    "img-src 'self' data:",
+    "connect-src 'self'",
+    "base-uri 'none'",
+    "form-action 'self'",
+    "frame-ancestors 'none'",
+  ].join("; ");
+}
+
+/** Everything the API owns. Anything else on this origin is the console. */
+function isApiResponse(url: string): boolean {
+  const path = pathOf(url);
+  return path.startsWith("/api/") || path === "/health" || path === "/widget.js";
+}
+
+/**
+ * Returns the hook. The console's policy is passed in rather than read from
+ * module state, because whether a console is being served at all is decided in
+ * app.ts by looking for the bundle.
+ */
+export function securityHeaders(options: { consolePolicy?: string } = {}) {
+  return async function applySecurity(req: FastifyRequest, reply: FastifyReply, payload: unknown) {
+    /** This server returns JSON, one script, and the console. None should ever be sniffed into another type. */
+    reply.header("x-content-type-options", "nosniff");
+    /** Nothing here should leak a workspace URL to a third party via a referrer. */
+    reply.header("referrer-policy", "no-referrer");
+    /** Neither an API nor the console has a reason to be framed, and framing is how clickjacking starts. */
+    reply.header("x-frame-options", "DENY");
+    reply.header(
+      "content-security-policy",
+      options.consolePolicy && !isApiResponse(req.url ?? "") ? options.consolePolicy : API_CSP,
+    );
+
+    /**
+     * Only meaningful over TLS, and actively harmful to send from a plain-http
+     * dev server, since a browser would then refuse http on localhost for a year.
+     */
+    if (env.APP_URL.startsWith("https://")) {
+      reply.header("strict-transport-security", "max-age=31536000; includeSubDomains");
+    }
+
+    return payload;
+  };
+}
+
 export async function applySecurityHeaders(_req: FastifyRequest, reply: FastifyReply, payload: unknown) {
   /** This server returns JSON and one script. Neither should ever be sniffed into another type. */
   reply.header("x-content-type-options", "nosniff");
@@ -136,7 +200,7 @@ export async function applySecurityHeaders(_req: FastifyRequest, reply: FastifyR
   reply.header("referrer-policy", "no-referrer");
   /** An API has no reason to be framed, and framing it is how clickjacking starts. */
   reply.header("x-frame-options", "DENY");
-  reply.header("content-security-policy", "default-src 'none'; frame-ancestors 'none'");
+  reply.header("content-security-policy", API_CSP);
 
   /**
    * Only meaningful over TLS, and actively harmful to send from a plain-http

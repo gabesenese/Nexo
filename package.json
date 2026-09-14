@@ -12,7 +12,8 @@
     "typecheck": "npm run typecheck --workspaces --if-present",
     "db:migrate": "npm run db:migrate --workspace=@nexo/server",
     "db:generate": "npm run db:generate --workspace=@nexo/server",
-    "db:seed": "npm run db:seed --workspace=@nexo/server"
+    "db:seed": "npm run db:seed --workspace=@nexo/server",
+    "agents:watch": "node .claude/tui/dashboard.cjs"
   },
   "devDependencies": {
     "concurrently": "^9.0.1",

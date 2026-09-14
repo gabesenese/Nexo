@@ -5,6 +5,7 @@ build/
 *.log
 .DS_Store
 packages/server/prisma/generated/
+.claude/logs/
 
 
 ### MISC

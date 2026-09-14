@@ -1,0 +1,31 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [{ "type": "command", "command": "node .claude/hooks/log-event.cjs" }]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [{ "type": "command", "command": "node .claude/hooks/log-event.cjs" }]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [{ "type": "command", "command": "node .claude/hooks/log-event.cjs" }]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [{ "type": "command", "command": "node .claude/hooks/log-event.cjs" }]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [{ "type": "command", "command": "node .claude/hooks/log-event.cjs" }]
+      }
+    ]
+  }
+}

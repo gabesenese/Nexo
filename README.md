@@ -10,9 +10,9 @@ the full product/business plan.
 > brand-new real customer can complete the whole journey end-to-end (UI → API → DB → result),
 > nothing mocked. `structured-plan.md` is the single roadmap; GitHub Milestones mirror it.
 
-**Status: M2 — Customer Identity (active).** M1 (Marketing) is done. The ingestion → retrieval →
-local-LLM answer → escalation → webhook-handoff core is proven as backend, but its customer-facing
-slices (M3–M5) are not complete yet. See `structured-plan.md` §0 for the full status map.
+**Status: Launch (active).** M1–M6 are shipped, along with the plan model and limits (M7a/M7b)
+and Stripe checkout (#99). What remains is getting Nexo onto the internet so a stranger can buy it.
+See `structured-plan.md` §0 for the full status map.
 
 ## Architecture
 
@@ -43,7 +43,7 @@ packages/
 ```bash
 npm install
 docker compose up -d                    # Postgres + pgvector
-cp .env.example packages/server/.env    # fill in ANTHROPIC_API_KEY and OPENAI_API_KEY
+cp .env.example packages/server/.env    # then set JWT_SECRET: openssl rand -hex 32
 npm run db:migrate --workspace=@nexo/server
 npm run dev                             # server :4000, admin :5173, widget dev demo :5174, landing :5175
 ```

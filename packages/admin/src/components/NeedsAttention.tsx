@@ -136,8 +136,16 @@ export function NeedsAttention() {
             </div>
             {/** The reason used to appear twice per row in two phrasings, which read as noise once stacked. */}
             <div className="attention-meta">
-              <span className="attention-reason">{headline(item)}</span> · waiting {waitedFor(item.since)} ·{" "}
-              <span className={item.assignee ? "owner-set" : "owner-none"}>{ownerLabel(item, me?.id)}</span>
+              <span className="attention-reason">{headline(item)}</span> · waiting {waitedFor(item.since)}
+              {/** Unowned is the one state an operator must act on, so it is a pill rather than more meta text. */}
+              {item.assignee ? (
+                <>
+                  {" "}
+                  · <span className="owner-set">{ownerLabel(item, me?.id)}</span>
+                </>
+              ) : (
+                <span className="owner-none">{ownerLabel(item, me?.id)}</span>
+              )}
             </div>
           </div>
           <span className="attention-action">{actionLabel(item)} →</span>

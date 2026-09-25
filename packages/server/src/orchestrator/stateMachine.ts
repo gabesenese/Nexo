@@ -133,10 +133,32 @@ export async function handleUserMessage(params: {
   /** Drop the last row: it's the message just inserted, passed separately as `message`. */
   const history: ChatTurn[] = toHistory(priorMessages.slice(0, -1));
 
-  const retrieved = await hybridSearch(message, organizationId);
-  const context = retrieved.map((r) => ({ id: r.id, sourceName: r.sourceName, content: r.content }));
-
-  const result = await chatProvider.generateResponse({ history, message, context });
+  /**
+   * Retrieval embeds the question and generation calls the model, so either
+   * can fail when the AI provider is down. The customer's message is already
+   * stored by then, and throwing here would leave it unanswered on an `active`
+   * thread that no operator is told about. An outage is escalated like any
+   * other answer Nexo cannot give.
+   */
+  let retrieved: Awaited<ReturnType<typeof hybridSearch>>;
+  let result: Awaited<ReturnType<ChatProvider["generateResponse"]>>;
+  try {
+    retrieved = await hybridSearch(message, organizationId);
+    const context = retrieved.map((r) => ({ id: r.id, sourceName: r.sourceName, content: r.content }));
+    result = await chatProvider.generateResponse({ history, message, context });
+  } catch (err) {
+    console.error(`AI provider failed, escalating instead: ${(err as Error).message}`);
+    return escalate({
+      conversationId: conversation.id,
+      organizationId,
+      sessionId,
+      reason: "ai_unavailable",
+      confidence: null,
+      answer: "I can't answer that right now, so I'm passing it to a person on the team.",
+      citations: [],
+      question: message,
+    });
+  }
 
   const citations = retrieved
     .filter((r) => result.usedSourceIds.includes(r.id))
@@ -260,7 +282,9 @@ async function escalate(params: {
   const summary =
     reason === "user_requested"
       ? "User explicitly requested a human agent."
-      : `Low-confidence AI answer (confidence ${confidence?.toFixed(2)}); escalated instead of guessing.`;
+      : reason === "ai_unavailable"
+        ? "The AI provider failed, so no answer was generated."
+        : `Low-confidence AI answer (confidence ${confidence?.toFixed(2)}); escalated instead of guessing.`;
 
   /**
    * The handoff summary keeps the confidence figure, which is what a support

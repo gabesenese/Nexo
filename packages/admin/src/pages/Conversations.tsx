@@ -67,6 +67,7 @@ const REASON_LABELS: Record<string, string> = {
   low_confidence: "Nexo was not confident enough to answer",
   user_requested: "The customer asked for a person",
   agent_requested: "An operator flagged this for a human",
+  ai_unavailable: "Nexo's AI was unavailable, so it could not answer",
 };
 
 function reasonLabel(reason: string): string {

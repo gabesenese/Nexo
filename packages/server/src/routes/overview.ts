@@ -89,7 +89,9 @@ export async function overviewRoutes(app: FastifyInstance) {
             ? "A customer asked for a person"
             : e.reason === "agent_requested"
               ? "An operator flagged a conversation for a human"
-              : "Nexo handed a conversation over, it was not confident",
+              : e.reason === "ai_unavailable"
+                ? "Nexo handed a conversation over, its AI was unavailable"
+                : "Nexo handed a conversation over, it was not confident",
         conversationId: e.conversationId,
         at: e.createdAt.toISOString(),
       })),

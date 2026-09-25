@@ -4,9 +4,6 @@ import { StartCta } from "./StartCta";
 export function Hero({ onOpenTrial }: { onOpenTrial: () => void }) {
   return (
     <section className="wrap hero" id="top">
-      <div className="pill">
-        <b>NEW</b> Every handoff now carries the reason Nexo stopped
-      </div>
       <h1>
         Every answer
         <br />

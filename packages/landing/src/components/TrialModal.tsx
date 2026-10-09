@@ -139,7 +139,7 @@ export function TrialModal({ open, onClose }: { open: boolean; onClose: () => vo
             <div className="modal-sub">
               {SIGNUP_OPEN
                 ? "Prefer a hand getting set up? Tell us who you are and we'll reach out. You can also start on your own anytime."
-                : "Tell us who you are and we'll get in touch as soon as we can take you on. No sales call, no card."}
+                : "Tell us who you are and we'll get in touch as soon as we can take you on."}
             </div>
 
             <div className="field">

@@ -86,9 +86,16 @@ export function ImpactPage() {
               Over the last {data.windowDays} days your customers started{" "}
               <strong>{data.conversations.toLocaleString()}</strong> conversations.{" "}
               <strong className="resolved">{data.resolvedAutomatically.toLocaleString()}</strong>{" "}
-              were resolved without a person ever stepping in.{" "}
-              <strong>{data.resolvedWithHuman.toLocaleString()}</strong> needed one of your team.{" "}
-              {data.stillOpen > 0 && <>{data.stillOpen.toLocaleString()} are still open.</>}
+              were marked resolved without anyone on your team writing to the customer or taking a
+              handoff. <strong>{data.resolvedWithHuman.toLocaleString()}</strong> were resolved with
+              your team involved.{" "}
+              {data.answeredUnconfirmed > 0 && (
+                <>
+                  {data.answeredUnconfirmed.toLocaleString()} were answered by Nexo but not marked
+                  resolved, so they are not counted as resolutions.{" "}
+                </>
+              )}
+              {data.waitingOnPerson > 0 && <>{data.waitingOnPerson.toLocaleString()} are waiting on your team.</>}
             </p>
           </div>
 
@@ -101,7 +108,7 @@ export function ImpactPage() {
               <div className="kpi-note">{data.resolvedAutomatically.toLocaleString()} conversations</div>
             </div>
             <div className="kpi">
-              <div className="kl">Needed a person</div>
+              <div className="kl">Resolved with your team</div>
               <div className="kv" data-count={data.resolvedWithHuman}>
                 {data.resolvedWithHuman.toLocaleString()}
               </div>
@@ -113,9 +120,16 @@ export function ImpactPage() {
               </div>
             </div>
             <div className="kpi">
-              <div className="kl">Still open</div>
-              <div className={`kv${data.stillOpen > 0 ? " warn" : ""}`} data-count={data.stillOpen}>
-                {data.stillOpen.toLocaleString()}
+              <div className="kl">Answered, not confirmed</div>
+              <div className="kv" data-count={data.answeredUnconfirmed}>
+                {data.answeredUnconfirmed.toLocaleString()}
+              </div>
+              <div className="kpi-note">Not counted as resolved</div>
+            </div>
+            <div className="kpi">
+              <div className="kl">Waiting on your team</div>
+              <div className={`kv${data.waitingOnPerson > 0 ? " warn" : ""}`} data-count={data.waitingOnPerson}>
+                {data.waitingOnPerson.toLocaleString()}
               </div>
             </div>
           </div>
@@ -191,6 +205,29 @@ export function ImpactPage() {
                 </div>
               </div>
             )}
+          </div>
+
+          <div className="card">
+            <h3>How Nexo counts a resolution</h3>
+            <div className="card-sub">One definition, used everywhere on this page</div>
+            <ul className="impact-defs">
+              <li>
+                <strong>Resolved by Nexo</strong>: Nexo answered, never handed the conversation off,
+                nobody on your team wrote to the customer, and the conversation was marked resolved.
+              </li>
+              <li>
+                <strong>Resolved with your team</strong>: marked resolved after your team wrote to
+                the customer or took a handoff.
+              </li>
+              <li>
+                <strong>Answered, not confirmed</strong>: Nexo answered and nobody marked it
+                resolved. A customer going quiet is not evidence they were helped, so these are never
+                counted as resolutions.
+              </li>
+              <li>
+                <strong>Waiting on your team</strong>: handed off and not yet resolved.
+              </li>
+            </ul>
           </div>
         </>
       )}

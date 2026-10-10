@@ -23,7 +23,9 @@ function waitedFor(iso: string) {
 function headline(item: AttentionItem) {
   if (item.type === "reopened") return "Came back after being resolved";
   if (item.type === "customer_replied") return "Customer replied after handoff";
-  return item.reason === "user_requested" ? "Customer asked for a person" : "Nexo could not answer";
+  if (item.reason === "user_requested") return "Customer asked for a person";
+  if (item.reason === "fair_use_limit") return "Over your fair-use ceiling, so it came straight to you";
+  return "Nexo could not answer";
 }
 
 function actionLabel(item: AttentionItem) {

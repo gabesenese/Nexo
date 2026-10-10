@@ -251,6 +251,8 @@ export interface PlanUsage {
     state: "ok" | "approaching" | "over";
   };
   knowledgeSources: { used: number; limit: number | null; remaining: number | null; atLimit: boolean };
+  /** Past `ceiling` conversations in a month, new ones go to your own team instead of the AI. */
+  fairUse: { ceiling: number; reached: boolean };
   trial: TrialStatus;
   access: WorkspaceAccess;
 }
@@ -296,6 +298,8 @@ export interface ImpactSummary {
   conversations: number;
   resolvedAutomatically: number;
   resolvedWithHuman: number;
+  answeredUnconfirmed: number;
+  waitingOnPerson: number;
   stillOpen: number;
   escalated: number;
   automationRate: number;

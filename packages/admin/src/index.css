@@ -3270,6 +3270,20 @@ textarea::placeholder {
   font-weight: 600;
 }
 
+.impact-defs {
+  margin: var(--s3) 0 0;
+  padding-left: 1.1em;
+  display: grid;
+  gap: var(--s2);
+  color: var(--text-3);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.impact-defs strong {
+  color: var(--text);
+}
+
 /** Only the figure Nexo resolved alone is a result; the rest are just counts. */
 .impact-statement strong.resolved {
   color: var(--ok);

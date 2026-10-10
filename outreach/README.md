@@ -43,6 +43,13 @@ portfolio pages. Prefer companies where support is a team of 2-20, not one perso
 
 Calls go to Eastern Time offices. Lunch (12:00-13:00) and 17:00-18:00 are usually the best windows.
 
+## Check their bot first
+
+Before you call, open the company's public support chat and ask 3-5 ordinary questions
+(`bot-checks.md` has the method and two entries). Fill the `support_widget` and `ai_agent_seen`
+columns. Prioritise companies with no AI assistant; for those that have one, use the
+"already has an AI assistant" opener in `call-script.md`.
+
 ## Calling
 
 Follow `call-script.md`. Call in your own time, from your own phone. After every call, add a row

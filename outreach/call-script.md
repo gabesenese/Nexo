@@ -9,6 +9,18 @@ you are calling in the first sentence, be brief, and leave when they say no.
 > understand how small software companies handle repeat customer questions, and I'd like 15
 > minutes of your time. Is that something you'd be open to?"
 
+## If they already have an AI assistant (check their site first)
+
+Use this opener instead. You are asking how it is going, not pitching a replacement:
+
+> "Hi, I'm [name], an independent founder in Kitchener. I'm not selling anything. I noticed
+> [company] has an AI assistant in its support chat. I'm researching how small software teams
+> find those, what works and what doesn't. Could I ask you a few questions, 15 minutes?"
+
+Questions: What does it handle well? What does it get wrong? When it is wrong, how do you find
+out? Who checks its answers on pricing, refunds and contracts? What does it cost you? Would you
+change anything about it? If you could change one thing, what would it be?
+
 ## If a gatekeeper answers
 
 > "Who handles customer support there?" ... "Is there a good time to reach them, or a direct

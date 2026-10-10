@@ -43,12 +43,21 @@ portfolio pages. Prefer companies where support is a team of 2-20, not one perso
 
 Calls go to Eastern Time offices. Lunch (12:00-13:00) and 17:00-18:00 are usually the best windows.
 
-## Check their bot first
+## Check their support first, then pick who to call
 
-Before you call, open the company's public support chat and ask 3-5 ordinary questions
-(`bot-checks.md` has the method and two entries). Fill the `support_widget` and `ai_agent_seen`
-columns. Prioritise companies with no AI assistant; for those that have one, use the
-"already has an AI assistant" opener in `call-script.md`.
+Having an AI chat does not rule a company out. A bot that is not doing its job is a reason to
+buy something better. Rank companies by **evidence that support is struggling**, not by whether a
+bot exists:
+
+1. **Their public chat** (`bot-checks.md`): ask 3-5 ordinary questions. Did it answer wrongly or
+   vaguely, loop, or make it hard to reach a person?
+2. **Customer reviews** on review sites (G2, Capterra, Software Advice and similar): read the cons
+   and any review that mentions support. Record a short quote, the date and the link.
+3. Fill `support_widget`, `ai_agent_seen` and `support_complaints_seen` in `companies.csv`.
+
+Call first the companies with the strongest signs of a struggling support experience. Use the
+"already has an AI assistant" opener when they have a bot. Do not quote a review back at someone
+on a call; use it to choose your questions.
 
 ## Calling
 

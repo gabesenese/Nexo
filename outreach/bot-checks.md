@@ -9,6 +9,15 @@ sessions. Do not enter real personal or payment details.
 Questions worth asking: "refund policy", "how do I cancel", "do you have an uptime guarantee",
 "can I talk to a person", and one specific question about their own product.
 
+## Reviews check
+
+Customer reviews tell you what a chat session will not. On the review sites, open the company's
+product page, sort by newest, and read the cons plus any review that mentions "support", "help"
+or "response". Note a short quote, the date, the rating and the link. Treat one review as a
+lead to test, not a finding: it is one person, often about the product rather than your target
+area, and sometimes about a plan or period that has changed. Three or more recent reviews saying
+the same thing are a pattern.
+
 ## What to record
 
 ```
@@ -60,3 +69,16 @@ What I would ask them about it on a call:
   closing question is the mechanism behind Fin's "resolution": a customer who confirms or leaves
   can count as resolved and be billed (see `INDUSTRY-TRUTHS-TODO.md`, Truth 3). Worth noting, not
   proving: I only saw one answer.
+
+### Vidyard: review signal (screenshot, 2026-10-12)
+
+- A review dated February 2025 (4.0 stars, an independent creator) lists as its one con:
+  "Sometimes the support is difficult to contact."
+- **How strong:** weak. One reviewer, about reaching support in general, not necessarily the
+  chat, and the chat may be newer than the review. Check for more recent reviews before leaning on
+  it.
+- **Why it still matters:** difficulty reaching a person is the problem Nexo's "every answer has an
+  exit" idea targets. It could also be a deliberate choice, since vendors sometimes make humans
+  harder to reach to push self-service and cut cost, and that company may not want it fixed.
+- **Test on a call (neutral, no quoting the review):** "When a customer needs a person, how do
+  they reach one?" and "How often does that happen?"

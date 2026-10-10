@@ -36,6 +36,16 @@ facts only, no people, so it is safe in this public repo). Copy the rows into yo
 and several domains are from memory. Before calling a company, open its site and look for a
 help center and a Contact page. Drop the ones with no customer-facing support.
 
+The file name still says "kw" but it now holds Ontario companies: the first 12 are Kitchener-Waterloo,
+the rest come from Toronto, Ottawa, Hamilton, Guelph and Mississauga search results. Rows with
+status `unverified` are directory listings with no confirmation they have customer-facing support.
+
+Lists to copy from (open these yourself, I could not reach them from the build environment):
+Latka's Ontario (about 919 SaaS companies), Toronto (about 597) and Kitchener (about 44) pages at
+getlatka.com; RevenueBase's Canadian B2B software lists at revenuebase.ai; Gregslist's Toronto
+B2B SaaS list; Scott's Directories' software publishers for Hamilton and Guelph; Built In Toronto
+and Built In Ottawa; the Communitech member directory; and Deloitte's Technology Fast 50 winners page.
+
 To grow it to about 60: the Latka list of Kitchener SaaS companies, the Communitech member
 directory (communitech.ca), Waterloo EDC's Deloitte Technology Fast 50 pages, Google Maps
 searches ("software company Kitchener", "Waterloo SaaS"), and local startup and incubator

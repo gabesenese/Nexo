@@ -12,9 +12,9 @@
 
 ## Do-first list (all P0, in order)
 
-- [ ] 1. Add cost-per-conversation tracking (tokens in and out, per turn, per workspace).
-- [ ] 2. Write down what "resolved" means for Nexo, in one paragraph, and use only that definition.
-- [ ] 3. Take the 66% resolution figure off every public page until it is measured on real data.
+- [x] 1. Add cost-per-conversation tracking (tokens in and out, per turn, per workspace). *Done 2026-10-10: `AiUsage` table and `npm run cost:report`. Needs a real run to produce numbers.*
+- [x] 2. Write down what "resolved" means for Nexo, in one paragraph, and use only that definition. *Done: `RESOLUTION.md`, used by the Impact page and the website.*
+- [x] 3. Take the 66% resolution figure off every public page until it is measured on real data. *Done: landing page and `PHILOSOPHY.md`.*
 - [ ] 4. Decide the name and run the trademark search; register a domain.
 - [ ] 5. Book the first 5 buyer conversations, and ask each what AI their helpdesk already offers.
 
@@ -57,11 +57,11 @@ more than the efficiency. ([SoftwareSeni](https://www.softwareseni.com/why-ai-gr
 uncapped conversations carries the whole usage risk. You cannot know if the business works until
 you can see cost per conversation.
 
-- [ ] **P0** Log input tokens, output tokens, model and embedding calls for every turn. Done when
+- [x] **P0** Log input tokens, output tokens, model and embedding calls for every turn. *(Chat tokens only; embeddings are not recorded, see `billing/cost.ts`.)* Done when
       you can read cost per conversation and per workspace.
 - [ ] **P0** Compute gross margin per plan from real runs of the head-to-head questions. Done when
       the table in `REALITY-CHECK.md` is replaced with measured numbers.
-- [ ] **P0** Add a fair-use rule: a soft conversation ceiling with an overage or upgrade path. Done
+- [x] **P0** Add a fair-use rule: a soft conversation ceiling with an overage or upgrade path. *(Built as a ceiling that hands new conversations to the customer's own team; no overage billing.)* Done
       when no workspace can cost more than it pays without you being told.
 - [ ] **P1** Benchmark a cheaper model (and cached retrieval) against the current default on the 20
       questions. Done when you know the quality loss, in points, per dollar saved.
@@ -78,9 +78,9 @@ $0.99 can bill very differently. ([Dragapp audit](https://www.dragapp.com/blog/a
 **What it means.** Buyers cannot compare vendors, which is your opening. It also means your own
 number will be doubted: a 66% from invented data is the same kind of claim you criticise.
 
-- [ ] **P0** Write Nexo's definition of "resolved" and "handed off", in plain words. Done when the
+- [x] **P0** Write Nexo's definition of "resolved" and "handed off", in plain words. Done when the
       same words appear in the product, the docs and the landing page.
-- [ ] **P0** Remove or qualify the 66% figure everywhere public until it is measured on real data.
+- [x] **P0** Remove or qualify the 66% figure everywhere public until it is measured on real data.
 - [ ] **P1** Run the Plausible head-to-head (`eval/head-to-head/`). Done when the scorecard and
       `observations.md` are filled in for Nexo and at least one competitor.
 - [ ] **P1** In interviews ask: "How do you know your current AI resolved something?" Done when you
@@ -182,7 +182,7 @@ terms. Most AI support vendors do not publish a Canadian region. ([Fini guide](h
 **What it means.** A small vendor can win trust by being precise and documented. A vague claim
 loses it.
 
-- [ ] **P1** Rewrite the "Canadian data residency" claims on the landing page to say exactly what
+- [x] **P1** Rewrite the "Canadian data residency" claims on the landing page to say exactly what
       is stored where and what is processed by whom. Done when counsel has read it.
 - [ ] **P2** Publish a sub-processor list and a short data-flow diagram. Done when both are public.
 - [ ] **P2** Have a lawyer review the terms of service and privacy policy for an AI product that

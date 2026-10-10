@@ -213,7 +213,7 @@ Next step and who owns it:
 | 5 | Friday review: numbers page, decision log, learning log. |
 | 6-7 | Rest. |
 | 8 | Hold your first 2-3 conversations. Use the script in `MARKET-VALIDATION.md`. |
-| 9 | Add per-conversation cost tracking to the server (the one engineering P0). |
+| 9 | Cost tracking is built. Ask Nexo five questions on your own machine, then run `npm run cost:report --workspace=@nexo/server` and read what a conversation costs. |
 | 10 | Send 10 more outreach messages. Book one practitioner and one advisor call. |
 | 11 | Run the Plausible head-to-head questions through Nexo once an AI key is available. |
 | 12 | Hold 2-3 more conversations. |

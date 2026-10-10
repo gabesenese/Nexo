@@ -6,6 +6,10 @@
 > hypothetical, it says so. If this file and `PHILOSOPHY.md` disagree, read this one first, then
 > decide which of the two is wrong.
 
+> **Update 2026-10-10:** the cost tracking, fair-use ceiling, definition of "resolved" and claim
+> fixes this document called for are built (`INDUSTRY-TRUTHS-TODO.md` shows which). Still open:
+> name and trademark, the head-to-head run, and the buyer conversations.
+
 ## The short version
 
 Nexo is a well-built product with no evidence yet that anyone wants it, in a category where its
@@ -83,7 +87,7 @@ every prospect will ask. Price and verifiability are possible answers. Neither i
   still names Neon. Fix the wording or the architecture before a regulated buyer asks.
 - **66% automatic resolution.** Measured on a corpus you invented. Independent figures for
   the category are 38-50%. The head-to-head test in `eval/head-to-head/` exists to settle this.
-- **"Days to launch."** Not yet demonstrated by a stranger.
+- **"Days to launch."** Not yet demonstrated by a stranger. (It is a differentiator in `project-brief.md` and `structured-plan.md`, not on the landing page.)
 - **The name.** `structured-plan.md` already flags a clash with Nexo.io and says it blocks launch.
   There is no domain. Do this before spending on branding.
 

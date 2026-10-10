@@ -136,9 +136,11 @@ product belongs.
 
 **We stay flat-rate, not per-resolution.** Ada moved away from outcome pricing because buyers
 wanted predictable bills, and per-resolution billing charges the customer more precisely when
-the product works better. Our demo corpus resolves 66% automatically; at that rate an
-incumbent's bill goes up while ours does not. "Your bill does not grow when the AI gets
-better" is a real difference, not a slogan.
+the product works better: the more it resolves, the more an incumbent's bill grows, while
+ours does not. "Your bill does not grow when the AI gets better" is a real difference, not a
+slogan. (An earlier version of this paragraph quoted a 66% resolution rate. That figure came
+from invented demo conversations and is withdrawn; see `RESOLUTION.md` for how a rate may be
+quoted.)
 
 ---
 

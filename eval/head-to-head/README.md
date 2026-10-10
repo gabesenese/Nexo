@@ -69,6 +69,10 @@ Needs the server running with a cloud AI provider. Local Ollama results do not c
 paste each question into a fresh chat. Paste the reply into `answer`, the sources it shows
 into `sources_cited`, and set `auto_handoff` to `yes` if it offered a person.
 
+After the run, `npm run cost:report --workspace=@nexo/server` prints what those 20 conversations cost
+and the margin against the workspace's plan. Run the kit against a workspace below its fair-use
+ceiling, or Nexo will hand the new conversations to a person instead of answering them.
+
 ## Grade it
 
 For every row set `grade` to one of `correct`, `wrong`, `handoff`, and `citation_ok` to `y`

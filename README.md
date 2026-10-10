@@ -5,6 +5,9 @@ alternative for teams too small for Ada's enterprise floor and too serious for a
 See `PHILOSOPHY.md` for the company thesis, and `project-brief.md` and `structured-plan.md` for
 the full product/business plan.
 
+> **Scope freeze (since 2026-10-10).** No new features until buyers are committed; see
+> `structured-plan.md`. What "resolved" means is defined in `RESOLUTION.md`.
+
 > **CTO rule: never build an isolated layer. Build complete user journeys.**
 > We ship Nexo in vertical slices, one milestone at a time. A milestone is done only when a
 > brand-new real customer can complete the whole journey end-to-end (UI → API → DB → result),

@@ -19,6 +19,14 @@ const ITEMS = [
     a: "No. Prices are public, plans start at C$249 a month, and every plan includes every feature. Plans differ in how many chats they cover, and Essentials answers from up to 2 sources.",
   },
   {
+    q: "What if we get more chats than our plan covers?",
+    a: "Nexo keeps answering past your monthly number and tells you. If a month reaches twice your plan, new chats go to your own team instead of Nexo, so no customer is turned away, and chats already under way carry on. It resets at the start of the next month, or when you move up a plan.",
+  },
+  {
+    q: "What counts as a resolved chat?",
+    a: "A chat counts as resolved by Nexo only when it was marked resolved, Nexo never passed it to a person, and nobody on your team wrote to the customer. A customer going quiet after an answer is not counted, and if they come back within three days the chat reopens and stops counting.",
+  },
+  {
     q: "Does it work with the tools we already use?",
     a: "Yes. When Nexo hands a chat to your team, it can also send it to your helpdesk or other tools through Zapier or Make, or straight to your own system.",
   },

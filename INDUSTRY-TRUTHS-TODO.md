@@ -182,7 +182,7 @@ terms. Most AI support vendors do not publish a Canadian region. ([Fini guide](h
 **What it means.** A small vendor can win trust by being precise and documented. A vague claim
 loses it.
 
-- [x] **P1** Rewrite the "Canadian data residency" claims on the landing page to say exactly what
+- [x] **P1** Rewrite the "Canadian data residency" claims on the landing page *(done differently: #108 removed the claim and the FAQ answer entirely until the platform runs somewhere a reader can check it. That is safer than a rewrite; put a precise statement back at deploy.)* to say exactly what
       is stored where and what is processed by whom. Done when counsel has read it.
 - [ ] **P2** Publish a sub-processor list and a short data-flow diagram. Done when both are public.
 - [ ] **P2** Have a lawyer review the terms of service and privacy policy for an AI product that

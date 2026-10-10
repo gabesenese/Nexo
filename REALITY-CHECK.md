@@ -7,7 +7,8 @@
 > decide which of the two is wrong.
 
 > **Update 2026-10-10:** the cost tracking, fair-use ceiling, definition of "resolved" and claim
-> fixes this document called for are built (`INDUSTRY-TRUTHS-TODO.md` shows which). Still open:
+> fixes this document called for are built (`INDUSTRY-TRUTHS-TODO.md` shows which). The landing
+> page's 66%, residency and "hosted in Canada" claims were removed in #108. Still open:
 > name and trademark, the head-to-head run, and the buyer conversations.
 
 ## The short version

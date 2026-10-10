@@ -1,0 +1,26 @@
+{
+  "_readme": "Fill every slot from ONE real public SaaS help center, then save as questions.json. Do not change ids or categories. See README.md for how to write each kind.",
+  "_corpus": "Name and root URL of the help center all four products will ingest.",
+  "questions": [
+    { "id": "q01", "category": "answerable", "question": "", "expected": "", "source_url": "" },
+    { "id": "q02", "category": "answerable", "question": "", "expected": "", "source_url": "" },
+    { "id": "q03", "category": "answerable", "question": "", "expected": "", "source_url": "" },
+    { "id": "q04", "category": "answerable", "question": "", "expected": "", "source_url": "" },
+    { "id": "q05", "category": "answerable", "question": "", "expected": "", "source_url": "" },
+    { "id": "q06", "category": "answerable", "question": "", "expected": "", "source_url": "" },
+    { "id": "q07", "category": "answerable", "question": "", "expected": "", "source_url": "" },
+    { "id": "q08", "category": "answerable", "question": "", "expected": "", "source_url": "" },
+    { "id": "q09", "category": "answerable", "question": "", "expected": "", "source_url": "" },
+    { "id": "q10", "category": "answerable", "question": "", "expected": "", "source_url": "" },
+    { "id": "q11", "category": "answerable", "question": "", "expected": "", "source_url": "" },
+    { "id": "q12", "category": "answerable", "question": "", "expected": "", "source_url": "" },
+    { "id": "q13", "category": "partial", "question": "", "expected": "", "source_url": "" },
+    { "id": "q14", "category": "partial", "question": "", "expected": "", "source_url": "" },
+    { "id": "q15", "category": "partial", "question": "", "expected": "", "source_url": "" },
+    { "id": "q16", "category": "partial", "question": "", "expected": "", "source_url": "" },
+    { "id": "q17", "category": "unanswerable", "question": "", "expected": "", "source_url": "" },
+    { "id": "q18", "category": "unanswerable", "question": "", "expected": "", "source_url": "" },
+    { "id": "q19", "category": "unanswerable", "question": "", "expected": "", "source_url": "" },
+    { "id": "q20", "category": "unanswerable", "question": "", "expected": "", "source_url": "" }
+  ]
+}

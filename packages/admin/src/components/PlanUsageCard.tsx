@@ -46,9 +46,10 @@ export function PlanUsageCard() {
         </div>
         {overQuota ? (
           <p className="usage-note over">
-            {conversations.overage.toLocaleString()} over your monthly allowance. Nexo keeps
-            answering, and nobody contacting you is turned away. We will settle the difference rather
-            than cut off your customers.
+            {conversations.overage.toLocaleString()} over your monthly allowance.{" "}
+            {usage.fairUse.reached
+              ? `You have passed your fair-use ceiling of ${usage.fairUse.ceiling.toLocaleString()}, so new conversations are being handed to your team instead of Nexo. Conversations already under way continue.`
+              : `Nexo keeps answering. Past ${usage.fairUse.ceiling.toLocaleString()} conversations this month, new ones are handed to your team instead until you upgrade or the month resets.`}
           </p>
         ) : nearQuota ? (
           <p className="usage-note near">

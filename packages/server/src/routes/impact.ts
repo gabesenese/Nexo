@@ -9,8 +9,15 @@ export interface ImpactSummary {
   windowDays: number;
   since: string;
   conversations: number;
+  /** Marked resolved, nobody on the team wrote to the customer, and Nexo never handed it off. See RESOLUTION.md. */
   resolvedAutomatically: number;
+  /** Marked resolved after a person wrote to the customer or took a handoff. */
   resolvedWithHuman: number;
+  /** Nexo answered, never handed off, and nobody has marked it resolved. Not counted as a resolution. */
+  answeredUnconfirmed: number;
+  /** Handed off and not yet resolved. */
+  waitingOnPerson: number;
+  /** answeredUnconfirmed + waitingOnPerson, kept so existing readers of this field still work. */
   stillOpen: number;
   escalated: number;
   automationRate: number;
@@ -47,24 +54,49 @@ export async function impactRoutes(app: FastifyInstance) {
       const conversations = await prisma.conversation.count({ where: scope });
 
       /**
-       * A human touched it if an agent ever wrote in the thread. Escalation
-       * alone does not count: a conversation can sit escalated and unanswered,
-       * which is a queue problem rather than human effort spent.
+       * A person was involved if one wrote in the thread or took a handoff.
+       * Both count: a handed-off conversation that an operator closes without
+       * typing a reply (the customer drifted away, say) was still not resolved by
+       * Nexo, so it must not be credited to it. The definition lives in
+       * RESOLUTION.md; keep this and that file saying the same thing.
        */
       const resolvedWithHuman = await prisma.conversation.count({
-        where: { ...scope, resolvedAt: { not: null }, messages: { some: { role: "agent" } } },
+        where: {
+          ...scope,
+          status: "resolved",
+          OR: [{ messages: { some: { role: "agent" } } }, { escalations: { some: {} } }],
+        },
       });
 
+      /**
+       * Resolved means resolved now. A customer who writes again within the
+       * reopen window reopens the thread, which sets it back to active but leaves
+       * `resolvedAt` behind, so counting on that timestamp would keep crediting a
+       * resolution that did not hold. Status is what says whether it holds.
+       */
       const resolvedTotal = await prisma.conversation.count({
-        where: { ...scope, resolvedAt: { not: null } },
+        where: { ...scope, status: "resolved" },
       });
 
       const escalated = await prisma.conversation.count({
         where: { ...scope, escalations: { some: {} } },
       });
 
+      /**
+       * Not resolved is not the same as unresolved trouble. A conversation Nexo
+       * answered and nobody closed is "answered, unconfirmed": it may well have
+       * helped, but silence is not evidence of that, so it is shown on its own
+       * line and never added to the resolved count.
+       */
+      const answeredUnconfirmed = await prisma.conversation.count({
+        where: { ...scope, status: { not: "resolved" }, escalations: { none: {} } },
+      });
+      const waitingOnPerson = await prisma.conversation.count({
+        where: { ...scope, status: { not: "resolved" }, escalations: { some: {} } },
+      });
+
       const resolvedAutomatically = resolvedTotal - resolvedWithHuman;
-      const stillOpen = conversations - resolvedTotal;
+      const stillOpen = answeredUnconfirmed + waitingOnPerson;
 
       const { averageHandleMinutes, supportHourlyCostCad } = org;
       const canEstimate = averageHandleMinutes !== null && supportHourlyCostCad !== null;
@@ -77,6 +109,8 @@ export async function impactRoutes(app: FastifyInstance) {
         conversations,
         resolvedAutomatically,
         resolvedWithHuman,
+        answeredUnconfirmed,
+        waitingOnPerson,
         stillOpen,
         escalated,
         automationRate: conversations ? resolvedAutomatically / conversations : 0,

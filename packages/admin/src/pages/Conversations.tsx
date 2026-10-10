@@ -68,6 +68,7 @@ const REASON_LABELS: Record<string, string> = {
   user_requested: "The customer asked for a person",
   agent_requested: "An operator flagged this for a human",
   ai_unavailable: "Nexo's AI was unavailable, so it could not answer",
+  fair_use_limit: "Your workspace passed its fair-use ceiling, so this went straight to your team",
 };
 
 function reasonLabel(reason: string): string {

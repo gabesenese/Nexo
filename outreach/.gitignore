@@ -1,0 +1,6 @@
+# Real prospect data stays on your machine. This repo is public.
+companies.csv
+call-log.csv
+notes/*
+!notes/_template.md
+widget-scan.csv

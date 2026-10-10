@@ -1336,6 +1336,15 @@ button {
   margin-top: 18px;
 }
 
+.pricing-note {
+  max-width: 62ch;
+  margin: 32px auto 0;
+  text-align: center;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ink-3);
+}
+
 .tiers {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

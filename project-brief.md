@@ -10,6 +10,10 @@ Ada (ada.cx), the dominant AI customer-support platform, is built exclusively fo
 
 This structurally excludes the SMB and low-mid-market segment (roughly 1,000–50,000 conversations/month), a large and underserved market.
 
+> **Update 2026-10-09:** `COMPETITORS.md` supersedes the competitor framing below. Coveo,
+> Voiceflow and Heyday are not direct competitors; the real set is Intercom Fin, Botpress,
+> Chatbase, Tidio (Lyro) and eesel, with Ada, Decagon and Sierra as the price ceiling.
+
 ### The Canadian field (verified 2026-08-09)
 
 Canada is not empty. It holds four credible players, and they divide into two camps, neither of which is what we are building:

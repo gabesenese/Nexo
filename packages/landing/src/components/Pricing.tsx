@@ -51,6 +51,11 @@ export function Pricing() {
           );
         })}
       </div>
+
+      <p className="pricing-note" style={{ "--i": 2 } as React.CSSProperties}>
+        Past twice a plan&rsquo;s monthly chats, new chats go to your own team instead of Nexo. Nobody is turned away,
+        and chats already under way carry on.
+      </p>
     </section>
   );
 }

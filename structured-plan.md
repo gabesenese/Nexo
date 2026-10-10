@@ -45,6 +45,26 @@ these outcomes forward, we ask why we're building it.
 
 **CTO rule:** Never build an isolated layer. Build complete user journeys.
 
+### Scope freeze (from 2026-10-10)
+
+The product is ahead of the evidence that anyone will pay for it (`REALITY-CHECK.md`,
+`MARKET-VALIDATION.md`). Until that changes, building is the wrong default.
+
+**Allowed:**
+- Fixing a claim, a definition or a number that is not true (`RESOLUTION.md`).
+- Measuring cost and margin (`npm run cost:report`) and acting on what it shows.
+- Bugs, security and data-loss fixes.
+- Work a design partner asks for **in writing**, one request at a time.
+- What running the buyer research needs: the head-to-head kit (`eval/head-to-head`) and, when a
+  prospect says yes, Deployment Phase 1.
+
+**Frozen:** new features, new design passes on the landing page or console, resolution memory,
+new integrations and connectors, analytics charts, and new strategy or vision documents.
+
+**It lifts when** either 5 buyers have committed to a paid pilot, or 20 buyer conversations are done
+and a decision-log entry (`CEO-PLAYBOOK.md`) says what to change instead. Review at the latest on
+**2027-01-08**. An exception is a decision-log entry, written before the work starts.
+
 ### Current status (updated 2026-08-13)
 
 **Active: Launch.** M1 through M6 are shipped and merged. M7a (impact statement) and M7b (plan
@@ -129,8 +149,11 @@ with live progress, re-index, and crash recovery on boot.
 ### M7 — Commercial Validation
 - **M7a Impact statement** ✅ shipped. Human hours and cost avoided, from customer-supplied
   inputs, with no industry-average defaults.
-- **M7b Plan model and limits** ✅ shipped. Sources hard-capped, conversations never capped,
-  because the person on the other end is the customer's customer.
+- **M7b Plan model and limits** ✅ shipped. Sources hard-capped. Conversations are never refused,
+  because the person on the other end is the customer's customer, but they are bounded: past a
+  fair-use ceiling (the plan's allowance times `FAIR_USE_MULTIPLIER`, default 2) new conversations
+  are handed to the workspace's own team instead of answered by the AI. Added 2026-10-10 after
+  measuring that a flat price with unbounded AI spend has no known margin.
 - **M7c Stripe checkout.** Committed on a branch, parked. Unparks inside Launch/Money below.
 
 ---

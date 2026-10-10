@@ -58,6 +58,15 @@ export const ollamaChatProvider: ChatProvider = {
       answer: typeof parsed.answer === "string" ? parsed.answer : "",
       confidence: clamp01(typeof parsed.confidence === "number" ? parsed.confidence : Number(parsed.confidence)),
       usedSourceIds,
+      usage: res.usage
+        ? {
+            model: env.OLLAMA_CHAT_MODEL,
+            inputTokens: res.usage.prompt_tokens ?? 0,
+            outputTokens: res.usage.completion_tokens ?? 0,
+            cacheReadTokens: 0,
+            cacheWriteTokens: 0,
+          }
+        : undefined,
     };
   },
 };

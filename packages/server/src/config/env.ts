@@ -130,6 +130,16 @@ const envSchema = z.object({
    */
   CHAT_HISTORY_MESSAGES: z.coerce.number().int().positive().default(10),
   REOPEN_WINDOW_HOURS: z.coerce.number().positive().default(72),
+  /**
+   * The fair-use ceiling is the plan's monthly conversation allowance times this.
+   * Past it, new conversations are handed to the workspace's own team instead of
+   * being answered by the AI, so the AI spend on one workspace is bounded at a
+   * known multiple of what it pays. 2 is a starting point, not a measurement:
+   * choose it from `npm run cost:report` once real conversations show what one
+   * costs. Must be at least 1, because a ceiling below the allowance would stop
+   * the AI answering a customer who had not yet used what they paid for.
+   */
+  FAIR_USE_MULTIPLIER: z.coerce.number().min(1).default(2),
   JWT_SECRET: z.string().min(32, "JWT_SECRET must be at least 32 characters"),
 });
 

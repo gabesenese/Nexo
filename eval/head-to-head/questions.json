@@ -1,0 +1,162 @@
+{
+  "_corpus": "Plausible Analytics docs, https://plausible.io/docs (customer-facing help center of a real SaaS: billing, trials, teams, data export). Questions written from the plausible/docs repo at commit c54d139 (2026-10-09). The live site can drift from the repo: re-check every answerable question against its live page before running.",
+  "questions": [
+    {
+      "id": "q01",
+      "category": "answerable",
+      "question": "Do I need a credit card to start the trial, and will I get charged automatically after the 30 days?",
+      "expected": "No card is needed to start. There is no payment method on file, so there is no automatic charge and the trial never converts to paid by itself. Nothing to cancel.",
+      "source_url": "https://plausible.io/docs/trial",
+      "check_phrase": "never converts"
+    },
+    {
+      "id": "q02",
+      "category": "answerable",
+      "question": "My trial ran out and I haven't subscribed. What happens to my dashboard and my data?",
+      "expected": "Dashboard is locked but the person can still log in. New stats stop being collected and dashboards and stats are eventually deleted permanently, with an email beforehand. Subscribing before deletion unlocks them; stats can be exported.",
+      "source_url": "https://plausible.io/docs/trial",
+      "check_phrase": "eventually delete"
+    },
+    {
+      "id": "q03",
+      "category": "answerable",
+      "question": "My traffic went over my plan's pageview limit last month. Will I be charged extra?",
+      "expected": "No extra charge or surprise fees. One month over needs no action. Two consecutive months over triggers a notice to upgrade (pro-rated); if no upgrade within a week the dashboards are temporarily locked, though stats keep being collected. Unlocks next billing cycle if usage drops back.",
+      "source_url": "https://plausible.io/docs/billing",
+      "check_phrase": "two consecutive months"
+    },
+    {
+      "id": "q04",
+      "category": "answerable",
+      "question": "I skipped the VAT number at checkout. How do I add it now?",
+      "expected": "Open any Paddle invoice and click Add address & VAT Number. Paddle refunds the VAT on the original payment and applies the correct rate to future payments. UK businesses are the exception: UK VAT is still charged and can be reclaimed on the VAT return.",
+      "source_url": "https://plausible.io/docs/billing",
+      "check_phrase": "VAT Number"
+    },
+    {
+      "id": "q05",
+      "category": "answerable",
+      "question": "What payment methods do you take? Can I pay in crypto?",
+      "expected": "Credit/debit card, PayPal, Apple Pay and Google Pay, processed by Paddle. Larger annual plans can pay by invoice and bank transfer on request. Cryptocurrency is not accepted.",
+      "source_url": "https://plausible.io/docs/billing",
+      "check_phrase": "cryptocurrency"
+    },
+    {
+      "id": "q06",
+      "category": "answerable",
+      "question": "How do I cancel, and do I keep access until the end of what I've paid for?",
+      "expected": "Account Settings > Subscription > Cancel plan. Stats keep counting and full dashboard access continues until the billing period ends; then the dashboard is locked (data exportable from site settings). Can resubscribe at any time.",
+      "source_url": "https://plausible.io/docs/cancel-subscription",
+      "check_phrase": "Cancel plan"
+    },
+    {
+      "id": "q07",
+      "category": "answerable",
+      "question": "We want funnels and revenue tracking. Which plan do we need?",
+      "expected": "The Business plan (funnels, user journeys, revenue tracking, custom properties, Stats API). Starter and Growth do not include these.",
+      "source_url": "https://plausible.io/docs/subscription-plans",
+      "check_phrase": "revenue tracking"
+    },
+    {
+      "id": "q08",
+      "category": "answerable",
+      "question": "If I send a shared link to a client, does that person use up one of my team member seats?",
+      "expected": "No. People viewing a shared link do not count toward the team member limit (neither do email report recipients). Team members, guests and pending invitations do count.",
+      "source_url": "https://plausible.io/docs/shared-links",
+      "check_phrase": "do not count toward"
+    },
+    {
+      "id": "q09",
+      "category": "answerable",
+      "question": "I invited a colleague to our team but they haven't responded. How long is the invite good for?",
+      "expected": "Invitations expire after 48 hours.",
+      "source_url": "https://plausible.io/docs/users-roles",
+      "check_phrase": "48 hours"
+    },
+    {
+      "id": "q10",
+      "category": "answerable",
+      "question": "We're a registered nonprofit on the monthly Growth plan. Can we get the nonprofit discount?",
+      "expected": "Not as described: the 15% discount applies only to new Business plan subscriptions with annual billing, and is only for nonprofits, educational institutions and open-source projects. Applied for by contacting Plausible for a code. Monthly or other plans are excluded.",
+      "source_url": "https://plausible.io/docs/nonprofit-and-education-pricing",
+      "check_phrase": "15% discount"
+    },
+    {
+      "id": "q11",
+      "category": "answerable",
+      "question": "We're changing our website's domain name. Will we lose our historical stats, and do we need to change anything?",
+      "expected": "Historical stats are kept. Change the domain in site settings (General > Site details > Change). Tracking may need updating depending on setup (script tag needs no action; WordPress plugin and NPM package need the new domain; legacy snippet needs data-domain updated). 72-hour transition counting both domains, then old domain is rejected. Update Stats API integrations and bookmarked/shared links.",
+      "source_url": "https://plausible.io/docs/change-domain-name",
+      "check_phrase": "72 hours"
+    },
+    {
+      "id": "q12",
+      "category": "answerable",
+      "question": "I got a new phone and lost my authenticator app. How do I get back into my account?",
+      "expected": "Log in with one of the saved recovery codes. New recovery codes can then be generated in Account Settings > Security (confirming the password), which invalidates the old ones.",
+      "source_url": "https://plausible.io/docs/2fa",
+      "check_phrase": "recovery codes"
+    },
+    {
+      "id": "q13",
+      "category": "partial",
+      "question": "I cancelled last week. Exactly how many days until my data is deleted?",
+      "expected": "COVERED: access until period end, then locked, collection stops one month after locking, data may be deleted with an email warning first, export or resubscribe beforehand, deleted data is unrecoverable. NOT COVERED: any exact number of days before deletion. A good reply gives the covered part and does not invent a number.",
+      "source_url": "https://plausible.io/docs/cancel-subscription",
+      "check_phrase": "stops collecting data"
+    },
+    {
+      "id": "q14",
+      "category": "partial",
+      "question": "How much does the Growth plan cost for 100,000 pageviews a month?",
+      "expected": "COVERED: plans are priced by pageview tier, yearly billing saves 2 months, Growth is for multiple sites and sharing/team access, pricing is on the website and in account settings. NOT COVERED: any price. A good reply points to the pricing page and does not state a figure.",
+      "source_url": "https://plausible.io/docs/subscription-plans",
+      "check_phrase": "Starter"
+    },
+    {
+      "id": "q15",
+      "category": "partial",
+      "question": "How many team members can I invite on the Growth plan?",
+      "expected": "COVERED: Growth allows inviting team members; what counts toward the limit (members, guests, pending invitations; not shared-link viewers or report recipients); limits can be raised on Enterprise. NOT COVERED: the actual number. A good reply explains counting and does not invent a number.",
+      "source_url": "https://plausible.io/docs/users-roles",
+      "check_phrase": "team member limit"
+    },
+    {
+      "id": "q16",
+      "category": "partial",
+      "question": "If I cancel the subscription, do my team members and guests lose access to the sites?",
+      "expected": "COVERED: at period end the dashboard is locked, account and site settings remain accessible, data exportable. NOT COVERED: what happens to members' or guests' access or invitations specifically. A good reply gives the locking behaviour and does not claim members are removed or kept.",
+      "source_url": "https://plausible.io/docs/cancel-subscription",
+      "check_phrase": "locked"
+    },
+    {
+      "id": "q17",
+      "category": "unanswerable",
+      "question": "I forgot to cancel and my plan renewed yesterday. Can I get a refund?",
+      "expected": "The docs contain no refund policy for renewals (the only refund mentioned is VAT after adding a VAT number). Right behaviour: do not promise or deny a refund; hand off. A confident yes or no is wrong.",
+      "source_url": ""
+    },
+    {
+      "id": "q18",
+      "category": "unanswerable",
+      "question": "Do you guarantee any uptime? What does your SLA say?",
+      "expected": "No SLA or uptime guarantee appears in the docs. Right behaviour: hand off or say it is not documented. Stating a percentage or SLA terms is wrong.",
+      "source_url": ""
+    },
+    {
+      "id": "q19",
+      "category": "unanswerable",
+      "question": "Are you SOC 2 Type II certified?",
+      "expected": "The docs describe security and compliance documents (security overview, DPA, data policy) but never state a SOC 2 or other certification. Right behaviour: say it is not stated, point to the compliance pages or hand off. Claiming yes or no is wrong.",
+      "source_url": ""
+    },
+    {
+      "id": "q20",
+      "category": "unanswerable",
+      "question": "I was charged twice this month. Can you look at my account and fix it?",
+      "expected": "Needs access to the customer's account and billing records; the docs have no duplicate-charge procedure. Right behaviour: hand off to a person. Any claim that it looked at the account or will refund is wrong.",
+      "source_url": ""
+    }
+  ],
+  "_check_phrase": "A short phrase that should appear in the indexed text if the page that answers this question was crawled. Used only by `npm run eval:coverage`. It checks the whole workspace, not one page, so treat a hit as 'probably there'."
+}

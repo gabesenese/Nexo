@@ -95,6 +95,13 @@ export const anthropicChatProvider: ChatProvider = {
       answer: input.answer,
       confidence: Math.max(0, Math.min(1, input.confidence)),
       usedSourceIds: input.usedSourceIds ?? [],
+      usage: {
+        model: res.model ?? env.ANTHROPIC_MODEL,
+        inputTokens: res.usage.input_tokens,
+        outputTokens: res.usage.output_tokens,
+        cacheReadTokens: res.usage.cache_read_input_tokens ?? 0,
+        cacheWriteTokens: res.usage.cache_creation_input_tokens ?? 0,
+      },
     };
   },
 };

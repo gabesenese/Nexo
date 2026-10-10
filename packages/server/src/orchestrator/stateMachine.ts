@@ -12,6 +12,8 @@ import { shouldEscalate } from "./confidence.js";
 import { toHistory } from "./history.js";
 import { storeEscalationQuestion } from "../knowledge/gaps.js";
 import { notifyOrg, notifySession } from "../realtime/bus.js";
+import { recordAiUsage } from "../billing/aiUsage.js";
+import { overFairUseCeiling } from "../billing/usage.js";
 
 export interface ChatTurnResult {
   conversationId: string;
@@ -29,6 +31,13 @@ const chatProvider: ChatProvider = env.AI_PROVIDER === "cloud" ? anthropicChatPr
  */
 const handoffAdapter: HandoffAdapter =
   env.HANDOFF_ADAPTER === "mock" ? mockHandoffAdapter : webhookHandoffAdapter;
+
+/**
+ * What the customer reads when their workspace is past its fair-use ceiling.
+ * It says nothing about plans: the person asking did nothing wrong and should
+ * only learn that a person will reply.
+ */
+const FAIR_USE_ANSWER = "Thanks for getting in touch. I'm passing this to a person on the team, who will reply here.";
 
 async function getOrCreateConversation(sessionId: string, organizationId: string, channel: string) {
   /**
@@ -126,6 +135,26 @@ export async function handleUserMessage(params: {
     });
   }
 
+  /**
+   * Past the fair-use ceiling, a new conversation goes straight to the
+   * workspace's own team and the AI does not run. Only a conversation's first
+   * message is checked: one already under way (or reopened) was counted when it
+   * started and is never cut off halfway through.
+   */
+  const messageCount = await prisma.message.count({ where: { conversationId: conversation.id } });
+  if (messageCount === 1 && (await overFairUseCeiling(organizationId))) {
+    return escalate({
+      conversationId: conversation.id,
+      organizationId,
+      sessionId,
+      reason: "fair_use_limit",
+      confidence: null,
+      answer: FAIR_USE_ANSWER,
+      citations: [],
+      question: message,
+    });
+  }
+
   const priorMessages = await prisma.message.findMany({
     where: { conversationId: conversation.id },
     orderBy: { createdAt: "asc" },
@@ -146,6 +175,7 @@ export async function handleUserMessage(params: {
     retrieved = await hybridSearch(message, organizationId);
     const context = retrieved.map((r) => ({ id: r.id, sourceName: r.sourceName, content: r.content }));
     result = await chatProvider.generateResponse({ history, message, context });
+    await recordAiUsage({ organizationId, conversationId: conversation.id, kind: "answer", usage: result.usage });
   } catch (err) {
     console.error(`AI provider failed, escalating instead: ${(err as Error).message}`);
     return escalate({
@@ -244,6 +274,7 @@ export async function generateDraft(params: {
   const context = retrieved.map((r) => ({ id: r.id, sourceName: r.sourceName, content: r.content }));
 
   const result = await chatProvider.generateResponse({ history, message: question, context });
+  await recordAiUsage({ organizationId, conversationId, kind: "draft", usage: result.usage });
 
   const citations = retrieved
     .filter((r) => result.usedSourceIds.includes(r.id))
@@ -284,7 +315,9 @@ async function escalate(params: {
       ? "User explicitly requested a human agent."
       : reason === "ai_unavailable"
         ? "The AI provider failed, so no answer was generated."
-        : `Low-confidence AI answer (confidence ${confidence?.toFixed(2)}); escalated instead of guessing.`;
+        : reason === "fair_use_limit"
+          ? "The workspace is past its monthly fair-use conversation ceiling, so Nexo did not answer; a person needs to reply."
+          : `Low-confidence AI answer (confidence ${confidence?.toFixed(2)}); escalated instead of guessing.`;
 
   /**
    * The handoff summary keeps the confidence figure, which is what a support
@@ -296,7 +329,9 @@ async function escalate(params: {
   const notificationMessage =
     reason === "user_requested"
       ? `Asked for a person: “${asked}”`
-      : `Nexo could not answer: “${asked}”`;
+      : reason === "fair_use_limit"
+        ? `Past your fair-use ceiling, so Nexo handed this to your team: “${asked}”`
+        : `Nexo could not answer: “${asked}”`;
 
   const handoffResult = await handoffAdapter.createTicket({
     conversationId,
@@ -331,7 +366,9 @@ async function escalate(params: {
    * database locks, and a failure leaves `questionEmbedding` null for the
    * backfill to pick up rather than stranding a customer mid-handoff.
    */
-  await storeEscalationQuestion(escalation.id, question).catch(() => {});
+  if (reason !== "fair_use_limit") {
+    await storeEscalationQuestion(escalation.id, question).catch(() => {});
+  }
 
   return { conversationId, answer, confidence, citations, escalated: true };
 }

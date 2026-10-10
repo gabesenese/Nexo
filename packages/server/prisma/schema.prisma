@@ -148,6 +148,7 @@ model Organization {
   notifications Notification[]
   webhookEndpoint WebhookEndpoint?
   auditEvents   AuditEvent[]
+  aiUsage       AiUsage[]
 }
 
 model WidgetConfig {
@@ -291,6 +292,7 @@ model Conversation {
   escalations    Escalation[]
   notifications  Notification[]
   notes          Note[]
+  aiUsage        AiUsage[]
 
   @@index([sessionId])
   @@index([organizationId])
@@ -377,4 +379,29 @@ model ProcessedStripeEvent {
   createdAt DateTime @default(now())
 
   @@index([createdAt])
+}
+
+/// One row per model call that Nexo pays for, so cost per conversation and gross
+/// margin are measured instead of assumed. It holds token counts and the model
+/// name and nothing the customer wrote, which is why retention never has to
+/// touch it. `conversationId` is nulled rather than cascaded: deleting a thread
+/// must not erase what it cost to serve. Embedding calls are not recorded; see
+/// `billing/cost.ts` for why.
+model AiUsage {
+  id               String        @id @default(cuid())
+  organizationId   String
+  organization     Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  conversationId   String?
+  conversation     Conversation? @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+  /// "answer" for a reply to a customer, "draft" for a suggested reply an operator asked for.
+  kind             String
+  model            String
+  inputTokens      Int           @default(0)
+  outputTokens     Int           @default(0)
+  cacheReadTokens  Int           @default(0)
+  cacheWriteTokens Int           @default(0)
+  createdAt        DateTime      @default(now())
+
+  @@index([organizationId, createdAt])
+  @@index([conversationId])
 }

@@ -15,7 +15,8 @@
     "db:seed:demo": "tsx prisma/demo-seed.ts",
     "db:backfill:escalation-questions": "tsx prisma/backfill-escalation-questions.ts",
     "db:reembed": "tsx prisma/reembed.ts",
-    "measure:thresholds": "tsx scripts/measure-thresholds.ts"
+    "measure:thresholds": "tsx scripts/measure-thresholds.ts",
+    "cost:report": "tsx scripts/cost-report.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.116.0",

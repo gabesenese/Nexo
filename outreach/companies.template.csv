@@ -1,1 +1,1 @@
-company,website,city,type,size_guess,support_widget,ai_agent_seen,support_complaints_seen,contact_name,contact_role,phone,source,status,notes
+company,website,city,type,size_guess,potential_client,contacted,support_widget,ai_agent_seen,support_complaints_seen,contact_name,contact_role,phone,source,status,notes

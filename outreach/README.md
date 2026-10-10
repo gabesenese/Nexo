@@ -75,6 +75,15 @@ Call first the companies with the strongest signs of a struggling support experi
 "already has an AI assistant" opener when they have a bot. Do not quote a review back at someone
 on a call; use it to choose your questions.
 
+## Columns that decide who you call
+
+- `potential_client`: `yes` or `no`, your judgement after checking their support. Blank means not checked yet.
+- `contacted`: `yes` or `no`. Flip it to `yes` the day you call or write.
+- `contact_role`: the role to ask for (a support lead), not a person. Fill `contact_name` yourself
+  once you learn it on the call.
+- `phone`: a main public line. Numbers from directories are marked "verify" in `notes`; confirm
+  on the company's own site before dialling.
+
 ## Calling
 
 Follow `call-script.md`. Call in your own time, from your own phone. After every call, add a row

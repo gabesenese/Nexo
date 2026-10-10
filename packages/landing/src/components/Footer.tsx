@@ -1,4 +1,3 @@
-import { StartCta } from "./StartCta";
 import { Mark } from "./Mark";
 
 /**
@@ -16,15 +15,9 @@ const COLUMNS = [
   {
     heading: "Product",
     links: [
-      { label: "How it works", href: "#escalation" },
-      { label: "Escalation", href: "#escalation" },
+      { label: "See it work", href: "#story" },
+      { label: "How it works", href: "#how" },
       { label: "Pricing", href: "#pricing" },
-    ],
-  },
-  {
-    heading: "Company",
-    links: [
-      { label: "Philosophy", href: "#product" },
       { label: "Questions", href: "#faq" },
     ],
   },
@@ -41,9 +34,8 @@ export function Footer() {
               Nexo
             </div>
             <p>
-              The resolution system for SaaS support teams of two to twenty. AI answers, human handoff, one product.
+              Nexo answers your customers from your own help pages, and hands the rest to your team.
             </p>
-            <StartCta className="btn btn-outline" label="Start free trial" />
           </div>
           <div className="fcols">
             {COLUMNS.map((column) => (
@@ -60,19 +52,10 @@ export function Footer() {
             ))}
           </div>
         </div>
+        {/** Residency and hosting claims return once the platform runs somewhere a reader could check them. */}
         <div className="fbot">
-          <span className="residency">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path
-                d="M12 3l7 3v6c0 4-3 7-7 9-4-2-7-5-7-9V6z"
-                stroke="var(--ok-fill)"
-                strokeWidth="1.8"
-                strokeLinejoin="round"
-              />
-            </svg>
-            Canadian data residency
-          </span>
-          <span>&copy; 2026 Nexo &middot; Designed and hosted in Canada</span>
+          <span>&copy; 2026 Nexo</span>
+          <span>Every answer has an exit.</span>
         </div>
       </div>
     </footer>

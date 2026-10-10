@@ -6,12 +6,12 @@ export function Roi() {
       <div className="wrap reveal">
         <div className="roi-head" style={{ "--i": 0 } as React.CSSProperties}>
           <div>
-            <p className="eyebrow">What this replaces</p>
-            <h2>Your bill does not grow when the AI gets better.</h2>
+            <p className="eyebrow">What it costs</p>
+            <h2>One flat price, not a fee for every answer.</h2>
           </div>
           <p>
-            Incumbents charge per resolution, so the bill climbs exactly when the AI starts working. Nexo is flat rate,
-            at every volume.
+            Intercom charges for every question its AI resolves, so the better it works, the more you pay. Nexo is one
+            flat monthly price for your plan.
           </p>
         </div>
 
@@ -19,7 +19,7 @@ export function Roi() {
           {PLAN_ROWS.map((row) => (
             <article className="card" key={row.name}>
               <p className="mono" style={{ fontSize: "10.5px", color: "var(--ink-4)", letterSpacing: "0.08em" }}>
-                {row.conversations.toLocaleString("en-CA")} / MONTH
+                {row.conversations.toLocaleString("en-CA")} CHATS A MONTH
               </p>
               <div className="price" data-count={row.price} data-pre="C$">
                 {formatCad(row.price)}
@@ -40,11 +40,11 @@ export function Roi() {
         </div>
 
         <p className="roi-note" style={{ "--i": 2 } as React.CSSProperties}>
-          Intercom publishes Fin at $0.99 USD per resolution ({COMPARISON_CHECKED}). The figures above apply that rate
-          at a 50% resolution rate and convert at 1.39 CAD to the dollar. They exclude Intercom&rsquo;s per-seat fees of
-          $29 to $132 per seat per month, so a team on their helpdesk pays more than shown, not less. Our own demo
-          corpus resolves 66% without a person. Once you are live, the Impact page shows the same arithmetic on your own
-          conversations.
+          Intercom publishes its AI agent, Fin, at US$0.99 per resolution ({COMPARISON_CHECKED}). The figures above
+          assume it resolves half of your chats and convert at 1.39 Canadian dollars to the US dollar. They leave out
+          Intercom&rsquo;s seat fees of US$29 to US$132 per person a month, so a team on their helpdesk pays more than
+          shown, not less. Once you are live, the Impact page shows how many chats Nexo resolved on its own and, using
+          your own figures, the hours and money that saved your team.
         </p>
       </div>
     </section>

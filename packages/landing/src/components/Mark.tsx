@@ -21,3 +21,14 @@ export function Tick() {
     </span>
   );
 }
+
+/** The chip a primary call to action ends on, so the button reads as a way forward rather than a label. */
+export function Arrow() {
+  return (
+    <span className="btn-chip" aria-hidden="true">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+        <path d="M3.5 8.5 8.5 3.5M4.5 3.5h4v4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </span>
+  );
+}

@@ -1,10 +1,9 @@
 import { useState } from "react";
 import { Nav } from "./components/Nav";
 import { Hero } from "./components/Hero";
-import { ProductPanel } from "./components/ProductPanel";
-import { PhilosophySection } from "./components/PhilosophySection";
-import { Bento } from "./components/Bento";
-import { Features } from "./components/Features";
+import { Story } from "./components/Story";
+import { Steps } from "./components/Steps";
+import { FeatureRows } from "./components/FeatureRows";
 import { Roi } from "./components/Roi";
 import { Pricing } from "./components/Pricing";
 import { Faq } from "./components/Faq";
@@ -26,23 +25,16 @@ export default function App() {
   return (
     <TrialProvider value={openTrial}>
       <div className="mesh" aria-hidden="true" />
-      <svg className="grain" aria-hidden="true">
-        <filter id="landing-grain">
-          <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" stitchTiles="stitch" />
-        </filter>
-        <rect width="100%" height="100%" filter="url(#landing-grain)" />
-      </svg>
 
       <div className="shell">
         <Nav onOpenTrial={openTrial} />
         <Hero onOpenTrial={openTrial} />
-        <ProductPanel />
-        <PhilosophySection />
-        <Bento />
-        <Features />
+        <Story />
+        <Steps />
+        <FeatureRows />
         <Roi />
         <Pricing />
-        <Faq />
+        <Faq onOpenTrial={openTrial} />
         <FinalCta onOpenTrial={openTrial} />
         <Footer />
       </div>

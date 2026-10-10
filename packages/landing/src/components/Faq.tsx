@@ -2,39 +2,40 @@
  * Every answer here is checkable against the product or the pricing page. An
  * FAQ is the easiest place on a marketing site to drift into claims nobody
  * verified, so anything that would need a feature we have not built is left
- * out rather than softened.
+ * out rather than softened. Where the data lives is not answered here until
+ * the platform runs somewhere a reader could check.
  */
 const ITEMS = [
   {
-    q: "What happens when Nexo doesn't know?",
-    a: "It says so and hands the conversation to a person rather than guessing. The handoff carries the whole thread, what the customer asked, and what Nexo did or didn't find, so whoever picks it up is not starting from scratch.",
+    q: "What happens when Nexo doesn't know the answer?",
+    a: "It says so instead of guessing, and passes the chat to a person on your team. They see the whole conversation, so your customer doesn't have to explain it again.",
+  },
+  {
+    q: "Where do Nexo's answers come from?",
+    a: "From the help pages and PDFs you give it, and it points to the one it used. If they don't cover a question, Nexo hands the chat to your team rather than making something up.",
   },
   {
     q: "Do I have to talk to sales?",
-    a: "No. Pricing is public, plans start at C$249 a month, there is no enterprise floor, and you start a trial yourself. Every plan includes the whole product; the price only reflects volume.",
+    a: "No. Prices are public, plans start at C$249 a month, and every plan includes every feature. Plans differ in how many chats they cover, and Essentials answers from up to 2 sources.",
   },
   {
-    q: "What does Nexo answer from?",
-    a: "Sources you give it: a help-centre URL it crawls, or PDFs you upload. It answers from those and cites which one it used. It does not answer from general knowledge about the world.",
-  },
-  {
-    q: "Where does our data live?",
-    a: "Canadian data residency by default. That is a deliberate choice rather than a side effect of where a cloud region happened to be.",
-  },
-  {
-    q: "Does it work with our helpdesk?",
-    a: "Handoffs post to a signed webhook, so they reach whatever your team already uses, including through Zapier or Make. That is helpdesk-agnostic on purpose: picking one vendor to integrate with first is a decision we would rather make with a customer than guess at.",
+    q: "Does it work with the tools we already use?",
+    a: "Yes. When Nexo hands a chat to your team, it can also send it to your helpdesk or other tools through Zapier or Make, or straight to your own system.",
   },
 ];
 
-export function Faq() {
+export function Faq({ onOpenTrial }: { onOpenTrial: () => void }) {
   return (
     <section className="wrap faq reveal" id="faq">
       <div className="faq-head" style={{ "--i": 0 } as React.CSSProperties}>
         <p className="eyebrow">FAQ</p>
         <h2>Questions, before you ask.</h2>
+        <p>Something we haven't covered? Ask us, and a person answers.</p>
+        <button className="btn btn-ghost btn-sm" type="button" onClick={onOpenTrial}>
+          Talk to us
+        </button>
       </div>
-      <div style={{ "--i": 1 } as React.CSSProperties}>
+      <div className="faq-list" style={{ "--i": 1 } as React.CSSProperties}>
         {ITEMS.map((item, i) => (
           <details key={item.q} open={i === 0}>
             <summary>

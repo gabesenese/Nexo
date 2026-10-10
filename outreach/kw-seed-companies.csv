@@ -1,6 +1,6 @@
 company,website,city,type,size_guess,support_widget,ai_agent_seen,contact_name,contact_role,phone,source,status,notes
 Vidyard,vidyard.com,Kitchener,saas,,Chat messenger with cited answers (same layout as Intercom's; confirm which product),yes,,,,https://www.ellty.com/investors/waterloo-saas-investors,to_call,"Already runs an AI support assistant (screenshot 2026-10-12, see bot-checks.md). Not a no-bot prospect: ask how it is working. Larger support team likely. Domain from memory, verify."
-Igloo Software,igloosoftware.com,Kitchener,saas,,,,,,,web search 2026-10-12 (Communitech results),to_call,"Digital workplace software. Domain from memory, verify."
+Igloo Software,igloosoftware.com,Kitchener,saas,,Support chat (you confirmed 2026-10-12),unknown,,,,web search 2026-10-12 (Communitech results),to_call,"Has a support chat; not yet checked whether it is AI-powered. Ask 3-5 ordinary questions (see bot-checks.md). Domain from memory, verify."
 Mappedin,mappedin.com,Waterloo,saas,,,,,,,https://www.ellty.com/investors/waterloo-saas-investors,to_call,"Indoor mapping platform. Domain from memory, verify."
 Smile.io,smile.io,Kitchener,saas,,,,,,,https://www.waterlooedc.ca/blog/waterloo-deloitte-technology-fast-50,to_call,"Ecommerce loyalty app; likely high repeat-question volume. Domain from memory, verify."
 RideCo,rideco.com,Waterloo,saas,,,,,,,https://www.waterlooedc.ca/blog/waterloo-companies-deloitte-fast-50-2024,to_call,On-demand transit software. Customers are transit agencies; check support model.

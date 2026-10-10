@@ -75,7 +75,8 @@ escalations, audit log, Impact page. Missing: a `Resolution` model with a verifi
 ## 6. Next steps
 
 1. Run the same 20 real SaaS help-center questions through Fin, Chatbase, Tidio and Nexo. Record
-   answers, wrong answers and handoff quality. This tests the 66% claim cheaply.
+   answers, wrong answers and handoff quality. This tests the 66% claim cheaply. The kit is in
+   `eval/head-to-head/` (questions still to be written from a real help center).
 2. Prototype the verified-resolution status on top of the existing conversation and escalation
    records before building any new feature.
 3. Choose one helpdesk adapter (Zendesk or Intercom) once a design partner commits.

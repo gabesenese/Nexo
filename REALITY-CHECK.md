@@ -86,7 +86,7 @@ every prospect will ask. Price and verifiability are possible answers. Neither i
 - **"Canadian data residency by default."** Text goes to Anthropic and OpenAI for answers and
   embeddings. `DEPLOYMENT.md` itself notes Neon has no Canadian region while `structured-plan.md`
   still names Neon. Fix the wording or the architecture before a regulated buyer asks.
-- **66% automatic resolution.** Measured on a corpus you invented. Independent figures for
+- **66% automatic resolution (now withdrawn).** Measured on a corpus you invented. Independent figures for
   the category are 38-50%. The head-to-head test in `eval/head-to-head/` exists to settle this.
 - **"Days to launch."** Not yet demonstrated by a stranger. (It is a differentiator in `project-brief.md` and `structured-plan.md`, not on the landing page.)
 - **The name.** `structured-plan.md` already flags a clash with Nexo.io and says it blocks launch.

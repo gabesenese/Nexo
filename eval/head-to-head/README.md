@@ -2,7 +2,8 @@
 
 Tests the claim in `COMPETITORS.md` that Nexo's resolution numbers hold up against the
 products a small SaaS team would compare it to. The point is not a leaderboard. It is to
-learn whether Nexo's 66% on the invented demo corpus survives a corpus we did not write.
+learn how Nexo's answers hold up on a corpus we did not write, since the only rate measured so
+far came from invented demo conversations and has been withdrawn.
 
 ## The corpus
 
@@ -47,31 +48,87 @@ fixed, and the runner refuses an incomplete file:
 
 Confirm each `unanswerable` question by searching the help center, not by assuming.
 
+## Get ready (about an hour, once)
+
+You need: Node 20 or newer, Docker, an **Anthropic** API key and an **OpenAI** API key (Nexo uses
+OpenAI only to turn text into search vectors). Set a low spend cap on both accounts, such as
+US$10, until you have seen a real bill. Indexing a docs site and asking 20 questions should cost
+well under that, and the cost report below will tell you exactly.
+
+1. **Install and start the database.** From the repo root:
+   ```bash
+   npm install
+   docker compose up -d        # Postgres with pgvector; wait until it reports healthy
+   ```
+2. **Create the server settings file.** It must be `packages/server/.env`, not the repo root.
+   ```bash
+   cp .env.example packages/server/.env      # PowerShell: Copy-Item .env.example packages/server/.env
+   ```
+   Open it and set these four things (leave the rest alone):
+   - `JWT_SECRET`: any 32+ character random string. Generate one anywhere with
+     `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
+   - `AI_PROVIDER=cloud`
+   - `ANTHROPIC_API_KEY=...`
+   - `OPENAI_API_KEY=...`
+
+   Local Ollama results do not count (`structured-plan.md`, Launch/Infra step 3). Never commit this
+   file; it is already git-ignored.
+3. **Create the tables.**
+   ```bash
+   npm run db:migrate --workspace=@nexo/server
+   ```
+4. **Start everything.** In a terminal at the repo root: `npm run dev`. The console is at
+   http://localhost:5173 and the API at http://localhost:4000.
+5. **Make a workspace and index the corpus.** Open http://localhost:5173/signup, create an account,
+   and in the setup steps add the help center URL `https://plausible.io/docs`. Wait until the source
+   shows **ready**; this takes a few minutes.
+6. **Read the Sources page.** Note the page count. The crawler stops at 100 pages and the docs
+   have about 135, so it will probably say the crawl was cut short. That is expected and is itself
+   a finding about Nexo: write it in `observations.md`.
+7. **Copy the widget key** from Settings in the console, then set it in your terminal:
+   ```bash
+   export NEXO_WIDGET_KEY=<key>              # PowerShell: $env:NEXO_WIDGET_KEY = "<key>"
+   ```
+8. **Check the corpus covers the questions.**
+   ```bash
+   npm run eval:coverage --workspace=@nexo/server
+   ```
+   It lists each question's page as found or missing, using a short phrase that should be in the
+   text. A missing page means a question would test the crawler, not the answer. If several are
+   missing, tell whoever is running the comparison, and either drop those questions for every
+   product or give every product the same pages. A "found" is a good sign, not proof.
+9. **Re-check the expected answers against the live site.** Open each `source_url` in
+   `questions.json` (16 pages) and confirm the page still says what `expected` says. Fix `expected`
+   if it drifted. Do this before any product sees a question.
+
 ## Run it
 
 ```bash
 cd eval/head-to-head
-# questions.json is already filled in for the Plausible docs
-node init-sheet.mjs                         # results.csv, one row per product per question
+node init-sheet.mjs        # results.csv: one row per product per question
+node run-nexo.mjs          # asks Nexo all 20, one fresh session each (about two minutes)
 ```
 
-**Nexo.** Ingest the help-center URL in a workspace (Knowledge > add source), wait for it to
-be ready, then:
+The runner pauses between questions to stay under the chat rate limit (30 a minute). If it ever
+reports a 402, the workspace's trial has ended. If a conversation comes back as handed to a person
+without an answer, check the workspace is below its fair-use ceiling.
+
+Then see what it cost:
 
 ```bash
-NEXO_WIDGET_KEY=<workspace widget key> node run-nexo.mjs
+npm run cost:report --workspace=@nexo/server
 ```
 
-Needs the server running with a cloud AI provider. Local Ollama results do not count
-(see `structured-plan.md`, Launch/Infra step 3).
-
-**Fin, Chatbase, Tidio.** Create your own trial, point each at the same help-center URL, and
-paste each question into a fresh chat. Paste the reply into `answer`, the sources it shows
-into `sources_cited`, and set `auto_handoff` to `yes` if it offered a person.
-
-After the run, `npm run cost:report --workspace=@nexo/server` prints what those 20 conversations cost
-and the margin against the workspace's plan. Run the kit against a workspace below its fair-use
-ceiling, or Nexo will hand the new conversations to a person instead of answering them.
+**Fin, Chatbase, Tidio.** For each, in its own account, on the same help center URL:
+- Note the plan, version and date in `observations.md` before you start, because a trial and a paid
+  plan can behave differently. Read each product's current pricing page for what the trial includes;
+  do not enter a card unless you must, and set a reminder to cancel.
+- Point it at `https://plausible.io/docs` and note how long indexing took, how it did it, and any
+  cap or limit it told you about.
+- Use default settings. Do not tune prompts or train it on the questions.
+- Ask each of the 20 questions in a **fresh chat**, word for word. Paste the answer into `answer`,
+  any sources it shows into `sources_cited`, and set `auto_handoff` to `yes` if it offered a person.
+- Write down in `observations.md` what you notice as you go (see the template there).
 
 ## Grade it
 
@@ -101,4 +158,4 @@ do badly that Nexo can beat. That second list is the point of the exercise.
   is a tuning problem, not a failure.
 - 20 questions is a smoke test, not a benchmark. Differences under ~10 points are noise.
   Repeat on a second help center before quoting any number publicly.
-- Record results and the date in `COMPETITORS.md` section 5, replacing the unproven 66% note.
+- Record results and the date in `COMPETITORS.md` section 5, replacing the "unproven headline number" note.

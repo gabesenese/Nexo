@@ -177,7 +177,7 @@ Next step and who owns it:
 - **Sell the next step, not the product.** The goal of each call is the next call, an audit or a pilot.
 - **Do not discount your way to a yes.** Ask for the paid pilot at a fair price; "free" teaches
   buyers the product is worth nothing, and a pilot nobody pays for proves nothing.
-- **Never overclaim.** Do not quote the 66% figure, residency or speed until they are true and you
+- **Never overclaim.** Do not quote a resolution rate, residency or speed until they are true and you
   can show them. One caught exaggeration costs a customer and a reference.
 - **Do not hire a salesperson until you have personally closed your first ten customers.** You
   cannot manage or coach a process you have not run.
@@ -217,7 +217,7 @@ Next step and who owns it:
 | 10 | Send 10 more outreach messages. Book one practitioner and one advisor call. |
 | 11 | Run the Plausible head-to-head questions through Nexo once an AI key is available. |
 | 12 | Hold 2-3 more conversations. |
-| 13 | Rewrite any public claim you cannot prove (residency, 66%). |
+| 13 | Re-read the website for anything you cannot prove. The 66%, residency and hosting claims are already removed. |
 | 14 | Friday review. Compare with day 1. What changed? What did you avoid? |
 
 ## What this playbook does not cover

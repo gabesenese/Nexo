@@ -67,15 +67,16 @@ escalations, audit log, Impact page. Missing: a `Resolution` model with a verifi
 - **No named helpdesk integration** — handoff is a generic signed webhook.
 - **Narrow ingestion** — help-center crawl and PDF only.
 - **No customer-context actions** — Fin can issue a refund; Nexo can only answer.
-- **The headline number is unproven** — the demo corpus resolves 66%; independent figures are
-  38–50%. Real customers will probably land below 66%.
+- **There is no measured resolution rate** — the only figure so far (66%) came from invented demo
+  conversations and has been withdrawn (`RESOLUTION.md`). Independent figures for the category are
+  38–50%, so expect Nexo's real number to land in that range until measured.
 - **Unverified claim in `PHILOSOPHY.md`** — Intercom's acquisition by Salesforce (~$3.6B) was
   confirmed by only one source in this research. Verify before keeping it.
 
 ## 6. Next steps
 
 1. Run the same 20 real SaaS help-center questions through Fin, Chatbase, Tidio and Nexo. Record
-   answers, wrong answers and handoff quality. This tests the 66% claim cheaply. The kit is in
+   answers, wrong answers and handoff quality. This measures Nexo's real answer quality cheaply. The kit is in
    `eval/head-to-head/` (questions still to be written from a real help center).
 2. Prototype the verified-resolution status on top of the existing conversation and escalation
    records before building any new feature.

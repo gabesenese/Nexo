@@ -43,6 +43,22 @@ portfolio pages. Prefer companies where support is a team of 2-20, not one perso
 
 Calls go to Eastern Time offices. Lunch (12:00-13:00) and 17:00-18:00 are usually the best windows.
 
+## Find who has a chat widget (run on your own computer)
+
+```bash
+cd outreach
+node detect-widgets.mjs kw-seed-companies.csv     # or companies.csv once you have it
+```
+
+It loads each homepage once, looks for the scripts of about 20 common chat and support widgets
+(Intercom, Zendesk, HubSpot, Drift, Crisp, Help Scout, Ada, Chatbase and others), prints a table and
+writes `widget-scan.csv`. Rows with no website are skipped, so fill those in first.
+
+Treat it as a hint. "None detected" can be wrong: a widget loaded through Google Tag Manager,
+after a cookie banner, or only on a Help page does not appear in the homepage HTML (the script
+tells you when Tag Manager is present). A named vendor also does not say whether the bot is AI.
+Open the site and look at it yourself before trusting either result.
+
 ## Check their support first, then pick who to call
 
 Having an AI chat does not rule a company out. A bot that is not doing its job is a reason to

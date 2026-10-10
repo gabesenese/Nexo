@@ -3,3 +3,4 @@ companies.csv
 call-log.csv
 notes/*
 !notes/_template.md
+widget-scan.csv

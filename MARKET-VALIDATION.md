@@ -87,8 +87,10 @@ last time, what they pay today and who would have to approve.
 2. **Landing smoke test.** Send traffic to the existing page and measure trial-signup rate per
    visitor. Early access means a low number is expected; compare variants (flat price vs
    per-resolution framing, residency claim vs none).
-3. **Paid pilot.** After the audit: a 30-day paid pilot at a discount, in writing. A pilot with money
-   attached is the only signal in this document that cannot be faked.
+3. **Paid pilot.** After the audit: a 30-day paid pilot at the list price, in writing, with a refund
+   if it misses a bar the prospect sets (terms in `outreach/call-script.md`). Not discounted: a
+   discounted pilot tests the discount, not the price. A pilot with money attached is the only
+   signal in this document that cannot be faked.
 
 ### Decision rule
 

@@ -101,6 +101,11 @@ to `call-log.csv` and, if you spoke to someone, a file in `notes/` (copy `notes/
 
 `outcome` values: `no_answer`, `voicemail`, `gatekeeper`, `declined`, `agreed_to_talk`, `talked`.
 
+If a call reaches pricing, `node price-options.mjs <chats a month>` prints the three options at
+their volume (see `call-script.md`). Log the pick in `price_pick` (`flat`, `per_resolution` or
+`base_plus`) and their words in `price_pick_why`. A `call-log.csv` made before these two columns
+existed needs them added to the end of its header line.
+
 ## Stop rule
 
 After 30 calls (or two weeks, whichever comes first), run:

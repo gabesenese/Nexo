@@ -23,6 +23,8 @@ console.log(`Agreed to talk later:    ${agreed}`);
 console.log(`Real conversations:      ${talked}  (${pct(talked)} of calls)`);
 console.log(`Referrals received:      ${rows.filter((r) => r.referral.trim()).length}`);
 console.log(`Do-not-call list:        ${rows.filter((r) => r.do_not_call.toLowerCase() === "yes").length}`);
+const picks = ["flat", "per_resolution", "base_plus"].map((p) => `${p} ${rows.filter((r) => (r.price_pick ?? "").trim() === p).length}`);
+console.log(`Pricing picks:           ${picks.join(", ")}`);
 if (rows.length >= STOP_AFTER) {
   console.log(`\nYou reached ${STOP_AFTER} calls. Stop and review: what did you learn? Change something before calling more.`);
 }

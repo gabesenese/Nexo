@@ -63,6 +63,42 @@ call and log it. Add anyone who says to stop calling to your do-not-call list.
 8. (Only now) If I could show you what it would say to 20 of your customers' real questions, using
    only your public help center, would that be useful?
 
+## Pricing: three ways to pay (after question 8, only if the call is going well)
+
+You are deciding how to price it, and their choice is the data. Ask how many support chats they
+get in a month in total. Question 2 only counts the repeat questions, per week, so it is a floor,
+not the total. Then, on your own screen, run:
+
+```bash
+node price-options.mjs <their chats a month>
+```
+
+Read them the three options it prints, at their volume, then ask: "Which of these would you pick,
+and why?" Write down their exact words. Log `flat`, `per_resolution` or `base_plus` in
+`price_pick` and their reason in `price_pick_why`.
+
+- The three cost about the same when 4 in 10 chats are confirmed solved. They were built that way,
+  so the choice shows how they want to pay, not which is cheapest. It is not a forecast: never tell
+  them how many chats Nexo would solve. Nobody knows until a pilot measures it.
+- Only the flat price can be sold today. The other two bill on chats their customer confirms were
+  solved, which needs the chat to ask "Did that solve it?", and that is not built (`RESOLUTION.md`).
+  If several people pick them, that is the evidence the feature is waiting for.
+
+## The pilot (after the 20-question audit, if they want to try it)
+
+Offer the flat price, not a discount. A discounted pilot only tells you they will take a discount.
+
+- **Price:** the flat price `price-options.mjs` shows for their volume, the first month paid up front.
+- **Setup:** you do it. Import their help center, put the widget on their site, and set up the
+  handoff to their team.
+- **Length:** 30 days from the day the widget goes live.
+- **The bar, in writing before it starts:** ask what share of chats Nexo would have to resolve for
+  the month to be worth the price to them. Their number is the bar. "Resolved" means what
+  `RESOLUTION.md` says, which only works if their team closes conversations as they go, so agree
+  that too, and go through the list together at day 30.
+- **If it misses the bar:** refund the month in full.
+- **After 30 days:** they carry on at the same price or stop. No contract.
+
 ## Close
 
 > "Who else should I talk to?"  /  "Is it OK if I follow up in a few weeks?"

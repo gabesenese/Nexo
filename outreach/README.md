@@ -28,6 +28,21 @@ to look at it before you call.
 
 `type`: `saas`, `software` or `other`. `status`: `to_call`, `called`, `done`, `do_not_call`.
 
+## Kitchener-Waterloo seed list
+
+`kw-seed-companies.csv` holds 12 starting companies found in public sources (company-level
+facts only, no people, so it is safe in this public repo). Copy the rows into your private
+`companies.csv`. Every row needs checking: the search results were thin, "fit" is unverified,
+and several domains are from memory. Before calling a company, open its site and look for a
+help center and a Contact page. Drop the ones with no customer-facing support.
+
+To grow it to about 60: the Latka list of Kitchener SaaS companies, the Communitech member
+directory (communitech.ca), Waterloo EDC's Deloitte Technology Fast 50 pages, Google Maps
+searches ("software company Kitchener", "Waterloo SaaS"), and local startup and incubator
+portfolio pages. Prefer companies where support is a team of 2-20, not one person and not 100.
+
+Calls go to Eastern Time offices. Lunch (12:00-13:00) and 17:00-18:00 are usually the best windows.
+
 ## Calling
 
 Follow `call-script.md`. Call in your own time, from your own phone. After every call, add a row

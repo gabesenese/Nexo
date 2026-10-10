@@ -43,7 +43,8 @@ export function Roi() {
           Intercom publishes its AI agent, Fin, at US$0.99 per resolution ({COMPARISON_CHECKED}). The figures above
           assume it resolves half of your chats and convert at 1.39 Canadian dollars to the US dollar. They leave out
           Intercom&rsquo;s seat fees of US$29 to US$132 per person a month, so a team on their helpdesk pays more than
-          shown, not less. Once you are live, the Impact page shows the same arithmetic on your own chats.
+          shown, not less. Once you are live, the Impact page shows how many chats Nexo resolved on its own and, using
+          your own figures, the hours and money that saved your team.
         </p>
       </div>
     </section>

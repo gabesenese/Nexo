@@ -16,11 +16,11 @@ const ITEMS = [
   },
   {
     q: "Do I have to talk to sales?",
-    a: "No. Prices are public, plans start at C$249 a month, and every plan includes every feature. The price only changes with how many chats you get.",
+    a: "No. Prices are public, plans start at C$249 a month, and every plan includes every feature. Plans differ in how many chats they cover, and Essentials answers from up to 2 sources.",
   },
   {
     q: "Does it work with the tools we already use?",
-    a: "Yes. When Nexo hands a chat to your team, it can also send it to the tools you already use, such as your helpdesk, directly or through Zapier or Make.",
+    a: "Yes. When Nexo hands a chat to your team, it can also send it to your helpdesk or other tools through Zapier or Make, or straight to your own system.",
   },
 ];
 
